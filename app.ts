@@ -49,7 +49,7 @@ app.post('/DepthCoverage/Trigger', async function(req, res){
       throw new Error("Missing required parameter");
   }
   console.log(token + "," + org + "," + repo);
-  await TriggerOnboard(dbserver, db, dbuser, dbpw, token, org, repo, candidate);
+  await TriggerOnboard(dbserver, db, dbuser, dbpw, token, org, repo, "main", candidate);
   res.send('post method');
 });
 
