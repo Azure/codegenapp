@@ -1,0 +1,21 @@
+{
+    "compilerOptions": {
+        "lib": [
+            "es2019",
+            "dom"
+        ],
+        "outDir": "dist",
+        "module": "commonjs",
+        "types": [
+            "node",
+            "jest"
+        ],
+        "target": "es2016", 
+        "sourceMap" :true,
+        "experimentalDecorators": true
+    },
+    "exclude": [
+        "node_modules",
+        "tools"
+    ]
+}
