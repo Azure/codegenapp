@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { TriggerOnboard, DeletePipelineBranch, DeleteAllDepthBranchs} from "depthcoverage/dist/Onboard"
+import { TriggerOnboard, DeletePipelineBranch, DeleteAllDepthBranchs, submit} from "depthcoverage/dist/Onboard"
 
 var express = require('express');
 const app = express();
@@ -70,11 +70,26 @@ app.post('/DepthCoverage/cancel',  async function(req, res){
   res.send('delete depth branches');
 });
 
-app.get('/DepthCoverage/submitCode', function(req, res) {
-  console.log(req.query.triggerPR);
-  console.log(req.query.codePR);
+app.post('/DepthCoverage/generateCodePR',  async function(req, res){
+  const token = req.body.token;
+  const org = req.body.org;
+  const repo = req.body.repo;
+  const title = req.body.title;
+  const branch = req.body.branch;
+  const basebranch = req.body.base;
+  const prlink = await submit(token, org, repo, title, branch, basebranch);
+  res.send(prlink);
+});
 
-  res.send('submit code method');
+app.get('/DepthCoverage/submitCode', async function(req, res) {
+  const token = req.body.token;
+  const org = req.body.org;
+  const repo = req.body.repo;
+  const title = req.body.title;
+  const branch = req.body.branch;
+  const basebranch = req.body.base;
+  const prlink = await submit(token, org, repo, title, branch, basebranch);
+  res.send(prlink);
 });
 
 app.get('/DepthCoverage/Customize', function(req, res) {
