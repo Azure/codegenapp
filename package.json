@@ -29,14 +29,7 @@
     "mocha-prepare": "^0.1.0",
     "nyc": "^14.1.1",
     "shelljs": "^0.8.3",
-    "ts-jest": "^26.4.4",
-    "@octokit/core": "^3.1.4",
-    "@octokit/rest": "^18.0.3",
-    "globby": "^11.0.2",
-    "fs-extra": "^9.1.0",
-    "path": "^0.12.7",
-    "depthcoverage": "^0.0.13",
-    "express": "^4.17.1"
+    "ts-jest": "^26.4.4"
   },
   "dependencies": {
     "hashcode": "^1.0.3",
@@ -53,7 +46,8 @@
     "globby": "^11.0.2",
     "fs-extra": "^9.1.0",
     "path": "^0.12.7",
-    "depthcoverage": "^0.0.13",
+    "gitrestutil": "^0.1.5",
+    "depthcoverage": "^0.0.18",
     "express": "^4.17.1"
   }
 }
