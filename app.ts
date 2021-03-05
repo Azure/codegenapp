@@ -194,8 +194,7 @@ app.post('/DepthCoverage/RPs/:rpname/SDKs/:sdk/onboard/complete', async function
       sdkorg = ORG.MS;
     }
   }
-  
-  const branch = "Depth-" + sdk.toUpperCase() + "-" + rp;
+  const branch = "Depth-" + sdk.toLowerCase() + "-" + rp;
   /* delete depth-coverage rp branch */
   await DeletePipelineBranch(token, org, REPO.DEPTH_COVERAGE_REPO, branch);
 
