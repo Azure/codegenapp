@@ -27,9 +27,17 @@ export async function ReadFileFromPR(token: string, org: string, repo: string, p
     return content;
 }
 
-export async function Customize(token:string, rp: string, sdk: string, triggerPR: string, codePR: string) {
+export async function ReadFileFromRepo(token: string, org: string, repo: string, branch:string, filename:string): Promise<string> {
     const octo = NewOctoKit(token);
-    const org = ORG.AZURE;
+    const content = await getBlobContent(octo, org, repo, branch, filename);
+    const fs = require('fs');
+    fs.writeFileSync(filename, content);
+    return content;
+}
+
+export async function Customize(token:string, rp: string, sdk: string, triggerPR: string, codePR: string, org: string = undefined) {
+    const octo = NewOctoKit(token);
+    // const org = ORG.AZURE;
     let sdkorg = ORG.AZURE;
     sdk = sdk.toLowerCase();
     if (sdk === SDK.TF_SDK) {
@@ -50,7 +58,7 @@ export async function Customize(token:string, rp: string, sdk: string, triggerPR
 
     const prNumber = codePR.split("/").pop();
     const filelist:string[] = [readfile, "schema.json"];
-    await ReadCustomizeFiles(token, sdkorg, sdkrepo, +prNumber, filelist);
+    await ReadCustomizeFiles(token, org !== undefined ? org :sdkorg, sdkrepo, +prNumber, filelist);
 
     let filepaths: string[] = [];
     /* copy configuration to swagger repo */
@@ -99,7 +107,8 @@ export async function Customize(token:string, rp: string, sdk: string, triggerPR
     }
 
     try {
-        await uploadToRepo(octo, filepaths, org, REPO.DEPTH_COVERAGE_REPO, branch);
+        /* update depth-coverage-pipeline trigger pull request. */
+        await uploadToRepo(octo, filepaths, ORG.AZURE, REPO.DEPTH_COVERAGE_REPO, branch);
     } catch(e) {
         console.log(e);
     }
@@ -110,8 +119,8 @@ export async function Customize(token:string, rp: string, sdk: string, triggerPR
 
 }
 
-export async function OnboardComplete(token: string, rp: string, sdk: string) {
-    const org = ORG.AZURE;
+export async function OnboardComplete(token: string, rp: string, sdk: string, org:string = undefined) {
+    const azureorg = ORG.AZURE;
     sdk = sdk.toLowerCase();
     let sdkorg = ORG.AZURE;
     if (sdk === SDK.TF_SDK) {
@@ -119,7 +128,7 @@ export async function OnboardComplete(token: string, rp: string, sdk: string) {
     }
     const branch = "depth-" + sdk + "-" + rp;
     /* delete depth-coverage rp branch */
-    await DeletePipelineBranch(token, org, REPO.DEPTH_COVERAGE_REPO, branch);
+    await DeletePipelineBranch(token, azureorg, REPO.DEPTH_COVERAGE_REPO, branch);
 
     /* delete sdk rp branch. */
     let sdkrepo = "";
@@ -128,10 +137,10 @@ export async function OnboardComplete(token: string, rp: string, sdk: string) {
     } else if (sdk === SDK.CLI_CORE_SDK) {
         sdkrepo = REPO.CLI_REPO;
     }
-    await DeletePipelineBranch(token, sdkorg, sdkrepo, branch);
+    await DeletePipelineBranch(token, org !== undefined ? org : sdkorg, sdkrepo, branch);
 
     /*delete swagger rp branch */
-    await DeletePipelineBranch(token, org, REPO.SWAGGER_REPO, branch);
+    await DeletePipelineBranch(token, azureorg, REPO.SWAGGER_REPO, branch);
 }
 
 /* trigger a RP onboard. */
@@ -170,17 +179,15 @@ export async function TriggerOnboard(rp:string, sdk:string, token: string, org: 
 }
 
 /* onboard a RP. */
-export async function Onboard(rp:string, sdk:string, token: string) {
+export async function Onboard(rp:string, sdk:string, token: string, swaggerorg:string = undefined, org:string = undefined) {
     try {
         const octo = NewOctoKit(token);
         /* generate PR in swagger repo. */
         let basebranch="master"
         sdk = sdk.toLowerCase();
         let branch = "depth-" + sdk + "-" + rp;
-        if (sdk === SDK.CLI_CORE_SDK) {
-            branch = "depth-" + "CLI-core" + "-" + rp;
-        }
-        await createPullRequest(octo, ORG.AZURE, REPO.SWAGGER_REPO, basebranch, branch, "[Depth Coverage, " + rp+ "]pull request from pipeline " + branch);
+        
+        await createPullRequest(octo, swaggerorg !== undefined ? swaggerorg: ORG.AZURE, REPO.SWAGGER_REPO, basebranch, branch, "[Depth Coverage, " + rp+ "]pull request from pipeline " + branch);
 
         /* generate PR in sdk code repo. */
         let sdkrepo = "";
@@ -193,7 +200,7 @@ export async function Onboard(rp:string, sdk:string, token: string) {
             sdkrepo = REPO.CLI_REPO;
             sdkbasebranch="dev";
         }
-         await createPullRequest(octo, sdkorg, sdkrepo, sdkbasebranch, branch, "[Depth Coverage, " + rp+ "]pull request from pipeline " + branch);
+         await createPullRequest(octo, org !== undefined ? org : sdkorg, sdkrepo, sdkbasebranch, branch, "[Depth Coverage, " + rp+ "]pull request from pipeline " + branch);
 
     } catch(err) {
         console.log(err);

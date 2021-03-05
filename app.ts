@@ -3,6 +3,7 @@
 import { TriggerOnboard, DeletePipelineBranch, DeleteAllDepthBranchs, submit, uploadToRepo} from "depthcoverage/dist/Onboard"
 import { ORG, SDK, REPO } from "./common";
 import { Customize, Onboard } from "./codegen";
+import { IngestCandidates } from "./CandidateService";
 
 var express = require('express');
 const app = express();
@@ -31,6 +32,28 @@ app.put('/DepthCoverage/Trigger', function(req, res){
     res.send('put method');
 });
 
+app.post('/DepthCoverage/sdks/:sdk/candidates', function(req, res) {
+  const token = req.body.token;
+  const org = req.body.org;
+  const repo = req.body.repo;
+  const dbserver=req.body.DBServer;
+  const db=req.body.Database;
+  const dbuser = req.body.DBUsername;
+  const dbpw = req.body.DBPassword;
+  const candidate = req.body.candidateResources;
+  if (
+    !dbserver ||
+    !db ||
+    !dbuser ||
+    !dbpw 
+  ) {
+      throw new Error("Missing required parameter");
+  }
+  let filepath = "";
+  let table = "";
+  IngestCandidates(filepath, dbserver, db, dbuser, dbpw, table);
+  res.send("ingest candidate");
+})
 app.post('/DepthCoverage/Trigger', async function(req, res){
   console.log(req.body);
   console.log(req.body.pipelinepr)
@@ -42,6 +65,9 @@ app.post('/DepthCoverage/Trigger', async function(req, res){
   const dbuser = req.body.DBUsername;
   const dbpw = req.body.DBPassword;
   const candidate = req.body.candidateResources;
+  const platform = req.body.platform;
+  let branch = "main";
+  if (platform !== undefined && platform.toLowerCase() === "dev") branch = "dev";
   if (
       !dbserver ||
       !db ||
@@ -51,7 +77,7 @@ app.post('/DepthCoverage/Trigger', async function(req, res){
       throw new Error("Missing required parameter");
   }
   console.log(token + "," + org + "," + repo);
-  await TriggerOnboard(dbserver, db, dbuser, dbpw, token, org, repo, "main", candidate);
+  await TriggerOnboard(dbserver, db, dbuser, dbpw, token, org, repo, branch, candidate);
   res.send('post method');
 });
 
@@ -115,7 +141,7 @@ app.get('/DepthCoverage/RPs/:rpname/SDKs/:sdk/Customize', async function(req, re
   console.log(req.params.rpname);
   console.log(req.params.sdk);
   // console.log(req.parameter.token);
-  const org = ORG.AZURE;
+  const org = req.query.org;
   // const repo = req.body.repo;
   // const branch = req.body.branch;
   const token = req.query.token;
@@ -123,7 +149,7 @@ app.get('/DepthCoverage/RPs/:rpname/SDKs/:sdk/Customize', async function(req, re
   const sdk = req.params.sdk;
   const triggerPR = req.query.triggerPR;
   const codePR = req.query.codePR;
-  await Customize(token, rp, sdk, triggerPR, codePR);
+  await Customize(token, rp, sdk, triggerPR, codePR, org);
   res.send('customize');
 });
 
@@ -131,13 +157,21 @@ app.get('/DepthCoverage/RPs/:rpname/SDKs/:sdk/submit', async function(req, res) 
   console.log(req.params.rpname);
   console.log(req.params.sdk);
   // console.log(req.parameter.token);
-  const org = ORG.AZURE;
   // const repo = req.body.repo;
   // const branch = req.body.branch;
   const token = req.query.token;
+  const swaggerorg = req.query.swaggerorg;
+  const org = req.query.org;
   const rp = req.params.rpname;
   const sdk = req.params.sdk;
-  await Onboard(rp, sdk, token);
+
+  await Onboard(rp, sdk, token, swaggerorg, org);
+  // if (org !== undefined) {
+  //   await Onboard(rp, sdk, token, org);
+  // }
+  // else {
+  //   await Onboard(rp, sdk, token);
+  // }
 
   /*delete temple code repo. */
 
@@ -152,10 +186,15 @@ app.post('/DepthCoverage/RPs/:rpname/SDKs/:sdk/onboard/complete', async function
   // const branch = req.body.branch;
   const rp = req.params.rpname;
   const sdk:string = req.params.sdk;
-  let sdkorg = ORG.AZURE;
-  if (sdk.toLowerCase() === SDK.TF_SDK) {
-    sdkorg = ORG.MS;
+  let sdkorg:string = req.body.org;
+  const swaggerorg: string = req.body.swaggerorg;
+  if (sdkorg === undefined) {
+    sdkorg = ORG.AZURE;
+    if (sdk.toLowerCase() === SDK.TF_SDK) {
+      sdkorg = ORG.MS;
+    }
   }
+  
   const branch = "Depth-" + sdk.toUpperCase() + "-" + rp;
   /* delete depth-coverage rp branch */
   await DeletePipelineBranch(token, org, REPO.DEPTH_COVERAGE_REPO, branch);
@@ -170,7 +209,7 @@ app.post('/DepthCoverage/RPs/:rpname/SDKs/:sdk/onboard/complete', async function
   await DeletePipelineBranch(token, sdkorg, sdkrepo, branch);
 
   /*delete swagger rp branch */
-  await DeletePipelineBranch(token, org, REPO.SWAGGER_REPO, branch);
+  await DeletePipelineBranch(token, swaggerorg != undefined ? swaggerorg: org, REPO.SWAGGER_REPO, branch);
       res.send('delete branch' + branch);
 });
 
