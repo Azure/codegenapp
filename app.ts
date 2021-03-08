@@ -194,9 +194,15 @@ app.post('/DepthCoverage/RPs/:rpname/SDKs/:sdk/onboard/complete', async function
       sdkorg = ORG.MS;
     }
   }
-  const branch = "Depth-" + sdk.toLowerCase() + "-" + rp;
+  const branch = "depth-" + sdk.toLowerCase() + "-" + rp;
   /* delete depth-coverage rp branch */
-  await DeletePipelineBranch(token, org, REPO.DEPTH_COVERAGE_REPO, branch);
+  try {
+    await DeletePipelineBranch(token, org, REPO.DEPTH_COVERAGE_REPO, branch);
+  } catch(e) {
+    console.log("Failed to delete depthcoverage branch: " + branch);
+    console.log(e);
+  }
+  
 
   /* delete sdk rp branch. */
   let sdkrepo = "";
@@ -205,11 +211,22 @@ app.post('/DepthCoverage/RPs/:rpname/SDKs/:sdk/onboard/complete', async function
   } else if (sdk === SDK.CLI_CORE_SDK) {
     sdkrepo = REPO.CLI_REPO;
   }
-  await DeletePipelineBranch(token, sdkorg, sdkrepo, branch);
+  try {
+    await DeletePipelineBranch(token, sdkorg, sdkrepo, branch);
+  } catch(e) {
+    console.log("Failed to delete sdk branch: " + branch);
+    console.log(e);
+  }
 
   /*delete swagger rp branch */
-  await DeletePipelineBranch(token, swaggerorg != undefined ? swaggerorg: org, REPO.SWAGGER_REPO, branch);
-      res.send('delete branch' + branch);
+  try {
+    await DeletePipelineBranch(token, swaggerorg != undefined ? swaggerorg: org, REPO.SWAGGER_REPO, branch);
+  } catch(e) {
+    console.log("Failed to delete swagger branch: " + branch);
+    console.log(e);
+  }
+
+  res.send('delete branch' + branch);
 });
 
 function normalizePort(val) {
