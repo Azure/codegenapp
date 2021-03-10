@@ -45,7 +45,7 @@ export async function Customize(token:string, rp: string, sdk: string, triggerPR
         sdk = sdk.toLowerCase();
     }
 
-    const branch = "Depth-" + sdk + "-" + rp;
+    const branch = "depth-" + sdk + "-" + rp;
 
     let sdkrepo = "";
     let readfile = README.CLI_README_FILE;
@@ -149,7 +149,7 @@ export async function TriggerOnboard(rp:string, sdk:string, token: string, org: 
         const fs = require('fs');
         const RESOUCEMAPFile = "ToGenerate.json";
         const octo = NewOctoKit(token);
-        const branchName = "Onboard-" + sdk + "-" + rp;
+        const branchName = "onboard-" + sdk + "-" + rp;
         const baseCommit = await getCurrentCommit(octo, org, repo, basebranch);
         const targetBranch = await getBranch(octo, org, repo, branchName);
         if (targetBranch !== undefined) {
@@ -205,4 +205,12 @@ export async function Onboard(rp:string, sdk:string, token: string, swaggerorg:s
     } catch(err) {
         console.log(err);
     }
+}
+
+/* list pull request. */
+export async function listOpenPullRequest(token: string, org: string, repo: string, head: string, base:string):Promise<string[]> {
+    // const octo = NewOctoKit(token);
+    // return listPullRequest(octo, org, repo, "open", head, base);
+    let result:string[] = [];
+    return result;
 }

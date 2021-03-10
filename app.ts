@@ -2,7 +2,7 @@
 
 import { TriggerOnboard, DeletePipelineBranch, DeleteAllDepthBranchs, submit, uploadToRepo} from "depthcoverage/dist/Onboard"
 import { ORG, SDK, REPO } from "./common";
-import { Customize, Onboard } from "./codegen";
+import { Customize, Onboard, listOpenPullRequest } from "./codegen";
 import { IngestCandidates } from "./CandidateService";
 
 var express = require('express');
@@ -40,7 +40,7 @@ app.post('/DepthCoverage/sdks/:sdk/candidates', function(req, res) {
   const db=req.body.Database;
   const dbuser = req.body.DBUsername;
   const dbpw = req.body.DBPassword;
-  const candidate = req.body.candidateResources;
+  const sdk = req.params.sdk;
   if (
     !dbserver ||
     !db ||
@@ -49,9 +49,9 @@ app.post('/DepthCoverage/sdks/:sdk/candidates', function(req, res) {
   ) {
       throw new Error("Missing required parameter");
   }
-  let filepath = "";
-  let table = "";
-  IngestCandidates(filepath, dbserver, db, dbuser, dbpw, table);
+  let filepath = req.body.candidatefile;
+  let table = req.body.table;
+  IngestCandidates(__dirname+'/' + filepath, dbserver, db, dbuser, dbpw, table);
   res.send("ingest candidate");
 })
 app.post('/DepthCoverage/Trigger', async function(req, res){
@@ -94,7 +94,16 @@ app.post('/DepthCoverage/cancel',  async function(req, res){
   const token = req.body.token;
   const org = req.body.org;
   const repo = req.body.repo;
-  await DeleteAllDepthBranchs(token, org, repo);
+  /* delete depth coverage branch. */
+  try {
+    await DeleteAllDepthBranchs(token, org, repo);
+  } catch (e) {
+    console.log("Failed to delete branches from depthcoverage.")
+    console.log(e);
+  }
+
+  /* delete sdk branches. */
+  
   res.send('delete depth branches');
 });
 
@@ -107,8 +116,14 @@ app.post('/DepthCoverage/generateCodePR',  async function(req, res){
   const basebranch = req.body.base;
   console.log("token:"+token+",org:" + org + ",repo:" + repo + ",title:" + title + ",branch:" + branch + ",base:" + basebranch);
   try {
-    const prlink = await submit(token, org, repo, title, branch, basebranch);
-    res.send(prlink);
+    const pulls: string[] = await listOpenPullRequest(token, org, repo, branch, basebranch);
+    if (pulls.length > 0) {
+      res.send(pulls[0]);
+    } else {
+      const prlink = await submit(token, org, repo, title, branch, basebranch);
+      res.send(prlink);
+    }
+    
   }catch(e) {
     console.log(e);
     res.send("error");
@@ -213,6 +228,8 @@ app.post('/DepthCoverage/RPs/:rpname/SDKs/:sdk/onboard/complete', async function
   }
   try {
     await DeletePipelineBranch(token, sdkorg, sdkrepo, branch);
+    let codebranch = "depth-code-" + sdk.toLowerCase() + "-" + rp;
+    await DeletePipelineBranch(token, sdkorg, sdkrepo, codebranch);
   } catch(e) {
     console.log("Failed to delete sdk branch: " + branch);
     console.log(e);

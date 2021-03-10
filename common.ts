@@ -8,36 +8,41 @@ export enum REPO {
     DEPTH_COVERAGE_REPO = "depth-coverage-pipeline"
   }
   
-  export enum ORG {
+export enum ORG {
     AZURE = "Azure",
     MS = "microsoft"
-  }
+}
   
-  export enum SDK {
+export enum SDK {
     TF_SDK="terraform",
     CLI_CORE_SDK="clicore",
     CLI_EXTENSTION_SDK="cliextension"
-  }
+}
   
-  export enum README {
+export enum README {
     TF_README_FILE="readme.trenton.md",
     CLI_README_FILE="readme.az.md"
-  }
+}
 
-  export function readCVS(filepath: string): any[] {
-      let results: any[] = [];
-      
+export enum SQLStr {
+      SQLSTR_INSERT_CANDIDATE = "INSERT INTO %s (resourceProvider, fullResourceName, startDate, endDate) values (@resourceProvider, @fullResourceName, @startDate, @endDate)",
+      SQLSTR_CLEAR_CANDIDATE = "DElETE from %s"
+}
 
-    //   var parser = parse({delimiter: ','}, function(err, data) {
-    //       console.log(data);
-    //   });
-
-    console.log(__dirname+'/TFCandidate.csv');
-      fs.createReadStream(filepath)
+export function readCVS(filepath: string): any[] {
+    let results: any[] = [];
+    try {
+        console.log(__dirname+'/TFCandidate.csv');
+        fs.createReadStream(filepath)
         .pipe(csv())
         .on('data', (data) => results.push(data))
         .on('end', () => {
             console.log(results);
         });
-      return results;
-  }
+    }catch (e) {
+        console.log("Failed to read candidate file.");
+        console.log(e);
+    }
+    
+    return results;
+}
