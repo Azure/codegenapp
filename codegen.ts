@@ -1,5 +1,5 @@
 import { ORG, SDK, README, REPO } from "./common";
-import {uploadToRepo, createPullRequest, getBlobContent, NewOctoKit, getCurrentCommit, createBranch, deleteBranch, getBranch, getPullRequest, listBranchs} from "gitrestutil/GitAPI"
+import {uploadToRepo, createPullRequest, getBlobContent, NewOctoKit, getCurrentCommit, createBranch, deleteBranch, getBranch, getPullRequest, listBranchs, listPullRequest} from "gitrestutil/GitAPI"
 import { TriggerOnboard, DeletePipelineBranch, DeleteAllDepthBranchs, submit} from "depthcoverage/dist/Onboard"
 
 export async function ReadCustomizeFiles(token: string, org: string, repo: string, prNumber: number, fileList:string[]): Promise<string> {
@@ -103,7 +103,7 @@ export async function Customize(token:string, rp: string, sdk: string, triggerPR
                 console.log("\nFile Contents of copied_file:");
             } 
         });
-        filepaths.push(swaggerSchemaPath)
+        filepaths.push(swaggerSchemaPath);
     }
 
     try {
@@ -209,8 +209,8 @@ export async function Onboard(rp:string, sdk:string, token: string, swaggerorg:s
 
 /* list pull request. */
 export async function listOpenPullRequest(token: string, org: string, repo: string, head: string, base:string):Promise<string[]> {
-    // const octo = NewOctoKit(token);
-    // return listPullRequest(octo, org, repo, "open", head, base);
-    let result:string[] = [];
-    return result;
+    const octo = NewOctoKit(token);
+    return listPullRequest(octo, org, repo, "open", org + ":" + head, base);
+    // let result:string[] = [];
+    // return result;
 }

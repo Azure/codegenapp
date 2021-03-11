@@ -38,7 +38,7 @@
     "depthcoverage": "^0.0.19",
     "express": "^4.17.1",
     "fs-extra": "^9.1.0",
-    "gitrestutil": "^0.1.5",
+    "gitrestutil": "^0.1.6",
     "globby": "^11.0.2",
     "hashcode": "^1.0.3",
     "js-yaml": "^3.14.1",
