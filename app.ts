@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 
 import { TriggerOnboard, DeletePipelineBranch, DeleteAllDepthBranchs, submit, uploadToRepo} from "depthcoverage/dist/Onboard"
-import { ORG, SDK, REPO } from "./common";
+import { ORG, SDK, REPO, README } from "./common";
 import { Customize, Onboard, listOpenPullRequest } from "./codegen";
 import { IngestCandidates } from "./CandidateService";
+import { NewOctoKit } from "gitrestutil/GitAPI";
 
 var express = require('express');
 const app = express();
@@ -118,6 +119,14 @@ app.post('/DepthCoverage/generateCodePR',  async function(req, res){
   try {
     const pulls: string[] = await listOpenPullRequest(token, org, repo, branch, basebranch);
     if (pulls.length > 0) {
+      // const octo = NewOctoKit(token);
+      // const sdk = branch.split("-")[1];
+      
+      // let readfile = README.CLI_README_FILE;
+      // if (sdk === SDK.TF_SDK) {
+      //     readfile = README.TF_README_FILE;
+      // }
+      // await uploadToRepo(octo, [readfile], org, repo, branch);
       res.send(pulls[0]);
     } else {
       const prlink = await submit(token, org, repo, title, branch, basebranch);
@@ -164,8 +173,12 @@ app.get('/DepthCoverage/RPs/:rpname/SDKs/:sdk/Customize', async function(req, re
   const sdk = req.params.sdk;
   const triggerPR = req.query.triggerPR;
   const codePR = req.query.codePR;
-  await Customize(token, rp, sdk, triggerPR, codePR, org);
-  res.send('customize');
+  let excludeTest :boolean = false;
+  if (req.query.excludeTest !== undefined) {
+    excludeTest = req.query.excludeTest;
+  }
+  await Customize(token, rp, sdk, triggerPR, codePR, org, excludeTest);
+  res.send('customize. pipeline: https://devdiv.visualstudio.com/DevDiv/_build?definitionId=14243&_a=summary');
 });
 
 app.get('/DepthCoverage/RPs/:rpname/SDKs/:sdk/submit', async function(req, res) {
