@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 
 import { TriggerOnboard, DeletePipelineBranch, DeleteAllDepthBranchs, submit, uploadToRepo} from "depthcoverage/dist/Onboard"
-import { ORG, SDK, REPO } from "./common";
-import { Customize, Onboard } from "./codegen";
+import { ORG, SDK, REPO, README } from "./common";
+import { Customize, Onboard, listOpenPullRequest } from "./codegen";
 import { IngestCandidates } from "./CandidateService";
+import { NewOctoKit } from "gitrestutil/GitAPI";
 
 var express = require('express');
 const app = express();
@@ -40,7 +41,7 @@ app.post('/DepthCoverage/sdks/:sdk/candidates', function(req, res) {
   const db=req.body.Database;
   const dbuser = req.body.DBUsername;
   const dbpw = req.body.DBPassword;
-  const candidate = req.body.candidateResources;
+  const sdk = req.params.sdk;
   if (
     !dbserver ||
     !db ||
@@ -49,9 +50,9 @@ app.post('/DepthCoverage/sdks/:sdk/candidates', function(req, res) {
   ) {
       throw new Error("Missing required parameter");
   }
-  let filepath = "";
-  let table = "";
-  IngestCandidates(filepath, dbserver, db, dbuser, dbpw, table);
+  let filepath = req.body.candidatefile;
+  let table = req.body.table;
+  IngestCandidates(__dirname+'/' + filepath, dbserver, db, dbuser, dbpw, table);
   res.send("ingest candidate");
 })
 app.post('/DepthCoverage/Trigger', async function(req, res){
@@ -94,7 +95,16 @@ app.post('/DepthCoverage/cancel',  async function(req, res){
   const token = req.body.token;
   const org = req.body.org;
   const repo = req.body.repo;
-  await DeleteAllDepthBranchs(token, org, repo);
+  /* delete depth coverage branch. */
+  try {
+    await DeleteAllDepthBranchs(token, org, repo);
+  } catch (e) {
+    console.log("Failed to delete branches from depthcoverage.")
+    console.log(e);
+  }
+
+  /* delete sdk branches. */
+  
   res.send('delete depth branches');
 });
 
@@ -107,8 +117,22 @@ app.post('/DepthCoverage/generateCodePR',  async function(req, res){
   const basebranch = req.body.base;
   console.log("token:"+token+",org:" + org + ",repo:" + repo + ",title:" + title + ",branch:" + branch + ",base:" + basebranch);
   try {
-    const prlink = await submit(token, org, repo, title, branch, basebranch);
-    res.send(prlink);
+    const pulls: string[] = await listOpenPullRequest(token, org, repo, branch, basebranch);
+    if (pulls.length > 0) {
+      // const octo = NewOctoKit(token);
+      // const sdk = branch.split("-")[1];
+      
+      // let readfile = README.CLI_README_FILE;
+      // if (sdk === SDK.TF_SDK) {
+      //     readfile = README.TF_README_FILE;
+      // }
+      // await uploadToRepo(octo, [readfile], org, repo, branch);
+      res.send(pulls[0]);
+    } else {
+      const prlink = await submit(token, org, repo, title, branch, basebranch);
+      res.send(prlink);
+    }
+    
   }catch(e) {
     console.log(e);
     res.send("error");
@@ -149,8 +173,12 @@ app.get('/DepthCoverage/RPs/:rpname/SDKs/:sdk/Customize', async function(req, re
   const sdk = req.params.sdk;
   const triggerPR = req.query.triggerPR;
   const codePR = req.query.codePR;
-  await Customize(token, rp, sdk, triggerPR, codePR, org);
-  res.send('customize');
+  let excludeTest :boolean = false;
+  if (req.query.excludeTest !== undefined) {
+    excludeTest = req.query.excludeTest;
+  }
+  await Customize(token, rp, sdk, triggerPR, codePR, org, excludeTest);
+  res.send('customize. pipeline: https://devdiv.visualstudio.com/DevDiv/_build?definitionId=14243&_a=summary');
 });
 
 app.get('/DepthCoverage/RPs/:rpname/SDKs/:sdk/submit', async function(req, res) {
@@ -194,9 +222,15 @@ app.post('/DepthCoverage/RPs/:rpname/SDKs/:sdk/onboard/complete', async function
       sdkorg = ORG.MS;
     }
   }
-  const branch = "Depth-" + sdk.toLowerCase() + "-" + rp;
+  const branch = "depth-" + sdk.toLowerCase() + "-" + rp;
   /* delete depth-coverage rp branch */
-  await DeletePipelineBranch(token, org, REPO.DEPTH_COVERAGE_REPO, branch);
+  try {
+    await DeletePipelineBranch(token, org, REPO.DEPTH_COVERAGE_REPO, branch);
+  } catch(e) {
+    console.log("Failed to delete depthcoverage branch: " + branch);
+    console.log(e);
+  }
+  
 
   /* delete sdk rp branch. */
   let sdkrepo = "";
@@ -205,11 +239,24 @@ app.post('/DepthCoverage/RPs/:rpname/SDKs/:sdk/onboard/complete', async function
   } else if (sdk === SDK.CLI_CORE_SDK) {
     sdkrepo = REPO.CLI_REPO;
   }
-  await DeletePipelineBranch(token, sdkorg, sdkrepo, branch);
+  try {
+    await DeletePipelineBranch(token, sdkorg, sdkrepo, branch);
+    let codebranch = "depth-code-" + sdk.toLowerCase() + "-" + rp;
+    await DeletePipelineBranch(token, sdkorg, sdkrepo, codebranch);
+  } catch(e) {
+    console.log("Failed to delete sdk branch: " + branch);
+    console.log(e);
+  }
 
   /*delete swagger rp branch */
-  await DeletePipelineBranch(token, swaggerorg != undefined ? swaggerorg: org, REPO.SWAGGER_REPO, branch);
-      res.send('delete branch' + branch);
+  try {
+    await DeletePipelineBranch(token, swaggerorg != undefined ? swaggerorg: org, REPO.SWAGGER_REPO, branch);
+  } catch(e) {
+    console.log("Failed to delete swagger branch: " + branch);
+    console.log(e);
+  }
+
+  res.send('delete branch' + branch);
 });
 
 function normalizePort(val) {

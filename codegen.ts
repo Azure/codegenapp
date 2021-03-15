@@ -1,6 +1,7 @@
 import { ORG, SDK, README, REPO } from "./common";
-import {uploadToRepo, createPullRequest, getBlobContent, NewOctoKit, getCurrentCommit, createBranch, deleteBranch, getBranch, getPullRequest, listBranchs} from "gitrestutil/GitAPI"
+import {uploadToRepo, createPullRequest, getBlobContent, NewOctoKit, getCurrentCommit, createBranch, deleteBranch, getBranch, getPullRequest, listBranchs, listPullRequest, deleteFile} from "gitrestutil/GitAPI"
 import { TriggerOnboard, DeletePipelineBranch, DeleteAllDepthBranchs, submit} from "depthcoverage/dist/Onboard"
+import { ResourceAndOperation} from "depthcoverage/dist/QueryDepthCoverageReport"
 
 export async function ReadCustomizeFiles(token: string, org: string, repo: string, prNumber: number, fileList:string[]): Promise<string> {
     const octo = NewOctoKit(token);
@@ -35,7 +36,17 @@ export async function ReadFileFromRepo(token: string, org: string, repo: string,
     return content;
 }
 
-export async function Customize(token:string, rp: string, sdk: string, triggerPR: string, codePR: string, org: string = undefined) {
+export async function DeleteFilesFromRepo(token: string, org: string, repo: string, branch:string, filelist:string[]) {
+    const octo = NewOctoKit(token);
+    try {
+        deleteFile(octo, org, repo, branch, filelist[0]); 
+    } catch (e) {
+        console.log(e);
+    }
+    
+}
+
+export async function Customize(token:string, rp: string, sdk: string, triggerPR: string, codePR: string, org: string = undefined, excludeTest: boolean = false) {
     const octo = NewOctoKit(token);
     // const org = ORG.AZURE;
     let sdkorg = ORG.AZURE;
@@ -45,24 +56,60 @@ export async function Customize(token:string, rp: string, sdk: string, triggerPR
         sdk = sdk.toLowerCase();
     }
 
-    const branch = "Depth-" + sdk + "-" + rp;
+    const branch = "depth-" + sdk + "-" + rp;
 
     let sdkrepo = "";
     let readfile = README.CLI_README_FILE;
     if (sdk === SDK.TF_SDK) {
-        sdkrepo = REPO.SWAGGER_REPO;
+        sdkrepo = REPO.TF_PROVIDER_REPO;
         readfile = README.TF_README_FILE;
     } else if (sdk === SDK.CLI_CORE_SDK) {
         sdkrepo = REPO.CLI_REPO;
     }
 
+    const jsonMapFile: string = "ToGenerate.json";
+    const fs = require('fs');
+    let filepaths: string[] = [];
+
+    let content = await ReadFileFromRepo(token, ORG.AZURE, REPO.DEPTH_COVERAGE_REPO, branch, jsonMapFile);
+    /* exclude test. */
+    if (content !== undefined && content.length > 0) {
+        //let content = fs.readFileSync(jsonMapFile);
+        let resource:ResourceAndOperation = JSON.parse(content);
+        let excludes: string[] = [];
+        if (resource.excludeStages !== undefined && resource.excludeStages.length > 0) excludes = resource.excludeStages.split(";");
+        let ischanged: boolean = false;
+        if (excludeTest) {
+            if (excludes.indexOf("MockTest") === -1) {
+                ischanged = true;
+                excludes.push("MockTest");
+            }
+            if (excludes.indexOf("LiveTest") === -1) {
+                ischanged = true;
+                excludes.push("LiveTest");
+            }
+            resource.excludeStages = excludes.join(";");
+        } else {
+            let newArray = excludes.filter(item => item == "MockTest" || item == "LiveTest");
+            if (newArray.length !== excludes.length) {
+                resource.excludeStages = newArray.join(";");
+                ischanged = true;
+            }
+        }
+
+        if (ischanged) {
+            fs.writeFileSync(jsonMapFile, JSON.stringify(resource, null, 2));
+            filepaths.push(jsonMapFile);
+        }
+    }
+    
     const prNumber = codePR.split("/").pop();
     const filelist:string[] = [readfile, "schema.json"];
     await ReadCustomizeFiles(token, org !== undefined ? org :sdkorg, sdkrepo, +prNumber, filelist);
 
-    let filepaths: string[] = [];
+    
     /* copy configuration to swagger repo */
-    const fs = require('fs');
+    
     
     console.log(__dirname);
     const specpath = "specification/" + rp + "/resource-manager";
@@ -103,7 +150,7 @@ export async function Customize(token:string, rp: string, sdk: string, triggerPR
                 console.log("\nFile Contents of copied_file:");
             } 
         });
-        filepaths.push(swaggerSchemaPath)
+        filepaths.push(swaggerSchemaPath);
     }
 
     try {
@@ -149,7 +196,7 @@ export async function TriggerOnboard(rp:string, sdk:string, token: string, org: 
         const fs = require('fs');
         const RESOUCEMAPFile = "ToGenerate.json";
         const octo = NewOctoKit(token);
-        const branchName = "Onboard-" + sdk + "-" + rp;
+        const branchName = "onboard-" + sdk + "-" + rp;
         const baseCommit = await getCurrentCommit(octo, org, repo, basebranch);
         const targetBranch = await getBranch(octo, org, repo, branchName);
         if (targetBranch !== undefined) {
@@ -205,4 +252,12 @@ export async function Onboard(rp:string, sdk:string, token: string, swaggerorg:s
     } catch(err) {
         console.log(err);
     }
+}
+
+/* list pull request. */
+export async function listOpenPullRequest(token: string, org: string, repo: string, head: string, base:string):Promise<string[]> {
+    const octo = NewOctoKit(token);
+    return listPullRequest(octo, org, repo, "open", org + ":" + head, base);
+    // let result:string[] = [];
+    // return result;
 }
