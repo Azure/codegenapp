@@ -15,7 +15,7 @@ app.get('/', function(req, res) {
     res.send("hello world");
 });
 app.listen(port);
-
+let customizeTime = (new Date().getTime()) / 1000;
 app.get('/PullRequest', function(req, res) {
     res.send("<html><a href=\"https://github.com/Azure/depth-coverage-pipeline/pull/21\">pull request</a><html>")
 });
@@ -162,6 +162,12 @@ app.post('/DepthCoverage/Customize', function(req, res) {
 });
 
 app.get('/DepthCoverage/RPs/:rpname/SDKs/:sdk/Customize', async function(req, res) {
+  let currentSecond = (new Date().getTime()) / 1000;
+  if (currentSecond - customizeTime < 30) {
+    res.send("A customize was triggered. \n pipeline: https://devdiv.visualstudio.com/DevDiv/_build?definitionId=14196");
+    return;
+  }
+  customizeTime = currentSecond;
   console.log(req.params.rpname);
   console.log(req.params.sdk);
   // console.log(req.parameter.token);
@@ -178,7 +184,8 @@ app.get('/DepthCoverage/RPs/:rpname/SDKs/:sdk/Customize', async function(req, re
     excludeTest = req.query.excludeTest;
   }
   await Customize(token, rp, sdk, triggerPR, codePR, org, excludeTest);
-  res.send('customize. pipeline: https://devdiv.visualstudio.com/DevDiv/_build?definitionId=14243&_a=summary');
+  res.send('customize. pipeline: https://devdiv.visualstudio.com/DevDiv/_build?definitionId=14196');
+
 });
 
 app.get('/DepthCoverage/RPs/:rpname/SDKs/:sdk/submit', async function(req, res) {
