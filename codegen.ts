@@ -249,6 +249,10 @@ export async function Onboard(rp:string, sdk:string, token: string, swaggerorg:s
         }
          await createPullRequest(octo, org !== undefined ? org : sdkorg, sdkrepo, sdkbasebranch, branch, "[Depth Coverage, " + rp+ "]pull request from pipeline " + branch);
 
+         /* close work sdk branch. */
+         let workbranch = "depth-code-" + sdk + "-" + rp;
+         await DeletePipelineBranch(token, org !== undefined ? org : sdkorg, sdkrepo, workbranch);
+
     } catch(err) {
         console.log(err);
     }
