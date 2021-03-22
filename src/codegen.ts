@@ -1,7 +1,7 @@
 import { ORG, SDK, README, REPO } from "./common";
-import {uploadToRepo, createPullRequest, getBlobContent, NewOctoKit, getCurrentCommit, createBranch, deleteBranch, getBranch, getPullRequest, listBranchs, listPullRequest, deleteFile} from "gitrestutil/GitAPI"
-import { TriggerOnboard, DeletePipelineBranch, DeleteAllDepthBranchs, submit} from "depthcoverage/dist/Onboard"
-import { ResourceAndOperation} from "depthcoverage/dist/QueryDepthCoverageReport"
+import {uploadToRepo, createPullRequest, getBlobContent, NewOctoKit, getCurrentCommit, createBranch, deleteBranch, getBranch, getPullRequest, listBranchs, listPullRequest, deleteFile} from "./gitutil/GitAPI"
+import { TriggerOnboard, DeletePipelineBranch, DeleteAllDepthBranchs, submit} from "./depthcoverage/Onboard"
+import { ResourceAndOperation} from "./depthcoverage/QueryDepthCoverageReport"
 
 export async function ReadCustomizeFiles(token: string, org: string, repo: string, prNumber: number, fileList:string[]): Promise<string> {
     const octo = NewOctoKit(token);
@@ -191,7 +191,7 @@ export async function OnboardComplete(token: string, rp: string, sdk: string, or
 }
 
 /* trigger a RP onboard. */
-export async function TriggerOnboard(rp:string, sdk:string, token: string, org: string, repo: string, basebranch: string = 'main') {
+export async function TriggerRPOnboard(rp:string, sdk:string, token: string, org: string, repo: string, basebranch: string = 'main') {
     try {
         const fs = require('fs');
         const RESOUCEMAPFile = "ToGenerate.json";

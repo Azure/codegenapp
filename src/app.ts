@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
-import { TriggerOnboard, DeletePipelineBranch, DeleteAllDepthBranchs, submit, uploadToRepo} from "depthcoverage/dist/Onboard"
+import { TriggerOnboard, DeletePipelineBranch, DeleteAllDepthBranchs, submit} from "./depthcoverage/Onboard"
 import { ORG, SDK, REPO, README } from "./common";
 import { Customize, Onboard, listOpenPullRequest } from "./codegen";
 import { IngestCandidates } from "./CandidateService";
-import { NewOctoKit } from "gitrestutil/GitAPI";
+import { NewOctoKit, uploadToRepo } from "./gitutil/GitAPI";
 
 var express = require('express');
 const app = express();
@@ -27,11 +27,6 @@ app.use(
   );
   
 app.use(express.json());
-app.put('/DepthCoverage/Trigger', function(req, res){
-    console.log(req.body);
-    console.log(req.body.pipelinepr)
-    res.send('put method');
-});
 
 app.post('/DepthCoverage/sdks/:sdk/candidates', function(req, res) {
   const token = req.body.token;
@@ -54,7 +49,8 @@ app.post('/DepthCoverage/sdks/:sdk/candidates', function(req, res) {
   let table = req.body.table;
   IngestCandidates(__dirname+'/' + filepath, dbserver, db, dbuser, dbpw, table);
   res.send("ingest candidate");
-})
+});
+
 app.post('/DepthCoverage/Trigger', async function(req, res){
   console.log(req.body);
   console.log(req.body.pipelinepr)
@@ -119,22 +115,19 @@ app.post('/DepthCoverage/generateCodePR',  async function(req, res){
   try {
     const pulls: string[] = await listOpenPullRequest(token, org, repo, branch, basebranch);
     if (pulls.length > 0) {
-      // const octo = NewOctoKit(token);
-      // const sdk = branch.split("-")[1];
-      
-      // let readfile = README.CLI_README_FILE;
-      // if (sdk === SDK.TF_SDK) {
-      //     readfile = README.TF_README_FILE;
-      // }
-      // await uploadToRepo(octo, [readfile], org, repo, branch);
       res.send(pulls[0]);
     } else {
-      const prlink = await submit(token, org, repo, title, branch, basebranch);
-      res.send(prlink);
+      const {prlink, err} = await submit(token, org, repo, title, branch, basebranch);
+      if (err !== undefined) {
+        res.statusCode = 400;
+        res.send("error");
+      } else {
+        res.send(prlink);
+      }
     }
-    
   }catch(e) {
     console.log(e);
+    res.statusCode = 400;
     res.send("error");
   }
   
@@ -263,7 +256,7 @@ app.post('/DepthCoverage/RPs/:rpname/SDKs/:sdk/onboard/complete', async function
     console.log(e);
   }
 
-  res.send('delete branch' + branch);
+  res.send(rp + " " + sdk + ' onboarding is completed.');
 });
 
 function normalizePort(val) {
