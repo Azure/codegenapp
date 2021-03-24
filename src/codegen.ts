@@ -180,7 +180,7 @@ export async function OnboardComplete(token: string, rp: string, sdk: string, or
     /* delete sdk rp branch. */
     let sdkrepo = "";
     if (sdk === SDK.TF_SDK) {
-        sdkrepo = REPO.SWAGGER_REPO;
+        sdkrepo = REPO.TF_PROVIDER_REPO;
     } else if (sdk === SDK.CLI_CORE_SDK) {
         sdkrepo = REPO.CLI_REPO;
     }
@@ -241,7 +241,7 @@ export async function Onboard(rp:string, sdk:string, token: string, swaggerorg:s
         let sdkbasebranch = "master";
         let sdkorg = ORG.AZURE;
         if (sdk === SDK.TF_SDK) {
-            sdkrepo = REPO.SWAGGER_REPO;
+            sdkrepo = REPO.TF_PROVIDER_REPO;
             sdkorg = ORG.MS;
         } else if (sdk === SDK.CLI_CORE_SDK) {
             sdkrepo = REPO.CLI_REPO;
