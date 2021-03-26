@@ -1,43 +1,6 @@
 // import { SQLServerConnection } from "./SqlServerConnect";
 import sql from "mssql"
-
-export class ResourceAndOperation {
-    public constructor(RPName: string, readme:string, resources: DepthCoverageResource[], target: string) {
-        this.RPName = RPName;
-        this.readmeFile = readme;
-        this.resources = resources;
-        this.target = target;
-    }
-    public RPName: string;
-    public readmeFile: string;
-    public target: string;
-    public resources: DepthCoverageResource[] = [];
-    public ignoreFailures: string;
-    public excludeStages: string;
-    public tag:string;
-    // public Resource: string;
-    // public operations: DepthCoverageOperation[] = [];
-}
-export class DepthCoverageResource {
-    public constructor(rs: string, version: string) {
-        this.Resource = rs;
-        this.APIVersion = version;
-    }
-    public Resource: string;
-    public APIVersion: string = undefined;
-    public operations: DepthCoverageOperation[] = [];
-    public tag:string;
-}
-export class DepthCoverageOperation {
-    public constructor(id:string, version:string, jsonfile: string) {
-        this.OperationId = id;
-        this.version = version;
-        this.jsonFilePath = jsonfile;
-    }
-    public OperationId: string;
-    public version: string;
-    public jsonFilePath: string;
-}
+import { ResourceAndOperation, OnboardOperation, OnboardResource } from "../common";
 
 /* the operation schema in depth coverage db. */
 export class Operation {
@@ -87,20 +50,26 @@ export enum DepthCoverageType {
     DEPTH_COVERAGE_TYPE_CLI_NOT_SUPPOT_RESOURCE = "CLI_NOT_SUPPOT_RESOURCE"
 }
 
-export class CandidateResources {
-    public constructor(rp: string, rs: string, apiversion: string = "ALL", tag:string = "ALL") {
+export class CandidateResource {
+    public constructor(rp: string, rs: string, fileName:string = "ALL", apiversion: string = "ALL", tag:string = "ALL", start:string = "", end:string="") {
         this.resourceProvider = rp;
         this.fullResourceName = rs;
+        this.fileName = fileName;
         this.apiVersion = apiversion;
         this.tag = tag;
+        this.startDate = start;
+        this.endDate = end;
     }
     public resourceProvider: string;
     public fullResourceName: string;
-    public apiVersion: string;
-    public tag:string;
+    public fileName:string;
+    public apiVersion: string = "ALL";
+    public tag:string = "ALL";
+    public startDate: string;
+    public endDate: string;
 }
-export async function QueryCandidateResources(server: string, database: string, user: string, password:string, depthcoverageType: string): Promise<CandidateResources[]> {
-    let candidates: CandidateResources[] = [];
+export async function QueryCandidateResources(server: string, database: string, user: string, password:string, depthcoverageType: string): Promise<CandidateResource[]> {
+    let candidates: CandidateResource[] = [];
     var sql = require("mssql");
     var config = {
         user: user,
@@ -134,7 +103,7 @@ export async function QueryCandidateResources(server: string, database: string, 
         let result = await conn.request()
                             .query(queryStr);
         for (let record of result.recordset) {
-            let rs: CandidateResources = new CandidateResources(record["resourceProvider"], record["fullResourceName"], record["apiVersion"], record["tag"]);
+            let rs: CandidateResource = new CandidateResource(record["resourceProvider"], record["fullResourceName"], record["fileName"], record["apiVersion"], record["tag"]);
             candidates.push(rs);
         }
     }catch(e) {
@@ -207,7 +176,7 @@ export async function QueryDepthCoverageReport(server: string, database: string,
     return missing;
 }
 
-function IsCandidateResource(candidates: CandidateResources[], resourceProvider:string, fullResourceName: string):boolean {
+function IsCandidateResource(candidates: CandidateResource[], resourceProvider:string, fullResourceName: string):boolean {
     for (let candidate of candidates) {
         if (candidate.resourceProvider === resourceProvider && (candidate.fullResourceName.toLowerCase() === "all" || candidate.fullResourceName === fullResourceName)) return true;
     }
@@ -215,7 +184,7 @@ function IsCandidateResource(candidates: CandidateResources[], resourceProvider:
     return false;
 }
 
-function GetCandidateResource(candidates: CandidateResources[], resourceProvider:string, fullResourceName: string): CandidateResources {
+function GetCandidateResource(candidates: CandidateResource[], resourceProvider:string, fullResourceName: string): CandidateResource {
     for (let candidate of candidates) {
         if (candidate.resourceProvider === resourceProvider && (candidate.fullResourceName.toLowerCase() === "all" || candidate.fullResourceName === fullResourceName)) return candidate;
     }
@@ -223,7 +192,7 @@ function GetCandidateResource(candidates: CandidateResources[], resourceProvider
     return undefined;
 }
 
-export async function ConvertOperationToDepthCoverageResourceAndOperation(ops: Operation[], sdk:string, supportedResource: CandidateResources[]=undefined): Promise<ResourceAndOperation[]> {
+export async function ConvertOperationToDepthCoverageResourceAndOperation(ops: Operation[], sdk:string, supportedResource: CandidateResource[]=undefined): Promise<ResourceAndOperation[]> {
     let result: ResourceAndOperation[] = [];
     const specFileRegex = "(specification/)+(.*)/(resourcemanager|resource-manager|dataplane|data-plane|control-plane)/(.*)/(preview|stable|privatepreview)/(.*?)/(example)?(.*)";
     for (let op of ops) {
@@ -279,11 +248,11 @@ export async function ConvertOperationToDepthCoverageResourceAndOperation(ops: O
         if (rs !== undefined) {
             let find = GetOperation(rs.operations, op.operationId);
             if (find === undefined) {
-                rs.operations.push(new DepthCoverageOperation(op.operationId, apiVersion, op.fileName));
+                rs.operations.push(new OnboardOperation(op.operationId, apiVersion, op.fileName));
             }
         } else {
-            rs = new DepthCoverageResource(op.fullResourceName, apiVersion);
-            rs.operations.push(new DepthCoverageOperation(op.operationId, apiVersion, op.fileName));
+            rs = new OnboardResource(op.fullResourceName, apiVersion);
+            rs.operations.push(new OnboardOperation(op.operationId, apiVersion, op.fileName));
             rp.resources.push(rs);
         }
         if (tag !== undefined) rs.tag = tag;
@@ -292,7 +261,7 @@ export async function ConvertOperationToDepthCoverageResourceAndOperation(ops: O
     return result;
 }
 
-export async function ConvertResourceToDepthCoverageResourceAndOperation(resourcelist: Resource[], sdk:string, supportedResource: CandidateResources[]=undefined): Promise<ResourceAndOperation[]> {
+export async function ConvertResourceToDepthCoverageResourceAndOperation(resourcelist: Resource[], sdk:string, supportedResource: CandidateResource[]=undefined): Promise<ResourceAndOperation[]> {
     let result: ResourceAndOperation[] = [];
     const specFileRegex = "(specification/)+(.*)/(resourcemanager|resource-manager|dataplane|data-plane|control-plane)/(.*)/(preview|stable|privatepreview)/(.*?)/(example)?(.*)";
     for (let crs of resourcelist) {
@@ -341,7 +310,7 @@ export async function ConvertResourceToDepthCoverageResourceAndOperation(resourc
         }
         let rs = GetResource(rp.resources, crs.fullResourceName);
         if (rs === undefined) {
-            rs = new DepthCoverageResource(crs.fullResourceName, apiVersion);
+            rs = new OnboardResource(crs.fullResourceName, apiVersion);
             rp.resources.push(rs);
         }
         if (tag !== undefined) rs.tag = tag;
@@ -356,14 +325,14 @@ function GetResourceProvide(resources: ResourceAndOperation[], rp: string) {
 
     return undefined;
 }
-function GetResource(resources: DepthCoverageResource[], resource: string): DepthCoverageResource {
+function GetResource(resources: OnboardResource[], resource: string): OnboardResource {
     for (let r of resources) {
         if (r.Resource === resource) return r;
     }
     return undefined;
 }
 
-function GetOperation(operations: DepthCoverageOperation[], id:string) {
+function GetOperation(operations: OnboardOperation[], id:string) {
     for (let op of operations) {
         if (op.OperationId === id) return op;
     }

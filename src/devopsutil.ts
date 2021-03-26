@@ -2,7 +2,7 @@ import * as azdev from "azure-devops-node-api";
 import { ConnectionData } from "azure-devops-node-api/interfaces/LocationsInterfaces";
 import { GitRepository } from "azure-devops-node-api/interfaces/TfvcInterfaces";
 import { GitApi, IGitApi } from "azure-devops-node-api/GitApi";
-import { GitRepositoryCreateOptions } from "azure-devops-node-api/interfaces/GitInterfaces";
+import { GitRepositoryCreateOptions, GitCommitRef, GitCommit, GitTreeRef, GitQueryCommitsCriteria } from "azure-devops-node-api/interfaces/GitInterfaces";
 
 
 export async function getApi(serverUrl: string, token: string): Promise<azdev.WebApi> {
@@ -25,7 +25,7 @@ export async function getApi(serverUrl: string, token: string): Promise<azdev.We
 
 export async function getWebApi(serverUrl?: string): Promise<azdev.WebApi> {
     serverUrl = serverUrl || getEnv("API_URL");
-    return await this.getApi(serverUrl);
+    return await getApi(serverUrl, "4mk3ddbwdjlu53npp2xzeoacsivyxv5iemghv34mtxcynbqforfa");
 }
 
 function getEnv(name: string): string {
@@ -76,4 +76,29 @@ export async function getReposityByName(serverUrl:string, project: string, repon
     return undefined;
 }
 
-//export async function 
+export async function getPullRequest() {
+
+}
+
+export async function readRepoFile(filepath:string, serverUrl:string, project: string, reponame:string, branch:string = "main") {
+    const gitApiObject = await getGitApi(serverUrl);
+    let searchCriteria = <GitQueryCommitsCriteria>{$top:1, itemVersion:{version: branch}};
+    // searchCriteria.itemVersion.version = branch;
+    const repo = await getReposityByName(serverUrl, project, reponame);
+    if (repo !== undefined) {
+        let commits : GitCommit[] = await gitApiObject.getCommits(repo.id, searchCriteria, project, 0, 1);
+        let commit:GitCommit = commits[0];
+        let treesha = commit.treeId;
+        let tree:GitTreeRef = await gitApiObject.getTree(repo.id, treesha, project);
+        if (tree === undefined) {
+            for (let item of tree.treeEntries) {
+                if (item.relativePath === filepath) {
+                    let content = await gitApiObject.getBlobContent(repo.id, item.objectId, project);
+                    break;
+                }
+            }
+        }
+    }
+}
+
+// readFile("config/CLICandidate.csv", "https://dev.azure.com", "devdiv", "codegen-pipeline", "main");

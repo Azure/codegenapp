@@ -1,7 +1,8 @@
-import { Operation, ResourceAndOperation, DepthCoverageType, AutorestSDK, QueryCandidateResources, CandidateResources, QueryDepthCoverageReport, ConvertOperationToDepthCoverageResourceAndOperation, ConvertResourceToDepthCoverageResourceAndOperation } from "./QueryDepthCoverageReport";
+import { Operation, DepthCoverageType, AutorestSDK, QueryCandidateResources, QueryDepthCoverageReport, ConvertOperationToDepthCoverageResourceAndOperation, ConvertResourceToDepthCoverageResourceAndOperation, CandidateResource } from "./QueryDepthCoverageReport";
 import {uploadToRepo, createPullRequest, getBlobContent, NewOctoKit, getCurrentCommit, createBranch, deleteBranch, getBranch, getPullRequest, listBranchs, readCurrentCommitContent} from "../gitutil/GitAPI"
+import { ResourceAndOperation } from "../common";
 
-export async function RetriveResourceToGenerate(server: string, db: string, user: string, pw: string, depthcoverageType: string, supportedResources:CandidateResources[] = undefined) : Promise<ResourceAndOperation[]>{
+export async function RetriveResourceToGenerate(server: string, db: string, user: string, pw: string, depthcoverageType: string, supportedResources:CandidateResource[] = undefined) : Promise<ResourceAndOperation[]>{
     const opOrresources:any[] = await QueryDepthCoverageReport(server, db, user, pw, depthcoverageType);
     //const supportedResource:Set<string> = new Set(["Microsoft.Security/devices", "Microsoft.Consumption/marketplaces", "Microsoft.CertificateRegistration/certificateOrders"]);
     // const supportedService:Set<string> = new Set(["compute", "authorization", "storage", "sql", "web", "keyvault","network", "resources"]);
@@ -45,7 +46,7 @@ export async function DeletePipelineBranch(token: string, org: string, repo: str
 }
 
 export async function TriggerOnboard(dbserver: string, db:string, dbuser: string, dbpw: string, token: string, org: string, repo: string, basebranch: string = 'main', supported:string[] = undefined) {
-    let tfsupportedResource:CandidateResources[] = undefined;
+    let tfsupportedResource:CandidateResource[] = undefined;
     const tfcandidates = await QueryCandidateResources(dbserver, db, dbuser, dbpw, DepthCoverageType.DEPTH_COVERAGE_TYPE_TF_NOT_SUPPORT_RESOURCE);
     if (tfcandidates.length > 0 || (supported !== undefined && supported.length > 0)) {
         tfsupportedResource = [];
@@ -55,14 +56,14 @@ export async function TriggerOnboard(dbserver: string, db:string, dbuser: string
 
         if (supported !== undefined) {
             for (let s of supported) {
-                const candidate = new CandidateResources(s, "ALL");
+                const candidate = new CandidateResource(s, "ALL");
                 tfsupportedResource.push(candidate);
             }
         }
     }
     const tfresources = await RetriveResourceToGenerate(dbserver, db, dbuser, dbpw, DepthCoverageType.DEPTH_COVERAGE_TYPE_TF_NOT_SUPPORT_RESOURCE, tfsupportedResource);
 
-    let clisupportedResource:CandidateResources[] = undefined;
+    let clisupportedResource:CandidateResource[] = undefined;
     const clicandidates = await QueryCandidateResources(dbserver, db, dbuser, dbpw, DepthCoverageType.DEPTH_COVERAGE_TYPE_CLI_NOT_SUPPORT_OPERATION);
     if (clicandidates.length > 0 || (supported !== undefined && supported.length > 0)) {
         clisupportedResource = [];
@@ -72,7 +73,7 @@ export async function TriggerOnboard(dbserver: string, db:string, dbuser: string
 
         if (supported !== undefined) {
             for (let s of supported) {
-                const candidate = new CandidateResources(s, "ALL");
+                const candidate = new CandidateResource(s, "ALL");
                 clisupportedResource.push(candidate);
             }
         }
@@ -89,6 +90,7 @@ export async function TriggerOnboard(dbserver: string, db:string, dbuser: string
     const fs = require('fs');
     for (let rs of resources) {
         try {
+            rs.generateResourceList();
             const branchName = "depth-" + rs.target + "-" + rs.RPName;
             const baseCommit = await getCurrentCommit(octo, org, repo, basebranch);
             const targetBranch = await getBranch(octo, org, repo, branchName);

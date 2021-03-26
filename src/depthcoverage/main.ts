@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { QueryDepthCoverageReport, Operation, ResourceAndOperation, DepthCoverageType, ConvertOperationToDepthCoverageResourceAndOperation, ConvertResourceToDepthCoverageResourceAndOperation, AutorestSDK, CandidateResources } from "./QueryDepthCoverageReport";
+import { QueryDepthCoverageReport, Operation, DepthCoverageType, ConvertOperationToDepthCoverageResourceAndOperation, ConvertResourceToDepthCoverageResourceAndOperation, AutorestSDK, CandidateResource } from "./QueryDepthCoverageReport";
 import { fstat } from "fs";
 import { RetriveResourceToGenerate, DeletePipelineBranch, ReadPR, ReadPRFiles } from "./Onboard";
 import {uploadToRepo, createPullRequest, getBlobContent, NewOctoKit, getCurrentCommit, createBranch, deleteBranch, getBranch, getPullRequest} from "../gitutil/GitAPI"
@@ -37,9 +37,9 @@ async function SubmitPR(dbserver: string, db:string, dbuser: string, dbpw: strin
 
     // let resources = tfresources.concat(cliresources);
     const supportedService:Set<string> = new Set(["compute", "network"]);
-    const supportedResource:CandidateResources[] = [];
-    supportedResource.push(new CandidateResources("compute", "ALL"));
-    supportedResource.push(new CandidateResources("network", "ALL"));
+    const supportedResource:CandidateResource[] = [];
+    supportedResource.push(new CandidateResource("compute", "ALL"));
+    supportedResource.push(new CandidateResource("network", "ALL"));
     let resources = await RetriveResourceToGenerate(dbserver, db, dbuser, dbpw, DepthCoverageType.DEPTH_COVERAGE_TYPE_CLI_NOT_SUPPORT_OPERATION, supportedResource);
 
     const RESOUCEMAPFile = "ToGenerate.json";
