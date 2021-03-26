@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 
-import { TriggerOnboard, DeletePipelineBranch, DeleteAllDepthBranchs, submit, uploadToRepo} from "depthcoverage/dist/Onboard"
-import { ORG, SDK, REPO, README } from "./common";
-import { Customize, Onboard, listOpenPullRequest } from "./codegen";
-import { NewOctoKit } from "gitrestutil/GitAPI";
-import { IngestCandidates } from "./CandidateService";
+import { TriggerOnboard, DeletePipelineBranch, DeleteAllDepthBranchs, submit} from "./depthcoverage/Onboard"
+import { ORG, SDK, REPO, README, OnboardType } from "./common";
+import { Customize, Onboard, listOpenPullRequest, TriggerRPOnboard, ConfigureOnboard } from "./codegen";
+import { IngestCandidates, addCandidate } from "./CandidateService";
+import { NewOctoKit, uploadToRepo } from "./gitutil/GitAPI";
+import { CandidateResource } from "./depthcoverage/QueryDepthCoverageReport";
 
 var express = require('express');
 const app = express();
@@ -27,11 +28,6 @@ app.use(
   );
   
 app.use(express.json());
-app.put('/DepthCoverage/Trigger', function(req, res){
-    console.log(req.body);
-    console.log(req.body.pipelinepr)
-    res.send('put method');
-});
 
 app.post('/DepthCoverage/sdks/:sdk/candidates', function(req, res) {
   const token = req.body.token;
@@ -50,11 +46,36 @@ app.post('/DepthCoverage/sdks/:sdk/candidates', function(req, res) {
   ) {
       throw new Error("Missing required parameter");
   }
-  let filepath = req.body.candidatefile;
-  let table = req.body.table;
-  IngestCandidates(__dirname+'/' + filepath, dbserver, db, dbuser, dbpw, table);
+  let candidates = req.body.candidates;
+  //let table = req.body.table;
+  IngestCandidates(candidates, dbserver, db, dbuser, dbpw, sdk);
   res.send("ingest candidate");
-})
+});
+
+app.post('/DepthCoverage/sdks/:sdk/candidate/RPs/:rpname/resource/:rsname', function(req, res) {
+  const token = req.body.token;
+  const org = req.body.org;
+  const repo = req.body.repo;
+  const dbserver=req.body.DBServer;
+  const db=req.body.Database;
+  const dbuser = req.body.DBUsername;
+  const dbpw = req.body.DBPassword;
+  const sdk = req.params.sdk;
+  const rp = req.params.rpname;
+  const rs = req.params.rsname;
+  const apiversion = req.body.apiversion;
+  const tag = req.body.tag;
+  const start = req.body.start;
+  const end = req.body.end;
+
+  let candidate: CandidateResource = new CandidateResource(rp, rs, apiversion, tag, start, end);
+
+  addCandidate(candidate, dbserver, db, dbuser, dbpw, sdk);
+
+  res.send("ingest candidate(" + rp + "," + rs + ")");
+
+});
+
 app.post('/DepthCoverage/Trigger', async function(req, res){
   console.log(req.body);
   console.log(req.body.pipelinepr)
@@ -119,22 +140,19 @@ app.post('/DepthCoverage/generateCodePR',  async function(req, res){
   try {
     const pulls: string[] = await listOpenPullRequest(token, org, repo, branch, basebranch);
     if (pulls.length > 0) {
-      // const octo = NewOctoKit(token);
-      // const sdk = branch.split("-")[1];
-      
-      // let readfile = README.CLI_README_FILE;
-      // if (sdk === SDK.TF_SDK) {
-      //     readfile = README.TF_README_FILE;
-      // }
-      // await uploadToRepo(octo, [readfile], org, repo, branch);
       res.send(pulls[0]);
     } else {
-      const prlink = await submit(token, org, repo, title, branch, basebranch);
-      res.send(prlink);
+      const {prlink, err} = await submit(token, org, repo, title, branch, basebranch);
+      if (err !== undefined) {
+        res.statusCode = 400;
+        res.send("error");
+      } else {
+        res.send(prlink);
+      }
     }
-    
   }catch(e) {
     console.log(e);
+    res.statusCode = 400;
     res.send("error");
   }
   
@@ -263,7 +281,36 @@ app.post('/DepthCoverage/RPs/:rpname/SDKs/:sdk/onboard/complete', async function
     console.log(e);
   }
 
-  res.send('delete branch' + branch);
+  res.send(rp + " " + sdk + ' onboarding is completed.');
+});
+
+app.post('/onboard/RPs/:rpname/SDKs/:sdk', async function(req, res) {
+  const token = req.body.token;
+  const rp = req.params.rpname;
+  const sdk:string = req.params.sdk;
+  const org = ORG.AZURE;
+  const platform = req.body.platform;
+  let branch = "main";
+  if (platform !== undefined && platform.toLowerCase() === "dev") branch = "dev";
+  await TriggerRPOnboard(rp, sdk, token, org, REPO.DEPTH_COVERAGE_REPO, branch, OnboardType.ADHOC_ONBOARD);
+
+  res.send("Trigger onboard " + rp + ", sdk:" + sdk);
+});
+
+/* update the configuration of the pipeline. */
+app.patch('/onboard/PRs/:rpname/SDKs/:sdk', async function(req, res) {
+  const token = req.body.token;
+  const rp = req.params.rpname;
+  const sdk:string = req.params.sdk;
+  const org = ORG.AZURE;
+  const ignore = req.body.ignore;
+  const excludeStages = req.body.excludeStages;
+  const tag = req.body.tag;
+
+  await ConfigureOnboard(token, rp, sdk, tag, ignore, excludeStages, OnboardType.ADHOC_ONBOARD);
+
+  res.send("Update onboard " + rp + ", sdk:" + sdk);
+
 });
 
 function normalizePort(val) {

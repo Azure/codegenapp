@@ -1,7 +1,6 @@
-import { ORG, SDK, README, REPO } from "./common";
-import {uploadToRepo, createPullRequest, getBlobContent, NewOctoKit, getCurrentCommit, createBranch, deleteBranch, getBranch, getPullRequest, listBranchs, listPullRequest, deleteFile} from "gitrestutil/GitAPI"
-import { TriggerOnboard, DeletePipelineBranch, DeleteAllDepthBranchs, submit} from "depthcoverage/dist/Onboard"
-import { ResourceAndOperation} from "depthcoverage/dist/QueryDepthCoverageReport"
+import { ORG, SDK, README, REPO, OnboardType, ResourceAndOperation } from "./common";
+import {uploadToRepo, createPullRequest, getBlobContent, NewOctoKit, getCurrentCommit, createBranch, deleteBranch, getBranch, getPullRequest, listBranchs, listPullRequest, deleteFile} from "./gitutil/GitAPI"
+import { TriggerOnboard, DeletePipelineBranch, DeleteAllDepthBranchs, submit} from "./depthcoverage/Onboard"
 
 export async function ReadCustomizeFiles(token: string, org: string, repo: string, prNumber: number, fileList:string[]): Promise<string> {
     const octo = NewOctoKit(token);
@@ -44,6 +43,35 @@ export async function DeleteFilesFromRepo(token: string, org: string, repo: stri
         console.log(e);
     }
     
+}
+
+export async function ConfigureOnboard(token:string, rp: string, sdk: string, tag:string, ignore: string = undefined, exclude: string = undefined, onboardType: string = OnboardType.DEPTH_COVERAGE) {
+    const octo = NewOctoKit(token);
+    const branch = onboardType + "-" + sdk + "-" + rp;
+    const jsonMapFile: string = "ToGenerate.json";
+    let filepaths: string[] = [];
+    let content = await ReadFileFromRepo(token, ORG.AZURE, REPO.DEPTH_COVERAGE_REPO, branch, jsonMapFile);
+    let ischanged = false;
+    const fs = require('fs');
+    if (content !== undefined && content.length > 0) {
+        let resource:ResourceAndOperation = JSON.parse(content);
+        if (tag !== undefined && tag.length > 0) resource.tag = tag;
+        if (ignore !== undefined && ignore.length > 0) resource.ignoreFailures = ignore;
+        if (exclude !== undefined && exclude.length > 0) resource.excludeStages = exclude;
+        if (ischanged) {
+            fs.writeFileSync(jsonMapFile, JSON.stringify(resource, null, 2));
+            filepaths.push(jsonMapFile);
+        }    
+    }
+    
+    if (filepaths.length > 0) {
+        try {
+            /* update depth-coverage-pipeline trigger pull request. */
+            await uploadToRepo(octo, filepaths, ORG.AZURE, REPO.DEPTH_COVERAGE_REPO, branch);
+        } catch(e) {
+            console.log(e);
+        }
+    }
 }
 
 export async function Customize(token:string, rp: string, sdk: string, triggerPR: string, codePR: string, org: string = undefined, excludeTest: boolean = false) {
@@ -191,12 +219,16 @@ export async function OnboardComplete(token: string, rp: string, sdk: string, or
 }
 
 /* trigger a RP onboard. */
-export async function TriggerOnboard(rp:string, sdk:string, token: string, org: string, repo: string, basebranch: string = 'main') {
+export async function TriggerRPOnboard(rp:string, sdk:string, token: string, org: string, repo: string, basebranch: string = 'main', onboardType:string=OnboardType.DEPTH_COVERAGE) {
     try {
         const fs = require('fs');
         const RESOUCEMAPFile = "ToGenerate.json";
+        const readme:string = "specification/" + rp+ "/resource-manager/readme.md"
+        let ToGenerate: ResourceAndOperation = new ResourceAndOperation(rp, readme, [], sdk);
+        ToGenerate.onboardType = onboardType;
+        fs.writeFileSync(RESOUCEMAPFile, JSON.stringify(ToGenerate, null, 2));
         const octo = NewOctoKit(token);
-        const branchName = "onboard-" + sdk + "-" + rp;
+        const branchName = onboardType + "-" + sdk + "-" + rp;
         const baseCommit = await getCurrentCommit(octo, org, repo, basebranch);
         const targetBranch = await getBranch(octo, org, repo, branchName);
         if (targetBranch !== undefined) {
@@ -248,6 +280,10 @@ export async function Onboard(rp:string, sdk:string, token: string, swaggerorg:s
             sdkbasebranch="dev";
         }
          await createPullRequest(octo, org !== undefined ? org : sdkorg, sdkrepo, sdkbasebranch, branch, "[Depth Coverage, " + rp+ "]pull request from pipeline " + branch);
+
+         /* close work sdk branch. */
+         let workbranch = "depth-code-" + sdk + "-" + rp;
+         await DeletePipelineBranch(token, org !== undefined ? org : sdkorg, sdkrepo, workbranch);
 
     } catch(err) {
         console.log(err);
