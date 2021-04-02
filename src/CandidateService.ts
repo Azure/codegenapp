@@ -1,7 +1,7 @@
 import { readCVS, SQLStr, CandidateTable, SDK } from "./common";
 import { CandidateResource } from "./depthcoverage/QueryDepthCoverageReport";
 
-export async function IngestCandidatesFromFile(filepath:string, server: string, database: string, user: string, password:string, table: string) {
+export async function IngestCandidatesFromFile(filepath:string, server: string, database: string, user: string, password:string, table: string) : Promise<any> {
     let candidates: any[] = readCVS(filepath);
 
     var sql = require("mssql");
@@ -40,11 +40,13 @@ export async function IngestCandidatesFromFile(filepath:string, server: string, 
         }
     }catch(e) {
         console.log(e);
+        return e;
     }
     
+    return undefined;
 }
 
-export async function IngestCandidates(candidates:CandidateResource[], server: string, database: string, user: string, password:string, sdk: string) {
+export async function IngestCandidates(candidates:CandidateResource[], server: string, database: string, user: string, password:string, sdk: string) : Promise<any>{
     var sql = require("mssql");
     var config = {
         user: user,
@@ -90,10 +92,13 @@ export async function IngestCandidates(candidates:CandidateResource[], server: s
         }
     }catch(e) {
         console.log(e);
-    }  
+        return e;
+    } 
+
+    return undefined;
 }
 
-export async function addCandidate(candidate:CandidateResource, server: string, database: string, user: string, password:string, sdk: string) {
+export async function addCandidate(candidate:CandidateResource, server: string, database: string, user: string, password:string, sdk: string): Promise<any> {
 
     var sql = require("mssql");
     var config = {
@@ -142,6 +147,8 @@ export async function addCandidate(candidate:CandidateResource, server: string, 
         
     }catch(e) {
         console.log(e);
+        return e;
     }
     
+    return undefined;
 }
