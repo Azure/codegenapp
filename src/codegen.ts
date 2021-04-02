@@ -118,7 +118,7 @@ export async function Customize(token:string, rp: string, sdk: string, triggerPR
             }
             resource.excludeStages = excludes.join(";");
         } else {
-            let newArray = excludes.filter(item => item == "MockTest" || item == "LiveTest");
+            let newArray = excludes.filter(item => item !== "MockTest" && item !== "LiveTest");
             if (newArray.length !== excludes.length) {
                 resource.excludeStages = newArray.join(";");
                 ischanged = true;
