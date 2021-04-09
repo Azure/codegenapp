@@ -185,6 +185,7 @@ function IsCandidateResource(candidates: CandidateResource[], resourceProvider:s
 }
 
 function GetCandidateResource(candidates: CandidateResource[], resourceProvider:string, fullResourceName: string): CandidateResource {
+    if (candidates === undefined) return undefined;
     for (let candidate of candidates) {
         if (candidate.resourceProvider === resourceProvider && (candidate.fullResourceName.toLowerCase() === "all" || candidate.fullResourceName === fullResourceName)) return candidate;
     }
@@ -222,13 +223,13 @@ export async function ConvertOperationToDepthCoverageResourceAndOperation(ops: O
         if (supportedResource !== undefined && !IsCandidateResource(supportedResource, serviceName, op.fullResourceName)) continue;
         /* use api-version in candidate. */
         let candidate = GetCandidateResource(supportedResource, serviceName, op.fullResourceName);
-        if (candidate.apiVersion.toLowerCase() != "all") {
+        if (candidate !== undefined && candidate.apiVersion.toLowerCase() != "all") {
             apiVersion = candidate.apiVersion;
         }
         
         /*use tag in candidate. */
         let tag:string = undefined;
-        if (candidate.tag !== undefined && candidate.tag !== null && candidate.tag.toLowerCase() != "all") {
+        if (candidate != undefined && candidate.tag !== undefined && candidate.tag !== null && candidate.tag.toLowerCase() != "all") {
             tag = candidate.tag;
         }
         let rp = GetResourceProvide(result, serviceName);
@@ -292,7 +293,7 @@ export async function ConvertResourceToDepthCoverageResourceAndOperation(resourc
         let candidate = GetCandidateResource(supportedResource, serviceName, crs.fullResourceName);
         /*use tag in candidate. */
         let tag:string = undefined;
-        if (candidate.tag !== undefined && candidate.tag !== null && candidate.tag.toLowerCase() != "all") {
+        if (candidate !== undefined && candidate.tag !== undefined && candidate.tag !== null && candidate.tag.toLowerCase() != "all") {
             tag = candidate.tag;
         }
         let rp = GetResourceProvide(result, serviceName);
