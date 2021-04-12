@@ -257,6 +257,7 @@ export async function ConvertOperationToDepthCoverageResourceAndOperation(ops: O
             rp.resources.push(rs);
         }
         if (tag !== undefined) rs.tag = tag;
+        if (!Contains(rp.jsonFilelist, op.fileName)) rp.jsonFilelist.push(op.fileName);
     }
 
     return result;
@@ -313,11 +314,20 @@ export async function ConvertResourceToDepthCoverageResourceAndOperation(resourc
         if (rs === undefined) {
             rs = new OnboardResource(crs.fullResourceName, apiVersion);
             rp.resources.push(rs);
+            if (!Contains(rp.jsonFilelist, crs.fileName)) rp.jsonFilelist.push(crs.fileName);
         }
         if (tag !== undefined) rs.tag = tag;
     }
 
     return result;
+}
+
+function Contains(list: string[], target: string): boolean {
+    for (let str of list) {
+        if (str === target) return true;
+    }
+
+    return false;
 }
 function GetResourceProvide(resources: ResourceAndOperation[], rp: string) {
     for (let r of resources) {

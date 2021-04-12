@@ -66,11 +66,15 @@ export async function IngestCandidates(candidates:CandidateResource[], server: s
         let conn = await sql.connect(config);
         let deletsqlstr = require('util').format(SQLStr.SQLSTR_CLEAR_CANDIDATE, table);
         const delrequest = conn.request()
-        let delresult = await delrequest.query(deletsqlstr, (err, result) => {
-            if (err != undefined) {
-                console.log(err);
-            }
-        });
+        // let delresult = await delrequest.query(deletsqlstr, (err, result) => {
+        //     if (err != undefined) {
+        //         console.log(err);
+        //     }
+        // });
+        let {delresult, err}  = await delrequest.query(deletsqlstr);
+        if (err != undefined) {
+            console.log(err);
+        }
 
         let querystr = require('util').format(SQLStr.SQLSTR_INSERT_CANDIDATE, table);
         for (let candidate of candidates) {
@@ -84,11 +88,15 @@ export async function IngestCandidates(candidates:CandidateResource[], server: s
             request.input('tag', sql.VarChar, candidate.tag);
             request.input('startDate', sql.VarChar, candidate.startDate);
             request.input('endDate', sql.VarChar, candidate.endDate);
-            let result = await request.query(querystr, (err, result) => {
-                if (err != undefined) {
-                    console.log(err);
-                }
-            });
+            // let result = await request.query(querystr, (err, result) => {
+            //     if (err != undefined) {
+            //         console.log(err);
+            //     }
+            // });
+            let {result, err} = await request.query(querystr);
+            if (err != undefined) {
+                console.log(err);
+            }
         }
     }catch(e) {
         console.log(e);
@@ -121,11 +129,15 @@ export async function addCandidate(candidate:CandidateResource, server: string, 
         /* delete existing one first. */
         let deletsqlstr = require('util').format(SQLStr.SQLSTR_DELETE, table, candidate.resourceProvider, candidate.fullResourceName);
         const delrequest = conn.request()
-        let delresult = await delrequest.query(deletsqlstr, (err, result) => {
-            if (err != undefined) {
-                console.log(err);
-            }
-        });
+        // let delresult = await delrequest.query(deletsqlstr, (err, result) => {
+        //     if (err != undefined) {
+        //         console.log(err);
+        //     }
+        // });
+        let {delresult, delerr} = await delrequest.query(deletsqlstr);
+        if (delerr != undefined) {
+            console.log(delerr);
+        }
 
         let querystr = require('util').format(SQLStr.SQLSTR_INSERT_CANDIDATE, table);
        
@@ -139,11 +151,15 @@ export async function addCandidate(candidate:CandidateResource, server: string, 
         request.input('tag', sql.VarChar, candidate.tag);
         request.input('startDate', sql.VarChar, candidate.startDate);
         request.input('endDate', sql.VarChar, candidate.endDate);
-        let result = await request.query(querystr, (err, result) => {
-            if (err != undefined) {
-                console.log(err);
-            }
-        });
+        // let result = await request.query(querystr, (err, result) => {
+        //     if (err != undefined) {
+        //         console.log(err);
+        //     }
+        // });
+        let {result, err} = await request.query(querystr);
+        if (err != undefined) {
+            console.log(err);
+        }
         
     }catch(e) {
         console.log(e);
