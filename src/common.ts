@@ -16,6 +16,7 @@ export class ResourceAndOperation {
     public excludeStages: string;
     public tag:string;
     public resourcelist:string="";
+    public jsonFilelist: string[] = [];
     public onboardType: string = OnboardType.DEPTH_COVERAGE;
     // public Resource: string;
     // public operations: DepthCoverageOperation[] = [];
