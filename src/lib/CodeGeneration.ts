@@ -256,3 +256,38 @@ export async function DeleteCodeGeneration(server: string, database: string, use
     
     return undefined;
 }
+
+/* check if the code generation exists or not. */
+export async function IsCodeGenerationExist(server: string, database: string, user: string, password:string, resourceProvider: string, sdk: string, type: string): Promise<boolean> {
+    var sql = require("mssql");
+    var config = {
+        user: user,
+        password: password,
+        server: server, 
+        database: database 
+    };
+
+    let table: string = CodegenStatusTable;
+
+    try {
+        let conn = await sql.connect(config);
+
+        let querystr = require('util').format(SQLStr.SQLSTR_SELECT_CODEGENERATION, table);
+       
+            
+        const request = conn.request();
+        request.input('table', sql.VarChar, table);
+        request.input('resourceProvider', sql.VarChar, resourceProvider);
+        request.input('sdk', sql.VarChar, sdk);
+        request.input('type', sql.VarChar, type);
+
+        let result = await request.query(querystr);
+        if (result.recordset !== undefined && result.recordset.length > 0) return true;
+        
+    }catch(e) {
+        console.log(e);
+        return false;
+    }
+    
+    return false;
+}

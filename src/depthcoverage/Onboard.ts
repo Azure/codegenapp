@@ -1,6 +1,7 @@
 import { Operation, DepthCoverageType, AutorestSDK, QueryCandidateResources, QueryDepthCoverageReport, ConvertOperationToDepthCoverageResourceAndOperation, ConvertResourceToDepthCoverageResourceAndOperation, CandidateResource } from "./QueryDepthCoverageReport";
 import {uploadToRepo, createPullRequest, getBlobContent, NewOctoKit, getCurrentCommit, createBranch, deleteBranch, getBranch, getPullRequest, listBranchs, readCurrentCommitContent} from "../gitutil/GitAPI"
-import { ResourceAndOperation } from "../common";
+import { ResourceAndOperation, ENVKEY } from "../common";
+import { IsCodeGenerationExist } from "../lib/CodeGeneration";
 
 export async function RetriveResourceToGenerate(server: string, db: string, user: string, pw: string, depthcoverageType: string, supportedResources:CandidateResource[] = undefined) : Promise<ResourceAndOperation[]>{
     const opOrresources:any[] = await QueryDepthCoverageReport(server, db, user, pw, depthcoverageType);
@@ -40,12 +41,19 @@ export async function DeleteAllDepthBranchs(token: string, org: string, repo: st
     }
 }
 
-export async function DeletePipelineBranch(token: string, org: string, repo: string, branch: string) {
-    const octo = NewOctoKit(token);
-    await deleteBranch(octo, org, repo, branch);
+export async function DeletePipelineBranch(token: string, org: string, repo: string, branch: string) :Promise<any> {
+    try {
+        const octo = NewOctoKit(token);
+        await deleteBranch(octo, org, repo, branch);
+    } catch(err) {
+        console.log(err);
+        return err;
+    }
+    
+    return undefined;
 }
 
-export async function TriggerOnboard(dbserver: string, db:string, dbuser: string, dbpw: string, token: string, org: string, repo: string, basebranch: string = 'main', supported:string[] = undefined) {
+export async function TriggerOnboard(dbserver: string, db:string, dbuser: string, dbpw: string, token: string, org: string, repo: string, basebranch: string = 'main', supported:string[] = undefined, type:string="depth"): Promise<any> {
     let tfsupportedResource:CandidateResource[] = undefined;
     const tfcandidates = await QueryCandidateResources(dbserver, db, dbuser, dbpw, DepthCoverageType.DEPTH_COVERAGE_TYPE_TF_NOT_SUPPORT_RESOURCE);
     if (tfcandidates.length > 0 || (supported !== undefined && supported.length > 0)) {
@@ -90,8 +98,19 @@ export async function TriggerOnboard(dbserver: string, db:string, dbuser: string
     const fs = require('fs');
     for (let rs of resources) {
         try {
+            let alreadyOnboard: boolean = await IsCodeGenerationExist(process.env[ENVKEY.ENV_CODEGEN_DB_SERVER],
+                                                                process.env[ENVKEY.ENV_CODEGEN_DATABASE],
+                                                                process.env[ENVKEY.ENV_CODEGEN_DB_USER],
+                                                                process.env[ENVKEY.ENV_CODEGEN_DB_PASSWORD],
+                                                                rs.RPName,
+                                                                rs.target,
+                                                                type);
+            if (alreadyOnboard) {
+                console.log("Already triggerred to onboard " + rs.RPName + ". Ignore this one.");
+                continue;
+            }
             rs.generateResourceList();
-            const branchName = "depth-" + rs.target + "-" + rs.RPName;
+            const branchName = type + "-" + rs.target + "-" + rs.RPName;
             const baseCommit = await getCurrentCommit(octo, org, repo, basebranch);
             const targetBranch = await getBranch(octo, org, repo, branchName);
             if (targetBranch !== undefined) {
@@ -117,8 +136,11 @@ export async function TriggerOnboard(dbserver: string, db:string, dbuser: string
             
         } catch(err) {
             console.log(err);
+            return err;
         }
     }
+
+    return undefined;
 }
 
 export async function ReadPR(token: string, org: string, repo: string, prNumber: number): Promise<string> {
