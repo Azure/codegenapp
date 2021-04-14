@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { TriggerOnboard, DeletePipelineBranch, DeleteAllDepthBranchs, submit} from "./depthcoverage/Onboard"
+import { TriggerOnboard, DeletePipelineBranch, DeleteAllDepthBranchs, SubmitPullRequest} from "./depthcoverage/Onboard"
 import { ORG, SDK, REPO, README, OnboardType } from "./common";
 import { Customize, Onboard, listOpenPullRequest, TriggerRPOnboard, ConfigureOnboard } from "./codegen";
 import { IngestCandidates, addCandidate } from "./CandidateService";
@@ -142,7 +142,7 @@ app.post('/DepthCoverage/generateCodePR',  async function(req, res){
     if (pulls.length > 0) {
       res.send(pulls[0]);
     } else {
-      const {prlink, err} = await submit(token, org, repo, title, branch, basebranch);
+      const {prlink, err} = await SubmitPullRequest(token, org, repo, title, branch, basebranch);
       if (err !== undefined) {
         res.statusCode = 400;
         res.send("error");
@@ -165,7 +165,7 @@ app.get('/DepthCoverage/submitCode', async function(req, res) {
   const title = req.body.title;
   const branch = req.body.branch;
   const basebranch = req.body.base;
-  const prlink = await submit(token, org, repo, title, branch, basebranch);
+  const prlink = await SubmitPullRequest(token, org, repo, title, branch, basebranch);
   res.send(prlink);
 });
 

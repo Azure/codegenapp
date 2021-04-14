@@ -101,6 +101,29 @@ export class CodeGeneration {
     public pipelineBuildID: string;
     public status: string;
 }
+
+export enum CodeGenerationStatus {
+    CODE_GENERATION_STATUS_SUBMIT="submit",
+    CODE_GENERATION_STATUS_IN_PROGRESS="inprogress",
+    CODE_GENERATION_STATUS_CUSTOMIZING="customizing",
+    CODE_GENERATION_STATUS_FAILED="failed",
+    CODE_GENERATION_STATUS_PIPELINE_COMPLETED="pipelineCompleted",
+    CODE_GENERATION_STATUS_COMPLETED="completed"
+}
+
+export enum CodeGenerationDBColumn {
+    CODE_GENERATION_COLUMN_RESOURCE_PROVIDER="resourceProvider",
+    CODE_GENERATION_COLUMN_RESOURCETOGENERATE="resourcesToGenerate",
+    CODE_GENERATION_COLUMN_TAG="tag",
+    CODE_GENERATION_COLUMN_SWAGGER_PULLREQUEST="swaggerPR",
+    CODE_GENERATION_COLUMN_CODE_PULLREQUEST="codePR",
+    CODE_GENERATION_COLUMN_SDK="sdk",
+    CODE_GENERATION_COLUMN_TYPE="type",
+    CODE_GENERATION_COLUMN_IGNOAREFAILURE="ignoreFailure",
+    CODE_GENEERTION_COLUMN_EXCLUDESTAGES="excludeStages",
+    CODE_GENERATION_COLUMN_PIPELINEBUILDID="pipelineBuildID",
+    CODE_GENERATION_COLUMN_STATUS="status"
+}
 export enum REPO {
     SWAGGER_REPO="azure-rest-api-specs",
     TF_PROVIDER_REPO= "terraform-provider-azurerm",

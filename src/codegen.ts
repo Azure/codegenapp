@@ -1,6 +1,6 @@
-import { ORG, SDK, README, REPO, OnboardType, ResourceAndOperation } from "./common";
+import { ORG, SDK, README, REPO, OnboardType, ResourceAndOperation, CodegenStatusTable, SQLStr, CodeGeneration } from "./common";
 import {uploadToRepo, createPullRequest, getBlobContent, NewOctoKit, getCurrentCommit, createBranch, deleteBranch, getBranch, getPullRequest, listBranchs, listPullRequest, deleteFile} from "./gitutil/GitAPI"
-import { TriggerOnboard, DeletePipelineBranch, DeleteAllDepthBranchs, submit} from "./depthcoverage/Onboard"
+import { TriggerOnboard, DeletePipelineBranch, DeleteAllDepthBranchs, SubmitPullRequest} from "./depthcoverage/Onboard"
 
 export async function ReadCustomizeFiles(token: string, org: string, repo: string, prNumber: number, fileList:string[]): Promise<string> {
     const octo = NewOctoKit(token);
@@ -257,14 +257,14 @@ export async function TriggerRPOnboard(rp:string, sdk:string, token: string, org
     }
 }
 
-/* onboard a RP. */
-export async function Onboard(rp:string, sdk:string, token: string, swaggerorg:string = undefined, org:string = undefined) {
+/* onboard a RP. submit generated code to sdk code repo for onboarding */
+export async function Onboard(rp:string, sdk:string, token: string, swaggerorg:string = undefined, org:string = undefined, type: string = "depth"):Promise<any> {
     try {
         const octo = NewOctoKit(token);
         /* generate PR in swagger repo. */
         let basebranch="master"
         sdk = sdk.toLowerCase();
-        let branch = "depth-" + sdk + "-" + rp;
+        let branch = type + "-" + sdk + "-" + rp;
         
         await createPullRequest(octo, swaggerorg !== undefined ? swaggerorg: ORG.AZURE, REPO.SWAGGER_REPO, basebranch, branch, "[Depth Coverage, " + rp+ "]pull request from pipeline " + branch);
 
@@ -282,12 +282,15 @@ export async function Onboard(rp:string, sdk:string, token: string, swaggerorg:s
          await createPullRequest(octo, org !== undefined ? org : sdkorg, sdkrepo, sdkbasebranch, branch, "[Depth Coverage, " + rp+ "]pull request from pipeline " + branch);
 
          /* close work sdk branch. */
-         let workbranch = "depth-code-" + sdk + "-" + rp;
+         let workbranch = type + "-code-" + sdk + "-" + rp;
          await DeletePipelineBranch(token, org !== undefined ? org : sdkorg, sdkrepo, workbranch);
 
     } catch(err) {
         console.log(err);
+        return err;
     }
+
+    return undefined;
 }
 
 /* list pull request. */

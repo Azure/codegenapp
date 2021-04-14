@@ -161,7 +161,7 @@ export async function ReadPRFiles(token: string, org: string, repo: string, prNu
     await readCurrentCommitContent(octo, org, repo, headbranch, ["ToGenerate.json","readme.az.md", "schema.json"]);
 }
 
-export async function submit(token: string, org: string, repo: string, title: string, branchName: string, basebranch: string): Promise<{prlink:string, err:any}> {
+export async function SubmitPullRequest(token: string, org: string, repo: string, title: string, branchName: string, basebranch: string): Promise<{prlink:string, err:any}> {
     const octo = NewOctoKit(token);
     
     let prlink = ""
