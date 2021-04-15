@@ -76,9 +76,9 @@ export enum README {
 }
 
 export enum SQLStr {
-      SQLSTR_INSERT_CANDIDATE = "INSERT INTO %s (resourceProvider, fullResourceName, fileName, apiVersion, tag, startDate, endDate) values (@resourceProvider, @fullResourceName, @fileName, @apiVersion, @tag, @startDate, @endDate)",
+      SQLSTR_INSERT_CANDIDATE = "INSERT INTO %s (resourceProvider, fullResourceType, fileName, apiVersion, tag, startDate, endDate) values (@resourceProvider, @fullResourceType, @fileName, @apiVersion, @tag, @startDate, @endDate)",
       SQLSTR_CLEAR_CANDIDATE = "DElETE from %s",
-      SQLSTR_DELETE = "DELETE from %s where resourceProvider='%s' and fullResourceName='%s'"
+      SQLSTR_DELETE = "DELETE from %s where resourceProvider='%s' and fullResourceType='%s'"
 }
 
 export enum OnboardType {
