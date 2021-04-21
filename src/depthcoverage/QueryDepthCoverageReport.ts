@@ -6,13 +6,13 @@ import { ResourceAndOperation, OnboardOperation, OnboardResource } from "../comm
 export class Operation {
     public constructor(path:string, resouceName: string, name: string, id: string, filename: string) {
         this.path = path;
-        this.fullResourceName = resouceName;
+        this.fullResourceType = resouceName;
         this.operationName = name;
         this.operationId= id;
         this.fileName = filename;
     }
     public path: string = undefined;
-    public fullResourceName: string = undefined;
+    public fullResourceType: string = undefined;
     public operationName: string = undefined;
     public operationId: string = undefined;
     public fileName: string = undefined;
@@ -21,10 +21,10 @@ export class Operation {
 /* the resource schema in depth coverage db. */
 export class Resource {
     public constructor(resource: string, filename: string) {
-        this.fullResourceName = resource;
+        this.fullResourceType = resource;
         this.fileName = filename;
     }
-    public fullResourceName: string = undefined;
+    public fullResourceType: string = undefined;
     public fileName: string = undefined;
 }
 
@@ -35,10 +35,10 @@ export enum AutorestSDK {
 }
 
 export enum SQLQueryStr {
-    SQLQUERY_TF_NOT_SUPPORT_RESOURCE = "select fullResourceName, fileName from AMEClientTools_Coverage_Result_TFNotSupportedResources",
-    SQLQUERY_TF_NOT_SUPPORT_OPERATION = "select path, fullResourceName, operationName, operationId, fileName from AMEClientTools_Coverage_Result_TFNotSupportedOperations order by path",
-    SQLQUERY_CLI_NOT_SUPPORT_OPERATION = "select path, fullResourceName, operationName, operationId, fileName from AMEClientTools_Coverage_Result_CLINotSupportedOperations order by path",
-    SQLQUERY_CLI_NOT_SUPPOT_RESOURCE = "select fullResourceName, fileName from AMEClientTools_Coverage_Result_CLINotSupportedResources",
+    SQLQUERY_TF_NOT_SUPPORT_RESOURCE = "select fullResourceType, fileName from AMEClientTools_Coverage_Result_TFNotSupportedResources",
+    SQLQUERY_TF_NOT_SUPPORT_OPERATION = "select path, fullResourceType, operationName, operationId, fileName from AMEClientTools_Coverage_Result_TFNotSupportedOperations order by path",
+    SQLQUERY_CLI_NOT_SUPPORT_OPERATION = "select path, fullResourceType, operationName, operationId, fileName from AMEClientTools_Coverage_Result_CLINotSupportedOperations order by path",
+    SQLQUERY_CLI_NOT_SUPPOT_RESOURCE = "select fullResourceType, fileName from AMEClientTools_Coverage_Result_CLINotSupportedResources",
     SQLQUERY_CLI_CANDIDATE_OPERATION = "select * from AMEClientTools_Coverage_CLICandidateOperations",
     SQLQUERY_TF_CANDIDATE_RESOURCE="select * from AMEClientTools_Coverage_TFCandidateResources"
 }
@@ -53,7 +53,7 @@ export enum DepthCoverageType {
 export class CandidateResource {
     public constructor(rp: string, rs: string, fileName:string = "ALL", apiversion: string = "ALL", tag:string = "ALL", start:string = "", end:string="") {
         this.resourceProvider = rp;
-        this.fullResourceName = rs;
+        this.fullResourceType = rs;
         this.fileName = fileName;
         this.apiVersion = apiversion;
         this.tag = tag;
@@ -61,7 +61,7 @@ export class CandidateResource {
         this.endDate = end;
     }
     public resourceProvider: string;
-    public fullResourceName: string;
+    public fullResourceType: string;
     public fileName:string;
     public apiVersion: string = "ALL";
     public tag:string = "ALL";
@@ -103,7 +103,7 @@ export async function QueryCandidateResources(server: string, database: string, 
         let result = await conn.request()
                             .query(queryStr);
         for (let record of result.recordset) {
-            let rs: CandidateResource = new CandidateResource(record["resourceProvider"], record["fullResourceName"], record["fileName"], record["apiVersion"], record["tag"]);
+            let rs: CandidateResource = new CandidateResource(record["resourceProvider"], record["fullResourceType"], record["fileName"], record["apiVersion"], record["tag"]);
             candidates.push(rs);
         }
     }catch(e) {
@@ -156,12 +156,12 @@ export async function QueryDepthCoverageReport(server: string, database: string,
         if (depthcoverageType === DepthCoverageType.DEPTH_COVERAGE_TYPE_CLI_NOT_SUPPORT_OPERATION 
             || depthcoverageType === DepthCoverageType.DEPTH_COVERAGE_TYPE_TF_NOT_SUPPORT_OPERATION) {
             for (let record of result.recordset) {
-                let op: Operation = new Operation(record["path"], record["fullResourceName"], record["operationName"], record["operationId"], record["fileName"]);
+                let op: Operation = new Operation(record["path"], record["fullResourceType"], record["operationName"], record["operationId"], record["fileName"]);
                 missing.push(op);
             }
         } else {
             for (let record of result.recordset) {
-                let rs: Resource = new Resource(record["fullResourceName"], record["fileName"]);
+                let rs: Resource = new Resource(record["fullResourceType"], record["fileName"]);
                 missing.push(rs);
             }
         }
@@ -176,18 +176,18 @@ export async function QueryDepthCoverageReport(server: string, database: string,
     return missing;
 }
 
-function IsCandidateResource(candidates: CandidateResource[], resourceProvider:string, fullResourceName: string):boolean {
+function IsCandidateResource(candidates: CandidateResource[], resourceProvider:string, fullResourceType: string):boolean {
     for (let candidate of candidates) {
-        if (candidate.resourceProvider === resourceProvider && (candidate.fullResourceName.toLowerCase() === "all" || candidate.fullResourceName === fullResourceName)) return true;
+        if (candidate.resourceProvider === resourceProvider && (candidate.fullResourceType.toLowerCase() === "all" || candidate.fullResourceType === fullResourceType)) return true;
     }
 
     return false;
 }
 
-function GetCandidateResource(candidates: CandidateResource[], resourceProvider:string, fullResourceName: string): CandidateResource {
+function GetCandidateResource(candidates: CandidateResource[], resourceProvider:string, fullResourceType: string): CandidateResource {
     if (candidates === undefined) return undefined;
     for (let candidate of candidates) {
-        if (candidate.resourceProvider === resourceProvider && (candidate.fullResourceName.toLowerCase() === "all" || candidate.fullResourceName === fullResourceName)) return candidate;
+        if (candidate.resourceProvider === resourceProvider && (candidate.fullResourceType.toLowerCase() === "all" || candidate.fullResourceType === fullResourceType)) return candidate;
     }
 
     return undefined;
@@ -220,9 +220,9 @@ export async function ConvertOperationToDepthCoverageResourceAndOperation(ops: O
         // console.log("releaseState:" + releaseState);
         // console.log("apiVersion:" + apiVersion);
         // console.log("fileName:" + fileName);
-        if (supportedResource !== undefined && !IsCandidateResource(supportedResource, serviceName, op.fullResourceName)) continue;
+        if (supportedResource !== undefined && !IsCandidateResource(supportedResource, serviceName, op.fullResourceType)) continue;
         /* use api-version in candidate. */
-        let candidate = GetCandidateResource(supportedResource, serviceName, op.fullResourceName);
+        let candidate = GetCandidateResource(supportedResource, serviceName, op.fullResourceType);
         if (candidate !== undefined && candidate.apiVersion.toLowerCase() != "all") {
             apiVersion = candidate.apiVersion;
         }
@@ -245,14 +245,14 @@ export async function ConvertOperationToDepthCoverageResourceAndOperation(ops: O
                 rp.tag = rp.tag + ";" + tag;
             }
         }
-        let rs = GetResource(rp.resources, op.fullResourceName);
+        let rs = GetResource(rp.resources, op.fullResourceType);
         if (rs !== undefined) {
             let find = GetOperation(rs.operations, op.operationId);
             if (find === undefined) {
                 rs.operations.push(new OnboardOperation(op.operationId, apiVersion, op.fileName));
             }
         } else {
-            rs = new OnboardResource(op.fullResourceName, apiVersion);
+            rs = new OnboardResource(op.fullResourceType, apiVersion);
             rs.operations.push(new OnboardOperation(op.operationId, apiVersion, op.fileName));
             rp.resources.push(rs);
         }
@@ -290,8 +290,8 @@ export async function ConvertResourceToDepthCoverageResourceAndOperation(resourc
         // console.log("releaseState:" + releaseState);
         // console.log("apiVersion:" + apiVersion);
         // console.log("fileName:" + fileName);
-        if (supportedResource !== undefined && !IsCandidateResource(supportedResource, serviceName, crs.fullResourceName)) continue;
-        let candidate = GetCandidateResource(supportedResource, serviceName, crs.fullResourceName);
+        if (supportedResource !== undefined && !IsCandidateResource(supportedResource, serviceName, crs.fullResourceType)) continue;
+        let candidate = GetCandidateResource(supportedResource, serviceName, crs.fullResourceType);
         /*use tag in candidate. */
         let tag:string = undefined;
         if (candidate !== undefined && candidate.tag !== undefined && candidate.tag !== null && candidate.tag.toLowerCase() != "all") {
@@ -310,9 +310,9 @@ export async function ConvertResourceToDepthCoverageResourceAndOperation(resourc
                 rp.tag = rp.tag + ";" + tag;
             }
         }
-        let rs = GetResource(rp.resources, crs.fullResourceName);
+        let rs = GetResource(rp.resources, crs.fullResourceType);
         if (rs === undefined) {
-            rs = new OnboardResource(crs.fullResourceName, apiVersion);
+            rs = new OnboardResource(crs.fullResourceType, apiVersion);
             rp.resources.push(rs);
             if (!Contains(rp.jsonFilelist, crs.fileName)) rp.jsonFilelist.push(crs.fileName);
         }

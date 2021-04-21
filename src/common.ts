@@ -149,9 +149,9 @@ export enum README {
 
 export enum SQLStr {
     /*access depth coverage candidate table. */
-    SQLSTR_INSERT_CANDIDATE = "INSERT INTO %s (resourceProvider, fullResourceName, fileName, apiVersion, tag, startDate, endDate) values (@resourceProvider, @fullResourceName, @fileName, @apiVersion, @tag, @startDate, @endDate)",
+    SQLSTR_INSERT_CANDIDATE = "INSERT INTO %s (resourceProvider, fullResourceType, fileName, apiVersion, tag, startDate, endDate) values (@resourceProvider, @fullResourceName, @fileName, @apiVersion, @tag, @startDate, @endDate)",
     SQLSTR_CLEAR_CANDIDATE = "DElETE from %s",
-    SQLSTR_DELETE = "DELETE from %s where resourceProvider='%s' and fullResourceName='%s'",
+    SQLSTR_DELETE = "DELETE from %s where resourceProvider='%s' and fullResourceType='%s'",
 
     /*access code generation status table. */
     SQLSTR_INSERT_CODEGENERATION = "INSERT INTO %s (resourceProvider, resourcesToGenerate, tag, swaggerPR, codePR, sdk, type, ignoreFailure, excludeStages, pipelineBuildID, status) values (@resourceProvider, @resourcesToGenerate, @tag, @swaggerPR, @codePR, @sdk, @type, @ignoreFailure, @excludeStages, @pipelineBuildID, @status)",

@@ -29,7 +29,7 @@ export async function IngestCandidatesFromFile(filepath:string, server: string, 
             const request = conn.request();
             request.input('table', sql.VarChar, table);
             request.input('resourceProvider', sql.VarChar, candidate.RP);
-            request.input('fullResourceName', sql.VarChar, candidate.fullResourceName);
+            request.input('fullResourceType', sql.VarChar, candidate.fullResourceType);
             request.input('startDate', sql.VarChar, candidate.startDate);
             request.input('endDate', sql.VarChar, candidate.endDate);
             let result = await request.query(querystr, (err, result) => {
@@ -82,7 +82,7 @@ export async function IngestCandidates(candidates:CandidateResource[], server: s
             const request = conn.request();
             request.input('table', sql.VarChar, table);
             request.input('resourceProvider', sql.VarChar, candidate.resourceProvider);
-            request.input('fullResourceName', sql.VarChar, candidate.fullResourceName);
+            request.input('fullResourceType', sql.VarChar, candidate.fullResourceType);
             request.input('fileName', sql.VarChar, candidate.fileName);
             request.input('apiVersion', sql.VarChar, candidate.apiVersion);
             request.input('tag', sql.VarChar, candidate.tag);
@@ -127,7 +127,7 @@ export async function addCandidate(candidate:CandidateResource, server: string, 
     try {
         let conn = await sql.connect(config);
         /* delete existing one first. */
-        let deletsqlstr = require('util').format(SQLStr.SQLSTR_DELETE, table, candidate.resourceProvider, candidate.fullResourceName);
+        let deletsqlstr = require('util').format(SQLStr.SQLSTR_DELETE, table, candidate.resourceProvider, candidate.fullResourceType);
         const delrequest = conn.request()
         // let delresult = await delrequest.query(deletsqlstr, (err, result) => {
         //     if (err != undefined) {
@@ -145,7 +145,7 @@ export async function addCandidate(candidate:CandidateResource, server: string, 
         const request = conn.request();
         request.input('table', sql.VarChar, table);
         request.input('resourceProvider', sql.VarChar, candidate.resourceProvider);
-        request.input('fullResourceName', sql.VarChar, candidate.fullResourceName);
+        request.input('fullResourceType', sql.VarChar, candidate.fullResourceType);
         request.input('fileName', sql.VarChar, candidate.fileName);
         request.input('apiVersion', sql.VarChar, candidate.apiVersion);
         request.input('tag', sql.VarChar, candidate.tag);
