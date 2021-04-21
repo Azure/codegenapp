@@ -5,9 +5,11 @@ import * as bodyParser from 'body-parser';
 import { ManagedIdentityCredential } from "@azure/identity";
 import { SecretClient } from '@azure/keyvault-secrets';
 
-import "../controllers/depthConverageController"
+import "../controllers/DepthConverageController"
+import "../controllers/CodeGenerateController"
 
 class CodegenApp {
+    private port = this.normalizePort(process.env.PORT || '3000');
     private container: Container;
     // private logger: Logger;
     public async start(): Promise<void> {
@@ -84,6 +86,19 @@ class CodegenApp {
         });
         const serverInstance = server.build();
         serverInstance.listen(3000);
+    }
+
+    private normalizePort(val) {
+        var port = parseInt(val, 10);
+        if (isNaN(port)) {
+            return val;
+        }
+
+        if (port >= 0) {
+            return port;
+        }
+
+        return false;
     }
 
 }

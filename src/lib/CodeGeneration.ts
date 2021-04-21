@@ -1,4 +1,4 @@
-import { CodegenStatusTable, SQLStr, CodeGeneration } from "../common";
+import { CodegenStatusTable, SQLStr, CodeGeneration, CodeGenerationStatus } from "../common";
 
 export async function InsertCodeGeneration(server: string, database: string, user: string, password:string, codegen: CodeGeneration): Promise<any> {
     var sql = require("mssql");
@@ -257,8 +257,8 @@ export async function DeleteCodeGeneration(server: string, database: string, use
     return undefined;
 }
 
-/* check if the code generation exists or not. */
-export async function IsCodeGenerationExist(server: string, database: string, user: string, password:string, resourceProvider: string, sdk: string, type: string): Promise<boolean> {
+/* check if a running code generation exists or not. */
+export async function IsValidCodeGenerationExist(server: string, database: string, user: string, password:string, resourceProvider: string, sdk: string, type: string): Promise<boolean> {
     var sql = require("mssql");
     var config = {
         user: user,
@@ -282,8 +282,22 @@ export async function IsCodeGenerationExist(server: string, database: string, us
         request.input('type', sql.VarChar, type);
 
         let result = await request.query(querystr);
+
         if (result.recordset !== undefined && result.recordset.length > 0) return true;
-        
+        for (let record of result.recordset) {
+            const codegen = new CodeGeneration(record["resourceProvider"], 
+                                                        record["sdk"],
+                                                        record["type"],
+                                                        record["resourcesToGenerate"],
+                                                        record["tag"], 
+                                                        record["swaggerPR"],
+                                                        record["codePR"],
+                                                        record["ignoreFailure"],
+                                                        record["excludeStages"],
+                                                        record["pipelineBuildID"],
+                                                        record["status"]);
+            if (codegen.status !== CodeGenerationStatus.CODE_GENERATION_STATUS_COMPLETED) return true;
+        }
     }catch(e) {
         console.log(e);
         return false;

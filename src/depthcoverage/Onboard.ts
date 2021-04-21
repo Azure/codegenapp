@@ -1,7 +1,7 @@
 import { Operation, DepthCoverageType, AutorestSDK, QueryCandidateResources, QueryDepthCoverageReport, ConvertOperationToDepthCoverageResourceAndOperation, ConvertResourceToDepthCoverageResourceAndOperation, CandidateResource } from "./QueryDepthCoverageReport";
 import {uploadToRepo, createPullRequest, getBlobContent, NewOctoKit, getCurrentCommit, createBranch, deleteBranch, getBranch, getPullRequest, listBranchs, readCurrentCommitContent} from "../gitutil/GitAPI"
-import { ResourceAndOperation, ENVKEY } from "../common";
-import { IsCodeGenerationExist } from "../lib/CodeGeneration";
+import { ResourceAndOperation, ENVKEY, RESOUCEMAPFile } from "../common";
+import { IsValidCodeGenerationExist } from "../lib/CodeGeneration";
 
 export async function RetriveResourceToGenerate(server: string, db: string, user: string, pw: string, depthcoverageType: string, supportedResources:CandidateResource[] = undefined) : Promise<ResourceAndOperation[]>{
     const opOrresources:any[] = await QueryDepthCoverageReport(server, db, user, pw, depthcoverageType);
@@ -92,13 +92,13 @@ export async function TriggerOnboard(dbserver: string, db:string, dbuser: string
     let resources = tfresources.concat(cliresources);
     // let resources = await RetriveResourceToGenerate(dbserver, db, dbuser, dbpw, DepthCoverageType.DEPTH_COVERAGE_TYPE_CLI_NOT_SUPPORT_OPERATION);
 
-    const RESOUCEMAPFile = "ToGenerate.json";
+    // const RESOUCEMAPFile = "ToGenerate.json";
     const octo = NewOctoKit(token);
 
     const fs = require('fs');
     for (let rs of resources) {
         try {
-            let alreadyOnboard: boolean = await IsCodeGenerationExist(process.env[ENVKEY.ENV_CODEGEN_DB_SERVER],
+            let alreadyOnboard: boolean = await IsValidCodeGenerationExist(process.env[ENVKEY.ENV_CODEGEN_DB_SERVER],
                                                                 process.env[ENVKEY.ENV_CODEGEN_DATABASE],
                                                                 process.env[ENVKEY.ENV_CODEGEN_DB_USER],
                                                                 process.env[ENVKEY.ENV_CODEGEN_DB_PASSWORD],

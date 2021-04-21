@@ -3,6 +3,7 @@ import csv = require('csv-parser');
 import { ManagedIdentityCredential } from "@azure/identity";
 import { SecretClient } from '@azure/keyvault-secrets';
 
+export const RESOUCEMAPFile = "ToGenerate.json";
 export enum ENVKEY {
     ENV_DEPTH_DB_SERVER="DepthDBServer",
     ENV_DEPTH_DATABASE="DepthDatabase",
@@ -107,6 +108,7 @@ export enum CodeGenerationStatus {
     CODE_GENERATION_STATUS_IN_PROGRESS="inprogress",
     CODE_GENERATION_STATUS_CUSTOMIZING="customizing",
     CODE_GENERATION_STATUS_FAILED="failed",
+    CODE_GENERATION_STATUS_CANCELED="cancelled",
     CODE_GENERATION_STATUS_PIPELINE_COMPLETED="pipelineCompleted",
     CODE_GENERATION_STATUS_COMPLETED="completed"
 }
@@ -128,6 +130,7 @@ export enum REPO {
     SWAGGER_REPO="azure-rest-api-specs",
     TF_PROVIDER_REPO= "terraform-provider-azurerm",
     CLI_REPO = "azure-cli",
+    CLI_EXTENSION_REPO = "azure-cli-extensions",
     DEPTH_COVERAGE_REPO = "depth-coverage-pipeline"
   }
   
@@ -163,7 +166,8 @@ export enum SQLStr {
 
 export enum OnboardType {
     DEPTH_COVERAGE = "depth",
-    ADHOC_ONBOARD = "onboard"
+    ADHOC_ONBOARD = "onboard",
+    DEV_ONBOARD = "dev"
 }
 
 export enum CandidateTable {
