@@ -1,19 +1,18 @@
 import { BaseHttpController, controller, httpPost } from "inversify-express-utils";
 import { JsonResult } from "inversify-express-utils/dts/results";
 import { ENVKEY, ORG, SDK, OnboardType, CodeGenerationStatus, CodeGenerationDBColumn } from "../common";
-import { listOpenPullRequest, Onboard } from "../codegen";
-import { SubmitPullRequest } from "../depthcoverage/Onboard";
 import { Request, Response, response } from "express";
 import { getCodeGeneration, UpdateCodeGenerationValue } from "../lib/CodeGeneration";
 import CodeGenerateHandler from "../lib/CodeGenerateHandler";
+import { PipelineCredential } from "../lib/PipelineCredential";
 
 @controller("/codegenerate")
 export class CodeGenerateController extends BaseHttpController{
-    public token: string = process.env[ENVKEY.ENV_REPO_ACCESS_TOKEN];;
-    public constructor(tk: string = undefined) {
-        super();
-        if (tk !== undefined) this.token = tk;
-    }
+    // public token: string = process.env[ENVKEY.ENV_REPO_ACCESS_TOKEN];;
+    // public constructor(tk: string = undefined) {
+    //     super();
+    //     if (tk !== undefined) this.token = tk;
+    // }
     /* generate an pull request. */
     @httpPost("/generatePullRequest")
     public async GenerateCodePullRequest(request: Request): Promise<JsonResult> {
@@ -24,22 +23,23 @@ export class CodeGenerateController extends BaseHttpController{
         const branch = request.body.branch;
         const basebranch = request.body.base;
         console.log("org:" + org + ",repo:" + repo + ",title:" + title + ",branch:" + branch + ",base:" + basebranch);
-        let prlink:string = undefined;
-        let err:any = undefined;
-        try {
-            const pulls: string[] = await listOpenPullRequest(this.token, org, repo, branch, basebranch);
-            if (pulls.length > 0) {
-                prlink= pulls[0]
-            } else {
-                let {prlink:ret, err:e} = await SubmitPullRequest(this.token, org, repo, title, branch, basebranch);
-                prlink = ret;
-                err = e;
-            }
-        }catch(e) {
-            console.log(e);
-            err = e;
-        }
+        // let prlink:string = undefined;
+        // let err:any = undefined;
+        // try {
+        //     const pulls: string[] = await listOpenPullRequest(this.token, org, repo, branch, basebranch);
+        //     if (pulls.length > 0) {
+        //         prlink= pulls[0]
+        //     } else {
+        //         let {prlink:ret, err:e} = await SubmitPullRequest(this.token, org, repo, title, branch, basebranch);
+        //         prlink = ret;
+        //         err = e;
+        //     }
+        // }catch(e) {
+        //     console.log(e);
+        //     err = e;
+        // }
 
+        const {prlink, err} = await CodeGenerateHandler.GenerateCodeRullRequest(PipelineCredential.token, org, repo, title, branch, basebranch);
         let content = {};
         let statusCode = 200;
         if (err !== undefined) {
@@ -89,7 +89,7 @@ export class CodeGenerateController extends BaseHttpController{
             return this.json("Aleady Exists.", 201);
         }
 
-        const err = await Onboard(rp, sdk, this.token, swaggerorg, sdkorg, type);
+        const err = await CodeGenerateHandler.SubmitGeneratedCode(rp, sdk, PipelineCredential.token, swaggerorg, sdkorg, type);
 
         let content = {};
         let statusCode = 200;
@@ -99,6 +99,48 @@ export class CodeGenerateController extends BaseHttpController{
         } else {
             statusCode = 200;
             content = "Trigger " + type + " for resource provider " + rp;
+        }
+        
+        return this.json(content, statusCode);
+    }
+
+    /*complete one code generation after all the code have been merged. */
+    @httpPost("/resourceProvider/:rpname/sdk/:sdk/complete")
+    public async CompleteCodeGenerationPOST(request: Request): Promise<JsonResult> {
+        const rp = request.params.rpname;
+        const sdk:string = request.params.sdk;
+       
+        let onbaordtype = request.body.type;
+        if (onbaordtype === undefined) {
+            onbaordtype = OnboardType.ADHOC_ONBOARD;
+        }
+
+        let codegenorg: string = request.body.codegenorg;
+        if (codegenorg === undefined) {
+            codegenorg = ORG.AZURE;
+        }
+
+        let sdkorg:string = request.body.org;
+        let swaggerorg: string = request.body.swaggerorg;
+        if (sdkorg === undefined) {
+            sdkorg = ORG.AZURE;
+            if (sdk.toLowerCase() === SDK.TF_SDK) {
+                sdkorg = ORG.MS;
+            }
+        }
+        if (swaggerorg === undefined) {
+            swaggerorg = ORG.AZURE;
+        }
+
+        const err = CodeGenerateHandler.CompleteCodeGeneration(PipelineCredential.token, rp, sdk, onbaordtype, codegenorg, sdkorg, swaggerorg);
+        let content = {};
+        let statusCode = 200;
+        if (err !== undefined) {
+            statusCode = 400;
+            content = {error: err};
+        } else {
+            statusCode = 200;
+            content = "Cancel " + onbaordtype + " for resource provider " + rp;
         }
         
         return this.json(content, statusCode);
@@ -133,7 +175,7 @@ export class CodeGenerateController extends BaseHttpController{
             swaggerorg = ORG.AZURE;
         }
 
-        const err = CodeGenerateHandler.CancelCodeGeneration(this.token, rp, sdk, onbaordtype, codegenorg, sdkorg, swaggerorg);
+        const err = CodeGenerateHandler.CancelCodeGeneration(PipelineCredential.token, rp, sdk, onbaordtype, codegenorg, sdkorg, swaggerorg);
         let content = {};
         let statusCode = 200;
         if (err !== undefined) {
@@ -181,7 +223,7 @@ export class CodeGenerateController extends BaseHttpController{
         if (swaggerorg === undefined) {
             swaggerorg = ORG.AZURE;
         }
-        const err = CodeGenerateHandler.SubmitGeneratedCode(rp, sdk, this.token, swaggerorg, sdkorg, onbaordtype);
+        const err = CodeGenerateHandler.SubmitGeneratedCode(rp, sdk, PipelineCredential.token, swaggerorg, sdkorg, onbaordtype);
 
         let content = {};
         let statusCode = 200;
@@ -199,7 +241,7 @@ export class CodeGenerateController extends BaseHttpController{
     /*customize an code generation. */
     @httpPost("/resourceProvider/:rpname/sdk/:sdk/customize")
     public async CustomizeCodegenerationPOST(request: Request): Promise<JsonResult> {
-        const token = process.env[ENVKEY.ENV_REPO_ACCESS_TOKEN];
+        // const token = process.env[ENVKEY.ENV_REPO_ACCESS_TOKEN];
         const rp = request.params.rpname;
         const sdk = request.params.sdk;
         const org = request.body.org as string;
@@ -233,7 +275,7 @@ export class CodeGenerateController extends BaseHttpController{
             console.log("The code generation pipeline(" + rp + "," + sdk + ") is under " + codegen.status + "Already. Ignore this trigger.");
             return this.json("customize. pipeline: https://devdiv.visualstudio.com/DevDiv/_build?definitionId="+ codegen.pipelineBuildID, 201);
         }
-        const custmizeerr = CodeGenerateHandler.CustomizeCodeGeneration(token, rp, sdk, triggerPR, codePR, org, excludeTest);
+        const custmizeerr = CodeGenerateHandler.CustomizeCodeGeneration(PipelineCredential.token, rp, sdk, onbaordtype, triggerPR, codePR, org, excludeTest);
 
         if (custmizeerr === undefined) {
             /* update the code generation status. */

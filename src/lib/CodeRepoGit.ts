@@ -1,4 +1,4 @@
-import { NewOctoKit, deleteBranch, getPullRequest, getBlobContent, deleteFile } from "../gitutil/GitAPI";
+import { NewOctoKit, deleteBranch, getPullRequest, getBlobContent, deleteFile, createPullRequest, listPullRequest } from "../gitutil/GitAPI";
 
 export async function DeleteBranch(token: string, org: string, repo: string, branch: string) :Promise<any> {
     try {
@@ -53,4 +53,28 @@ export async function DeleteFilesFromRepo(token: string, org: string, repo: stri
         console.log(e);
     }
     
+}
+
+export async function SubmitPullRequest(token: string, org: string, repo: string, title: string, branchName: string, basebranch: string): Promise<{prlink:string, err:any}> {
+    const octo = NewOctoKit(token);
+    
+    let prlink = ""
+    let err = undefined;
+    try {
+        await createPullRequest(octo, org, repo, basebranch, branchName, title);
+    } catch(e) {
+        console.log(e);
+        err = e;
+        return {prlink, err};
+    }
+    
+    return {prlink, err};
+}
+
+/* list pull request. */
+export async function listOpenPullRequest(token: string, org: string, repo: string, head: string, base:string):Promise<string[]> {
+    const octo = NewOctoKit(token);
+    return listPullRequest(octo, org, repo, "open", org + ":" + head, base);
+    // let result:string[] = [];
+    // return result;
 }

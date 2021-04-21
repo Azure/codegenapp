@@ -167,7 +167,7 @@ export async function SubmitPullRequest(token: string, org: string, repo: string
     let prlink = ""
     let err = undefined;
     try {
-        await createPullRequest(octo, org, repo, basebranch, branchName, title);
+        prlink = await createPullRequest(octo, org, repo, basebranch, branchName, title);
     } catch(e) {
         console.log(e);
         err = e;

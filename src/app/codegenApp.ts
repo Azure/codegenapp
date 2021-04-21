@@ -4,9 +4,12 @@ import { InversifyExpressServer } from "inversify-express-utils";
 import * as bodyParser from 'body-parser';
 import { ManagedIdentityCredential } from "@azure/identity";
 import { SecretClient } from '@azure/keyvault-secrets';
+import { ENVKEY } from "../lib/Model";
+import { DepthDBCredentials, CodegenDBCredentials } from "../lib/DBCredentials";
 
 import "../controllers/DepthConverageController"
 import "../controllers/CodeGenerateController"
+import { PipelineCredential } from "../lib/PipelineCredential";
 
 class CodegenApp {
     private port = this.normalizePort(process.env.PORT || '3000');
@@ -51,6 +54,18 @@ class CodegenApp {
             console.log("Failed to get secret");
             console.log(e);
         }
+
+        DepthDBCredentials.server = process.env[ENVKEY.ENV_DEPTH_DB_SERVER];
+        DepthDBCredentials.db = process.env[ENVKEY.ENV_DEPTH_DATABASE];
+        DepthDBCredentials.user = process.env[ENVKEY.ENV_DEPTH_DB_USER];
+        DepthDBCredentials.pw = process.env[ENVKEY.ENV_DEPTH_DB_PASSWORD];
+        
+        CodegenDBCredentials.server = process.env[ENVKEY.ENV_CODEGEN_DB_SERVER];
+        CodegenDBCredentials.db = process.env[ENVKEY.ENV_CODEGEN_DATABASE];
+        CodegenDBCredentials.user = process.env[ENVKEY.ENV_CODEGEN_DB_USER];
+        CodegenDBCredentials.pw = process.env[ENVKEY.ENV_CODEGEN_DB_PASSWORD];
+
+        PipelineCredential.token = process.env[ENVKEY.ENV_REPO_ACCESS_TOKEN];
     }
     private buildContainer(): void {
         this.container = new Container();

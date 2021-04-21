@@ -1,6 +1,7 @@
 import { OnboardType } from "./common";
 
 export const RESOUCEMAPFile = "ToGenerate.json";
+
 export enum ENVKEY {
     ENV_DEPTH_DB_SERVER="DepthDBServer",
     ENV_DEPTH_DATABASE="DepthDatabase",

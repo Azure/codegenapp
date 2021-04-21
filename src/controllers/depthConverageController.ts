@@ -2,15 +2,24 @@ import { httpGet, controller, httpPost, BaseHttpController, httpPut } from "inve
 import { check } from "express-validator/check";
 import { IngestCandidates } from "../CandidateService";
 import { Request, Response, response } from "express";
-import { ENVKEY, ORG, SDK, REPO, CodeGeneration, CodeGenerationStatus, CodeGenerationDBColumn } from "../common";
 import { JsonResult } from "inversify-express-utils/dts/results";
-import { TriggerOnboard, DeletePipelineBranch, DeleteAllDepthBranchs, SubmitPullRequest } from "../depthcoverage/Onboard";
-import { listOpenPullRequest, Onboard, Customize } from "../codegen";
-import { getCodeGeneration, UpdateCodeGenerationValue } from "../lib/CodeGeneration";
+import { getCodeGeneration, UpdateCodeGenerationValue, ListCodeGenerations } from "../lib/CodeGeneration";
+import { OnboardType, ORG, SDK } from "../lib/common";
+import CodeGenerateHandler from "../lib/CodeGenerateHandler";
+import DepthCoverageHandler from "../lib/DepthCoverageHandler";
+import { CodegenDBCredentials, DepthDBCredentials } from "../lib/DBCredentials";
+import { ENVKEY } from "../lib/Model";
+import { CodeGeneration, CodeGenerationStatus, CodeGenerationDBColumn } from "../lib/CodeGenerationModel";
+import { PipelineCredential } from "../lib/PipelineCredential";
 // import { JsonResult } from "inversify-express-utils/dts/results/index"
 
 @controller("/depthCoverage")
 export class DepthCoverageController extends BaseHttpController{
+    // public token: string = process.env[ENVKEY.ENV_REPO_ACCESS_TOKEN];
+    // public constructor(tk: string = undefined) {
+    //     super();
+    //     if (tk !== undefined) this.token = tk;
+    // }
     @httpGet("/")
     public hello(): string{
         return "HelloWorld";
@@ -54,13 +63,13 @@ export class DepthCoverageController extends BaseHttpController{
     /*trigger depth-coverage. */
     @httpPost("/trigger")
     public async Trigger(req: Request) : Promise<JsonResult> {
-        const token = process.env[ENVKEY.ENV_REPO_ACCESS_TOKEN];
+        // const token = process.env[ENVKEY.ENV_REPO_ACCESS_TOKEN];
         const org = req.body.org;
         const repo = req.body.repo;
-        const dbserver=process.env[ENVKEY.ENV_DEPTH_DB_SERVER];
-        const db=process.env[ENVKEY.ENV_DEPTH_DATABASE];
-        const dbuser = process.env[ENVKEY.ENV_DEPTH_DB_USER];
-        const dbpw = process.env[ENVKEY.ENV_DEPTH_DB_PASSWORD];
+        // const dbserver=process.env[ENVKEY.ENV_DEPTH_DB_SERVER];
+        // const db=process.env[ENVKEY.ENV_DEPTH_DATABASE];
+        // const dbuser = process.env[ENVKEY.ENV_DEPTH_DB_USER];
+        // const dbpw = process.env[ENVKEY.ENV_DEPTH_DB_PASSWORD];
         const candidate = req.body.candidateResources;
         const platform = req.body.platform;
         let branch = "main";
@@ -69,16 +78,16 @@ export class DepthCoverageController extends BaseHttpController{
             branch = "dev";
             type = "dev";
         }
-        if (
-            !dbserver ||
-            !db ||
-            !dbuser ||
-            !dbpw 
-        ) {
-            throw new Error("Missing required parameter");
-        }
-        console.log(token + "," + org + "," + repo);
-        const err = await TriggerOnboard(dbserver, db, dbuser, dbpw, token, org, repo, branch, candidate, type);
+        // if (
+        //     !dbserver ||
+        //     !db ||
+        //     !dbuser ||
+        //     !dbpw 
+        // ) {
+        //     throw new Error("Missing required parameter");
+        // }
+        console.log(org + "," + repo);
+        const err = await DepthCoverageHandler.TriggerOnboard(DepthDBCredentials.server, DepthDBCredentials.db, DepthDBCredentials.user, DepthDBCredentials.pw, PipelineCredential.token, org, repo, branch, candidate, type);
         let content = {};
         let statusCode = 200;
         if (err !== undefined) {
@@ -94,7 +103,7 @@ export class DepthCoverageController extends BaseHttpController{
     /*complete an resource provider pipeline for a sdk. */
     @httpPost("/resourceProvider/:rpname/sdk/:sdk/complete", check("request").exists())
     public async Complete(request: Request): Promise<JsonResult> {
-        const token = process.env[ENVKEY.ENV_REPO_ACCESS_TOKEN];
+        // const token = process.env[ENVKEY.ENV_REPO_ACCESS_TOKEN];
         const org = ORG.AZURE;
         const rp = request.params.rpname;
         const sdk:string = request.params.sdk;
@@ -106,35 +115,12 @@ export class DepthCoverageController extends BaseHttpController{
             sdkorg = ORG.MS;
             }
         }
-        const branch = "depth-" + sdk.toLowerCase() + "-" + rp;
-        /* delete depth-coverage rp branch */
-        let err = await DeletePipelineBranch(token, org, REPO.DEPTH_COVERAGE_REPO, branch);
-        
-
-        /* delete sdk rp branch. */
-        let sdkrepo = "";
-        if (sdk === SDK.TF_SDK) {
-            sdkrepo = REPO.TF_PROVIDER_REPO;
-        } else if (sdk === SDK.CLI_CORE_SDK) {
-            sdkrepo = REPO.CLI_REPO;
+        const onbaordtype: string = OnboardType.DEPTH_COVERAGE;
+        let codegenorg: string = request.body.codegenorg;
+        if (codegenorg === undefined) {
+            codegenorg = ORG.AZURE;
         }
-        try {
-            await DeletePipelineBranch(token, sdkorg, sdkrepo, branch);
-            let codebranch = "depth-code-" + sdk.toLowerCase() + "-" + rp;
-            await DeletePipelineBranch(token, sdkorg, sdkrepo, codebranch);
-        } catch(e) {
-            console.log("Failed to delete sdk branch: " + branch);
-            console.log(e);
-        }
-
-        /*delete swagger rp branch */
-        try {
-            await DeletePipelineBranch(token, swaggerorg != undefined ? swaggerorg: org, REPO.SWAGGER_REPO, branch);
-        } catch(e) {
-            console.log("Failed to delete swagger branch: " + branch);
-            console.log(e);
-        }
-
+        const err = CodeGenerateHandler.CompleteCodeGeneration(PipelineCredential.token, rp, sdk, onbaordtype, codegenorg, sdkorg, swaggerorg);
         let content = {};
         let statusCode = 200;
         if (err !== undefined) {
@@ -142,68 +128,150 @@ export class DepthCoverageController extends BaseHttpController{
             content = {error: err};
         } else {
             statusCode = 200;
-            content = rp + " " + sdk + ' onboarding is completed.';
+            content = "Cancel " + onbaordtype + " for resource provider " + rp;
         }
         
         return this.json(content, statusCode);
+        // /* delete depth-coverage rp branch */
+        // let err = await DeletePipelineBranch(token, org, REPO.DEPTH_COVERAGE_REPO, branch);
+        
+
+        // /* delete sdk rp branch. */
+        // let sdkrepo = "";
+        // if (sdk === SDK.TF_SDK) {
+        //     sdkrepo = REPO.TF_PROVIDER_REPO;
+        // } else if (sdk === SDK.CLI_CORE_SDK) {
+        //     sdkrepo = REPO.CLI_REPO;
+        // }
+        // try {
+        //     await DeletePipelineBranch(token, sdkorg, sdkrepo, branch);
+        //     let codebranch = "depth-code-" + sdk.toLowerCase() + "-" + rp;
+        //     await DeletePipelineBranch(token, sdkorg, sdkrepo, codebranch);
+        // } catch(e) {
+        //     console.log("Failed to delete sdk branch: " + branch);
+        //     console.log(e);
+        // }
+
+        // /*delete swagger rp branch */
+        // try {
+        //     await DeletePipelineBranch(token, swaggerorg != undefined ? swaggerorg: org, REPO.SWAGGER_REPO, branch);
+        // } catch(e) {
+        //     console.log("Failed to delete swagger branch: " + branch);
+        //     console.log(e);
+        // }
+
+        // let content = {};
+        // let statusCode = 200;
+        // if (err !== undefined) {
+        //     statusCode = 400;
+        //     content = {error: err};
+        // } else {
+        //     statusCode = 200;
+        //     content = rp + " " + sdk + ' onboarding is completed.';
+        // }
+        
+        // return this.json(content, statusCode);
     }
 
     /* cancel all depth-coverages. */
     @httpPost("/cancel")
     public async CancelAllDepthCoverages(request: Request): Promise<JsonResult>{
-        const token = process.env[ENVKEY.ENV_REPO_ACCESS_TOKEN];
-        const org = request.body.org;
-        const repo = request.body.repo;
-        /* delete depth coverage branch. */
-        let err:any = undefined;
-        try {
-            await DeleteAllDepthBranchs(token, org, repo);
-        } catch (e) {
-            console.log("Failed to delete branches from depthcoverage.")
-            console.log(e);
-            err = e;
+        // const token = process.env[ENVKEY.ENV_REPO_ACCESS_TOKEN];
+        // const org = request.body.org;
+        // const repo = request.body.repo;
+        // /* delete depth coverage branch. */
+        // let err:any = undefined;
+        // try {
+        //     await DeleteAllDepthBranchs(token, org, repo);
+        // } catch (e) {
+        //     console.log("Failed to delete branches from depthcoverage.")
+        //     console.log(e);
+        //     err = e;
+        // }
+
+        // /* delete sdk branches. */
+        // let content = {};
+        // let statusCode = 200;
+        // if (err !== undefined) {
+        //     statusCode = 400;
+        //     content = {error: err};
+        // } else {
+        //     statusCode = 200;
+        //     content = "All Depth Coverage pipelines were cancelled";
+        // }
+        let canceledCodegens:string[] = [];
+        let failedCodegens:string[] = [];
+        let codegenorg: string = request.body.codegenorg;
+        if (codegenorg === undefined) {
+            codegenorg = ORG.AZURE;
         }
 
-        /* delete sdk branches. */
-        let content = {};
-        let statusCode = 200;
-        if (err !== undefined) {
-            statusCode = 400;
-            content = {error: err};
-        } else {
-            statusCode = 200;
-            content = "All Depth Coverage pipelines were cancelled";
+        let sdkorg:string = request.body.org;
+        let swaggerorg: string = request.body.swaggerorg;
+        
+        if (swaggerorg === undefined) {
+            swaggerorg = ORG.AZURE;
+        }
+
+        const type = OnboardType.DEPTH_COVERAGE;
+        const codegens: CodeGeneration[] = await ListCodeGenerations(CodegenDBCredentials.server,
+            CodegenDBCredentials.db,
+            CodegenDBCredentials.user,
+            CodegenDBCredentials.pw,
+            type,
+            true);
+        
+        for (let codegen of codegens) {
+            if (sdkorg === undefined) {
+                sdkorg = ORG.AZURE;
+                if (codegen.sdk.toLowerCase() === SDK.TF_SDK) {
+                    sdkorg = ORG.MS;
+                }
+            }
+            const err = CodeGenerateHandler.CancelCodeGeneration(PipelineCredential.token, codegen.resourceProvider, codegen.sdk, type, codegenorg, sdkorg, swaggerorg);
+            let content = "(" + codegen.resourceProvider + "," + codegen.sdk + ")";
+            if (err !== undefined) {
+                failedCodegens.push(content);
+            } else {
+                canceledCodegens.push(content);
+            }
+        }
+
+        let ret = {
+            cancelled: canceledCodegens.join(";"),
+            failed: failedCodegens.join(";")
         }
         
-        return this.json(content, statusCode);
+        return this.json(ret, 200);
     }
 
     /* generate an pull request. */
     @httpPost("/generatePullRequest")
     public async GenerateCodePullRequest(request: Request): Promise<JsonResult> {
-        const token = process.env[ENVKEY.ENV_REPO_ACCESS_TOKEN];
+        // const token = process.env[ENVKEY.ENV_REPO_ACCESS_TOKEN];
         const org = request.body.org;
         const repo = request.body.repo;
         const title = request.body.title;
         const branch = request.body.branch;
         const basebranch = request.body.base;
         console.log("org:" + org + ",repo:" + repo + ",title:" + title + ",branch:" + branch + ",base:" + basebranch);
-        let prlink:string = undefined;
-        let err:any = undefined;
-        try {
-            const pulls: string[] = await listOpenPullRequest(token, org, repo, branch, basebranch);
-            if (pulls.length > 0) {
-                prlink= pulls[0]
-            } else {
-                let {prlink:ret, err:e} = await SubmitPullRequest(token, org, repo, title, branch, basebranch);
-                prlink = ret;
-                err = e;
-            }
-        }catch(e) {
-            console.log(e);
-            err = e;
-        }
+        // let prlink:string = undefined;
+        // let err:any = undefined;
+        // try {
+        //     const pulls: string[] = await listOpenPullRequest(token, org, repo, branch, basebranch);
+        //     if (pulls.length > 0) {
+        //         prlink= pulls[0]
+        //     } else {
+        //         let {prlink:ret, err:e} = await SubmitPullRequest(token, org, repo, title, branch, basebranch);
+        //         prlink = ret;
+        //         err = e;
+        //     }
+        // }catch(e) {
+        //     console.log(e);
+        //     err = e;
+        // }
 
+        const {prlink, err} = await CodeGenerateHandler.GenerateCodeRullRequest(PipelineCredential.token, org, repo, title, branch, basebranch);
         let content = {};
         let statusCode = 200;
         if (err !== undefined) {
@@ -220,13 +288,13 @@ export class DepthCoverageController extends BaseHttpController{
     /*Onboard an resource provider. */
     @httpGet("/resourceProvider/:rpname/sdk/:sdk/onboard")
     public async OnboardResourceProvider(request: Request): Promise<JsonResult> {
-        const token = process.env[ENVKEY.ENV_REPO_ACCESS_TOKEN];
+        // const token = process.env[ENVKEY.ENV_REPO_ACCESS_TOKEN];
         const swaggerorg = request.query.swaggerorg;
         const org = request.query.org;
         const rp = request.params.rpname;
         const sdk = request.params.sdk;
 
-        let err = await Onboard(rp, sdk, token, swaggerorg as string, org as string);
+        let err = await CodeGenerateHandler.SubmitGeneratedCode(rp, sdk, PipelineCredential.token, swaggerorg as string, org as string);
 
         let content = {};
         let statusCode = 200;
@@ -243,13 +311,13 @@ export class DepthCoverageController extends BaseHttpController{
 
     @httpPost("/resourceProvider/:rpname/sdk/:sdk/onboard")
     public async OnboardResourceProviderPOST(request: Request): Promise<JsonResult> {
-        const token = process.env[ENVKEY.ENV_REPO_ACCESS_TOKEN];
+        // const token = process.env[ENVKEY.ENV_REPO_ACCESS_TOKEN];
         const swaggerorg = request.body.swaggerorg;
         const org = request.body.org;
         const rp = request.params.rpname;
         const sdk = request.params.sdk;
 
-        let err = await Onboard(rp, sdk, token, swaggerorg, org);
+        let err = await CodeGenerateHandler.SubmitGeneratedCode(rp, sdk, PipelineCredential.token, swaggerorg, org);
 
         let content = {};
         let statusCode = 200;
@@ -267,7 +335,7 @@ export class DepthCoverageController extends BaseHttpController{
     @httpGet("resourceProvider/:rpname/SDK/:sdk/customize")
     public async CustomizeResourceProviderGeneration(request: Request): Promise<JsonResult> {
         const org = request.query.org as string;
-        const token = process.env[ENVKEY.ENV_REPO_ACCESS_TOKEN];
+        // const token = process.env[ENVKEY.ENV_REPO_ACCESS_TOKEN];
         const rp = request.params.rpname;
         const sdk = request.params.sdk;
         const triggerPR = request.query.triggerPR as string;
@@ -277,6 +345,7 @@ export class DepthCoverageController extends BaseHttpController{
             excludeTest = Boolean(request.query.excludeTest);
         }
 
+        const onbaordtype:string = OnboardType.DEPTH_COVERAGE;
         let {codegen, err} = await getCodeGeneration(process.env[ENVKEY.ENV_CODEGEN_DB_SERVER],
                                                             process.env[ENVKEY.ENV_CODEGEN_DATABASE],
                                                             process.env[ENVKEY.ENV_CODEGEN_DB_USER],
@@ -296,7 +365,8 @@ export class DepthCoverageController extends BaseHttpController{
             console.log("The code generation pipeline(" + rp + "," + sdk + ") is under " + codegen.status + "Already. Ignore this trigger.");
             return this.json("customize. pipeline: https://devdiv.visualstudio.com/DevDiv/_build?definitionId="+ codegen.pipelineBuildID, 201);
         }
-        let cerr = await Customize(token, rp, sdk, triggerPR, codePR, org, excludeTest);
+
+        const custmizeerr = CodeGenerateHandler.CustomizeCodeGeneration(PipelineCredential.token, rp, sdk, onbaordtype, triggerPR, codePR, org, excludeTest);
 
         /* update the code generation status. */
         const uperr = await UpdateCodeGenerationValue(process.env[ENVKEY.ENV_CODEGEN_DB_SERVER],
@@ -308,8 +378,8 @@ export class DepthCoverageController extends BaseHttpController{
                                                     "depth",
                                                     CodeGenerationDBColumn.CODE_GENERATION_COLUMN_STATUS,
                                                     CodeGenerationStatus.CODE_GENERATION_STATUS_CUSTOMIZING);
-        if (cerr !== undefined) {
-            return this.json({error: cerr}, 400);
+        if (custmizeerr !== undefined) {
+            return this.json({error: custmizeerr}, 400);
         } else {
             return this.json("customize. pipeline: https://devdiv.visualstudio.com/DevDiv/_build?definitionId="+ codegen.pipelineBuildID, 201);
         }
@@ -317,7 +387,7 @@ export class DepthCoverageController extends BaseHttpController{
 
     @httpPost("resourceProvider/:rpname/SDK/:sdk/customize")
     public async CustomizeResourceProviderGenerationPOST(request: Request): Promise<JsonResult> {
-        const token = process.env[ENVKEY.ENV_REPO_ACCESS_TOKEN];
+        // const token = process.env[ENVKEY.ENV_REPO_ACCESS_TOKEN];
         const rp = request.params.rpname;
         const sdk = request.params.sdk;
         const org = request.body.org as string;
@@ -327,6 +397,8 @@ export class DepthCoverageController extends BaseHttpController{
         if (request.query.excludeTest !== undefined) {
             excludeTest = Boolean(request.body.excludeTest);
         }
+
+        const onbaordtype:string = OnboardType.DEPTH_COVERAGE;
 
         let {codegen, err} = await getCodeGeneration(process.env[ENVKEY.ENV_CODEGEN_DB_SERVER],
                                                             process.env[ENVKEY.ENV_CODEGEN_DATABASE],
@@ -347,9 +419,9 @@ export class DepthCoverageController extends BaseHttpController{
             console.log("The code generation pipeline(" + rp + "," + sdk + ") is under " + codegen.status + "Already. Ignore this trigger.");
             return this.json("customize. pipeline: https://devdiv.visualstudio.com/DevDiv/_build?definitionId="+ codegen.pipelineBuildID, 201);
         }
-        let cerr = await Customize(token, rp, sdk, triggerPR, codePR, org, excludeTest);
+        const custmizeerr = CodeGenerateHandler.CustomizeCodeGeneration(PipelineCredential.token, rp, sdk, onbaordtype, triggerPR, codePR, org, excludeTest);
 
-        if (cerr === undefined) {
+        if (custmizeerr === undefined) {
             /* update the code generation status. */
             const uperr = await UpdateCodeGenerationValue(process.env[ENVKEY.ENV_CODEGEN_DB_SERVER],
                                                         process.env[ENVKEY.ENV_CODEGEN_DATABASE],
@@ -361,8 +433,8 @@ export class DepthCoverageController extends BaseHttpController{
                                                         CodeGenerationDBColumn.CODE_GENERATION_COLUMN_STATUS,
                                                         CodeGenerationStatus.CODE_GENERATION_STATUS_CUSTOMIZING);
         }
-        if (cerr !== undefined) {
-            return this.json({error: cerr}, 400);
+        if (custmizeerr !== undefined) {
+            return this.json({error: custmizeerr}, 400);
         } else {
             return this.json("customize. pipeline: https://devdiv.visualstudio.com/DevDiv/_build?definitionId="+ codegen.pipelineBuildID, 201);
         }

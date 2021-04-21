@@ -1,10 +1,9 @@
-import { REPO, SDK, ENVKEY, ORG, README } from "../common";
-import { DeleteBranch, ReadFileFromRepo, ReadCustomizeFiles } from "./CodeRepoGit";
+import { DeleteBranch, ReadFileFromRepo, ReadCustomizeFiles, listOpenPullRequest, SubmitPullRequest } from "./CodeRepoGit";
 import { IsValidCodeGenerationExist, InsertCodeGeneration, UpdateCodeGenerationValue } from "./CodeGeneration";
 import { createBranch, uploadToRepo, createPullRequest, getBlobContent, NewOctoKit, getCurrentCommit, getBranch } from "../gitutil/GitAPI";
-import { DeletePipelineBranch } from "../depthcoverage/Onboard";
-import { ResourceAndOperation, RESOUCEMAPFile } from "./Model";
+import { ResourceAndOperation, RESOUCEMAPFile, ENVKEY } from "./Model";
 import { CodeGeneration, CodeGenerationDBColumn, CodeGenerationStatus } from "./CodeGenerationModel";
+import { SDK, REPO, ORG, README } from "./common";
 
 export class CodeGenerateHandler {
     /**
@@ -206,7 +205,7 @@ export class CodeGenerateHandler {
         return err;
     }
 
-    /*submit generated code to sdk repo, and readme to swagger repo. */
+    /*Onboard, submit generated code to sdk repo, and readme to swagger repo. */
     public async SubmitGeneratedCode(rp:string, sdk:string, token: string, swaggerorg:string = undefined, org:string = undefined, type: string = "depth"):Promise<any> {
         try {
             const octo = NewOctoKit(token);
@@ -238,7 +237,7 @@ export class CodeGenerateHandler {
     
              /* close work sdk branch. */
              let workbranch = type + "-code-" + sdk + "-" + rp;
-             await DeletePipelineBranch(token, sdkorg, sdkrepo, workbranch);
+             await DeleteBranch(token, sdkorg, sdkrepo, workbranch);
     
         } catch(err) {
             console.log(err);
@@ -249,7 +248,7 @@ export class CodeGenerateHandler {
     }
 
     /*customize an code generation. */
-    public async CustomizeCodeGeneration(token:string, rp: string, sdk: string, triggerPR: string, codePR: string, org: string = undefined, excludeTest: boolean = false):Promise<any> {
+    public async CustomizeCodeGeneration(token:string, rp: string, sdk: string, onboardType:string, triggerPR: string, codePR: string, org: string = undefined, excludeTest: boolean = false):Promise<any> {
         const octo = NewOctoKit(token);
         // const org = ORG.AZURE;
         let sdkorg = ORG.AZURE;
@@ -259,7 +258,7 @@ export class CodeGenerateHandler {
             sdk = sdk.toLowerCase();
         }
     
-        const branch = "depth-" + sdk + "-" + rp;
+        const branch = onboardType + "-" + sdk + "-" + rp;
     
         let sdkrepo = "";
         let readfile = README.CLI_README_FILE;
@@ -370,6 +369,28 @@ export class CodeGenerateHandler {
 
         return undefined;
     
+    }
+
+    public async GenerateCodeRullRequest(token: string, org: string, repo: string, title: string, branch: string, basebranch: string): Promise<{prlink:string, err:any}> {
+        console.log("org:" + org + ",repo:" + repo + ",title:" + title + ",branch:" + branch + ",base:" + basebranch);
+        let prlink:string = undefined;
+        let err:any = undefined;
+        try {
+            const pulls: string[] = await listOpenPullRequest(token, org, repo, branch, basebranch);
+            if (pulls.length > 0) {
+                prlink= pulls[0]
+            } else {
+                let {prlink:ret, err:e} = await SubmitPullRequest(token, org, repo, title, branch, basebranch);
+                prlink = ret;
+                err = e;
+            }
+        }catch(e) {
+            console.log(e);
+            err = e;
+        }
+
+        return {prlink, err};
+
     }
 }
 
