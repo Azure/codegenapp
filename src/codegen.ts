@@ -132,7 +132,9 @@ export async function Customize(token:string, rp: string, sdk: string, triggerPR
     }
     
     const prNumber = codePR.split("/").pop();
-    const filelist:string[] = [readfile, "schema.json"];
+    // const filelist:string[] = [readfile, "schema.json"];
+    let schemafile = "azurerm/internal/services/" + rp + "/schema.json";
+    const filelist:string[] = [readfile, schemafile];
     await ReadCustomizeFiles(token, org !== undefined ? org :sdkorg, sdkrepo, +prNumber, filelist);
 
     
