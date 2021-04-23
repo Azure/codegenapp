@@ -11,7 +11,8 @@ export async function ReadCustomizeFiles(token: string, org: string, repo: strin
     const fs = require('fs');
     for (let file of fileList) {
         const content = await getBlobContent(octo, org, repo, headbranch, file);
-        fs.writeFileSync(file, content);
+        let filename = file.split("/").pop();
+        fs.writeFileSync(filename, content);
     }
 
     return fileList.join(";");
