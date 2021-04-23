@@ -1,3 +1,6 @@
+import fs = require('fs');
+import csv = require('csv-parser');
+var parse = require('csv-parse/lib/sync');
 export enum REPO {
     SWAGGER_REPO="azure-rest-api-specs",
     TF_PROVIDER_REPO= "terraform-provider-azurerm",
@@ -36,7 +39,7 @@ export enum AutorestSDK {
 
 export enum SQLStr {
     /*access depth coverage candidate table. */
-    SQLSTR_INSERT_CANDIDATE = "INSERT INTO %s (resourceProvider, fullResourceType, fileName, apiVersion, tag, startDate, endDate) values (@resourceProvider, @fullResourceName, @fileName, @apiVersion, @tag, @startDate, @endDate)",
+    SQLSTR_INSERT_CANDIDATE = "INSERT INTO %s (resourceProvider, fullResourceType, fileName, apiVersion, tag, startDate, endDate) values (@resourceProvider, @fullResourceType, @fileName, @apiVersion, @tag, @startDate, @endDate)",
     SQLSTR_CLEAR_CANDIDATE = "DElETE from %s",
     SQLSTR_DELETE = "DELETE from %s where resourceProvider='%s' and fullResourceType='%s'",
 
@@ -47,4 +50,29 @@ export enum SQLStr {
     SQLSTR_SELECT_CODEGENERATION = "SELECT * FROM %s where resourceProvider=@resourceProvider and type=@type and sdk=@sdk",
     SQLSTR_UPDATE_CODEGENERATION_VALUE = "UPDATE %s SET %s=@%s where resourceProvider=@resourceProvider and type=@type and sdk=@sdk",
     SQLSTR_LIST_CODEGENERATION = "SELECT * FROM %s where type=@type"
+}
+
+export function readCVS(filepath: string): any[] {
+    let results: any[] = [];
+    try {
+        console.log(__dirname+'/TFCandidate.csv');
+        fs.createReadStream(filepath)
+        .pipe(csv())
+        .on('data', (data) => results.push(data))
+        .on('end', () => {
+            console.log(results);
+        });
+    }catch (e) {
+        console.log("Failed to read candidate file.");
+        console.log(e);
+    }
+    
+    return results;
+}
+
+export function readCVSSync(filepath: string): any[] {
+    const fileContent = fs.readFileSync(filepath);
+    const records = parse(fileContent, {columns: true});
+    // console.log(records);
+    return records;
 }

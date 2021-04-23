@@ -22,6 +22,7 @@ export class DepthCoverageController extends BaseHttpController{
     // }
     @httpGet("/")
     public hello(): string{
+        console.log(DepthDBCredentials.server);
         return "HelloWorld";
     }
 
@@ -76,7 +77,7 @@ export class DepthCoverageController extends BaseHttpController{
         let type = "depth";
         if (platform !== undefined && platform.toLowerCase() === "dev") {
             branch = "dev";
-            type = "dev";
+            // type = "dev";
         }
         // if (
         //     !dbserver ||
@@ -361,6 +362,9 @@ export class DepthCoverageController extends BaseHttpController{
                    codegen.status === CodeGenerationStatus.CODE_GENERATION_STATUS_IN_PROGRESS) {
             console.log("The code generation pipeline(" + rp + "," + sdk + ") is under " + codegen.status + ". No avaialbe to trigger customize now.");
             return this.json("No available to trigger customize now", 400);
+        } else if (codegen.status === CodeGenerationStatus.CODE_GENERATION_STATUS_CANCELED) {
+            console.log("The code generation pipeline(" + rp + "," + sdk + ") is cancelled. No avaialbe to trigger customize now.");
+            return this.json("The code generation pipeline is cancelled. Cannot customize.", 400);
         } else if (codegen.status === CodeGenerationStatus.CODE_GENERATION_STATUS_CUSTOMIZING) {
             console.log("The code generation pipeline(" + rp + "," + sdk + ") is under " + codegen.status + "Already. Ignore this trigger.");
             return this.json("customize. pipeline: https://devdiv.visualstudio.com/DevDiv/_build?definitionId="+ codegen.pipelineBuildID, 201);

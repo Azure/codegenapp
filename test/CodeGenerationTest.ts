@@ -1,11 +1,37 @@
-import { isMainThread } from "worker_threads";
-import { CodeGeneration, initService, ENVKEY } from "../src/common";
 import { InsertCodeGeneration, getCodeGeneration, DeleteCodeGeneration, UpdateCodeGenerationValue } from "../src/lib/CodeGeneration";
 import { AssertionError } from "assert";
+import { readCVSSync } from "../src/lib/common";
+import { ENVKEY } from "../src/lib/Model";
+import { CodeGeneration } from "../src/lib/CodeGenerationModel";
 
 var assert = require('assert')
 describe('code generation test', () => {
-    initService();
+    // initService();
+    const depthDBcredentialFile = "test\\depthDB.csv"
+    if (depthDBcredentialFile !== undefined) {
+        // let credentials = readCVS(depthDBcredentialFile);
+        let credentials = readCVSSync(depthDBcredentialFile);
+        for (let cr of credentials) {
+            process.env[ENVKEY.ENV_DEPTH_DB_SERVER] = cr["server"];
+            process.env[ENVKEY.ENV_DEPTH_DATABASE] = cr["db"];
+            process.env[ENVKEY.ENV_DEPTH_DB_USER] = cr["user"];
+            process.env[ENVKEY.ENV_DEPTH_DB_PASSWORD] = cr["pw"];
+            break;
+        }
+    }
+    
+    const codeDBcredentialFile = "test\\CodeDB.csv"
+    if (codeDBcredentialFile !== undefined) {
+        // let credentials = readCVS(codeDBcredentialFile);
+        let credentials = readCVSSync(codeDBcredentialFile);
+        for (let cr of credentials) {
+            process.env[ENVKEY.ENV_CODEGEN_DB_SERVER] = cr["server"];
+            process.env[ENVKEY.ENV_CODEGEN_DATABASE] = cr["db"];
+            process.env[ENVKEY.ENV_CODEGEN_DB_USER] = cr["user"];
+            process.env[ENVKEY.ENV_CODEGEN_DB_PASSWORD] = cr["pw"];
+    
+        }
+    }
     it('ingest an code generation', async () => {
         jest.setTimeout(50000);
         /*insert a code generation. */

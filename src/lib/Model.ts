@@ -14,11 +14,12 @@ export enum ENVKEY {
     ENV_CODEGEN_DB_PASSWORD="DBPassword",
 }
 export class ResourceAndOperation {
-    public constructor(RPName: string, readme:string, resources: OnboardResource[], target: string) {
+    public constructor(RPName: string, readme:string, resources: OnboardResource[], target: string, type: string = OnboardType.DEPTH_COVERAGE) {
         this.RPName = RPName;
         this.readmeFile = readme;
         this.resources = resources;
         this.target = target;
+        this.onboardType = type;
     }
     public RPName: string;
     public readmeFile: string;
