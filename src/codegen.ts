@@ -11,7 +11,8 @@ export async function ReadCustomizeFiles(token: string, org: string, repo: strin
     const fs = require('fs');
     for (let file of fileList) {
         const content = await getBlobContent(octo, org, repo, headbranch, file);
-        fs.writeFileSync(file, content);
+        let filename = file.split("/").pop();
+        fs.writeFileSync(filename, content);
     }
 
     return fileList.join(";");
@@ -132,7 +133,9 @@ export async function Customize(token:string, rp: string, sdk: string, triggerPR
     }
     
     const prNumber = codePR.split("/").pop();
-    const filelist:string[] = [readfile, "schema.json"];
+    // const filelist:string[] = [readfile, "schema.json"];
+    let schemafile = "azurerm/internal/services/" + rp + "/schema.json";
+    const filelist:string[] = [readfile, schemafile];
     await ReadCustomizeFiles(token, org !== undefined ? org :sdkorg, sdkrepo, +prNumber, filelist);
 
     

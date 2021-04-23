@@ -236,8 +236,22 @@ export async function getBlobContent(octo: Octokit, org: string, repo: string, b
     const treeData = await getTree(octo, org, repo, currentCommit.treeSha);
 
     let content: string = "";
-    for (let t of treeData.tree) {
-        if (t.path === filepath) {
+    const dirs: string[] = filepath.split("/");
+    const filename = dirs.pop();
+    let curtree = treeData;
+    for (let dir of dirs) {
+        let found: boolean = false;
+        for (let t of curtree.tree) {
+            if (t.path === dir) {
+                curtree = await getTree(octo, org, repo, t.sha);
+                found = true;
+                break;
+            }
+        }
+        if (!found) return "";
+    }
+    for (let t of curtree.tree) {
+        if (t.path === filename) {
             const blobdata = (await octo.git.getBlob({
                 owner: org,
                 repo,
@@ -282,9 +296,24 @@ export async function deleteFile(octo: Octokit, org: string, repo: string, branc
     const currentCommit = await getCurrentCommit(octo, org, repo, branch);
     console.log("current commit:" + currentCommit.commitSha);
     const treeData = await getTree(octo, org, repo, currentCommit.treeSha);
-    for (let t of treeData.tree) {
+    const dirs: string[] = filepath.split("/");
+    const filename = dirs.pop();
+    let curtree = treeData;
+    for (let dir of dirs) {
+        let found: boolean = false;
+        for (let t of curtree.tree) {
+            if (t.path === dir) {
+                curtree = await getTree(octo, org, repo, t.sha);
+                found = true;
+                break;
+            }
+        }
+        if (!found) return "";
+    }
+
+    for (let t of curtree.tree) {
         console.log("file path:" + t.path);
-        if (t.path === filepath) {
+        if (t.path === filename) {
             console.log("find target:" + filepath + ", tsha:" + t.sha);
             try{
                 const deleteResult = await octo.repos.deleteFile({
