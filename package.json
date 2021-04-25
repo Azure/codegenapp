@@ -57,6 +57,7 @@
     "bufferutil": "^4.0.3",
     "canvas": "^2.7.0",
     "cluster": "^0.7.7",
+    "csv-parse": "^4.15.4",
     "csv-parser": "^3.0.0",
     "express": "^4.17.1",
     "express-validator": "^6.10.0",

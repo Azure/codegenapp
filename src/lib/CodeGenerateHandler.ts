@@ -17,7 +17,7 @@ export class CodeGenerateHandler {
      * @param onbaordtype onbaord type
      * @param resources The resource list to generate
      */
-    public async SubmitCodeGeneration(token: string, org: string, repo: string, basebranch: string, rp: string, sdk: string, onbaordtype: string, resources:string = undefined) {
+    public async TriggerCodeGeneration2(token: string, org: string, repo: string, basebranch: string, rp: string, sdk: string, onbaordtype: string, resources:string = undefined) {
         // const RESOUCEMAPFile = "ToGenerate.json";
         const octo = NewOctoKit(token);
         let alreadyOnboard: boolean = await IsValidCodeGenerationExist(process.env[ENVKEY.ENV_CODEGEN_DB_SERVER],
@@ -64,6 +64,61 @@ export class CodeGenerateHandler {
         if (e !== undefined) {
             console.log(e);
         }
+    }
+
+    public async TriggerCodeGeneration(token: string, org: string, repo: string, basebranch: string, rpToGen:ResourceAndOperation):Promise<any> {
+        // const RESOUCEMAPFile = "ToGenerate.json";
+        const octo = NewOctoKit(token);
+        let alreadyOnboard: boolean = await IsValidCodeGenerationExist(process.env[ENVKEY.ENV_CODEGEN_DB_SERVER],
+            process.env[ENVKEY.ENV_CODEGEN_DATABASE],
+            process.env[ENVKEY.ENV_CODEGEN_DB_USER],
+            process.env[ENVKEY.ENV_CODEGEN_DB_PASSWORD],
+            rpToGen.RPName,
+            rpToGen.target,
+            rpToGen.onboardType);
+        if (alreadyOnboard) {
+            console.log("Already triggerred to onboard " + rpToGen.RPName + ". Ignore this one.");
+            return;
+        }
+
+        // let readmefile: string = ""
+        // let rs: ResourceAndOperation = new ResourceAndOperation(rp, readmefile, [], sdk);
+        // rs.generateResourceList();
+        // if (resources !== undefined) rs.resourcelist = resources;
+        try {
+            const branchName = rpToGen.onboardType + "-" + rpToGen.target + "-" + rpToGen.RPName;
+            const baseCommit = await getCurrentCommit(octo, org, repo, basebranch);
+            const targetBranch = await getBranch(octo, org, repo, branchName);
+            // if (targetBranch !== undefined) {
+            //     console.log("resource branch already exist.")
+            //     return;
+            // }
+            await createBranch(octo, org, repo, branchName, baseCommit.commitSha);
+            const fs = require('fs');
+            fs.writeFileSync(RESOUCEMAPFile, JSON.stringify(rpToGen, null, 2));
+            await uploadToRepo(octo, ["ToGenerate.json"], org, repo, branchName);
+            /* create pull request. */
+            await createPullRequest(octo, org, repo, basebranch, branchName, "pull request from branch " + branchName);
+        
+            let content = await getBlobContent(octo, org, repo, branchName, RESOUCEMAPFile);
+            console.log(content);
+
+            /* update code generation status table. */
+            let cg: CodeGeneration = new CodeGeneration(rpToGen.RPName, rpToGen.target, rpToGen.onboardType);
+            let e = await InsertCodeGeneration(process.env[ENVKEY.ENV_CODEGEN_DB_SERVER],
+                    process.env[ENVKEY.ENV_CODEGEN_DATABASE],
+                    process.env[ENVKEY.ENV_CODEGEN_DB_USER],
+                    process.env[ENVKEY.ENV_CODEGEN_DB_PASSWORD],
+                    cg);
+            if (e !== undefined) {
+                console.log(e);
+            }
+        }catch(ex) {
+            console.log(ex);
+            return ex;
+        }
+
+        return undefined;
     }
     public async CompleteCodeGeneration(token: string, rp: string, sdk: string, onbaordtype: string, codegenorg: string, sdkorg: string, swaggerorg: string) : Promise<any> {  
     //     const branch = onbaordtype + "-" + sdk.toLowerCase() + "-" + rp;
