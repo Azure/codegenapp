@@ -49,7 +49,8 @@ export enum SQLStr {
     SQLSTR_DELETE_CODEGENERATION = "DELETE FROM %s where resourceProvider=@resourceProvider and type=@type and sdk=@sdk",
     SQLSTR_SELECT_CODEGENERATION = "SELECT * FROM %s where resourceProvider=@resourceProvider and type=@type and sdk=@sdk",
     SQLSTR_UPDATE_CODEGENERATION_VALUE = "UPDATE %s SET %s=@%s where resourceProvider=@resourceProvider and type=@type and sdk=@sdk",
-    SQLSTR_LIST_CODEGENERATION = "SELECT * FROM %s where type=@type"
+    SQLSTR_LIST_CODEGENERATION = "SELECT * FROM %s where type=@type",
+    SQLSTR_LIST_CODEGENERATION_BY_STATUS = "SELECT * FROM %s where status=@status"
 }
 
 export function readCVS(filepath: string): any[] {

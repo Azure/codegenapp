@@ -2,7 +2,7 @@ import { readCVS, CodeGeneration } from "./common";
 import { ReadFileFromRepo, ReadFileFromPR, DeleteFilesFromRepo } from "./codegen";
 import { IngestCandidates } from "./CandidateService";
 import { readFile } from "fs";
-import { readRepoFile } from "./devopsutil";
+import { readRepoFile } from "./devopsutil/devopsutil";
 import { InsertCodeGeneration, getCodeGeneration } from "./lib/CodeGeneration";
 
 // readCVS(__dirname+'/TFCandidate.csv');

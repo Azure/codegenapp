@@ -358,3 +358,50 @@ export async function ListCodeGenerations(server: string, database: string, user
     
     return codegens;
 }
+
+/*Get all code generations of an special status. */
+export async function ListCodeGenerationsByStatus(server: string, database: string, user: string, password:string, status: string):Promise<CodeGeneration[]> {
+    let codegens: CodeGeneration[] = [];
+    var sql = require("mssql");
+    var config = {
+        user: user,
+        password: password,
+        server: server, 
+        database: database 
+    };
+
+    let table: string = CodegenStatusTable;
+
+    try {
+        let conn = await sql.connect(config);
+
+        let querystr = require('util').format(SQLStr.SQLSTR_LIST_CODEGENERATION, table);
+       
+            
+        const request = conn.request();
+        request.input('table', sql.VarChar, table);
+        request.input('status', sql.VarChar, status);
+
+        let result = await request.query(querystr);
+
+        if (result.recordset !== undefined && result.recordset.length > 0) return codegens;
+        for (let record of result.recordset) {
+            const codegen = new CodeGeneration(record["resourceProvider"], 
+                                                        record["sdk"],
+                                                        record["type"],
+                                                        record["resourcesToGenerate"],
+                                                        record["tag"], 
+                                                        record["swaggerPR"],
+                                                        record["codePR"],
+                                                        record["ignoreFailure"],
+                                                        record["excludeStages"],
+                                                        record["pipelineBuildID"],
+                                                        record["status"]);
+            codegens.push(codegen);
+        }
+    }catch(e) {
+        console.log(e);
+    }
+    
+    return codegens;
+}

@@ -33,6 +33,10 @@ export class CodeGeneration {
     public excludeStages: string;
     public pipelineBuildID: string;
     public status: string;
+
+    public toString() {
+        return "(resourceProvider:" + this.resourceProvider + ", sdk: " + this.sdk + ", type:" + this.type + ")"; 
+    }
 }
 
 export enum CodeGenerationStatus {

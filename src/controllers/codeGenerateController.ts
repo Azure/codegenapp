@@ -293,18 +293,18 @@ export class CodeGenerateController extends BaseHttpController{
         }
         const custmizeerr = CodeGenerateHandler.CustomizeCodeGeneration(PipelineCredential.token, rp, sdk, onbaordtype, triggerPR, codePR, org, excludeTest);
 
-        if (custmizeerr === undefined) {
-            /* update the code generation status. */
-            const uperr = await UpdateCodeGenerationValue(process.env[ENVKEY.ENV_CODEGEN_DB_SERVER],
-                                                        process.env[ENVKEY.ENV_CODEGEN_DATABASE],
-                                                        process.env[ENVKEY.ENV_CODEGEN_DB_USER],
-                                                        process.env[ENVKEY.ENV_CODEGEN_DB_PASSWORD],
-                                                        rp, 
-                                                        sdk,
-                                                        "depth",
-                                                        CodeGenerationDBColumn.CODE_GENERATION_COLUMN_STATUS,
-                                                        CodeGenerationStatus.CODE_GENERATION_STATUS_CUSTOMIZING);
-        }
+        // if (custmizeerr === undefined) {
+        //     /* update the code generation status. */
+        //     const uperr = await UpdateCodeGenerationValue(process.env[ENVKEY.ENV_CODEGEN_DB_SERVER],
+        //                                                 process.env[ENVKEY.ENV_CODEGEN_DATABASE],
+        //                                                 process.env[ENVKEY.ENV_CODEGEN_DB_USER],
+        //                                                 process.env[ENVKEY.ENV_CODEGEN_DB_PASSWORD],
+        //                                                 rp, 
+        //                                                 sdk,
+        //                                                 onbaordtype,
+        //                                                 CodeGenerationDBColumn.CODE_GENERATION_COLUMN_STATUS,
+        //                                                 CodeGenerationStatus.CODE_GENERATION_STATUS_CUSTOMIZING);
+        // }
         if (custmizeerr !== undefined) {
             return this.json({error: custmizeerr}, 400);
         } else {

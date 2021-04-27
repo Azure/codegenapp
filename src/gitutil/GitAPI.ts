@@ -230,6 +230,16 @@ export async function listPullRequest(octo: Octokit, org: string, repo: string, 
     return pullurls;
 }
 
+export async function checkIfMergedPullRequest(octo: Octokit, org: string, repo: string, pullNumber: number) :Promise<any> {
+    const pullData = await octo.pulls.checkIfMerged({
+        owner: org,
+        repo,
+        pull_number: pullNumber
+    });
+
+    return pullData;
+}
+
 export async function getBlobContent(octo: Octokit, org: string, repo: string, branch: string, filepath: string) {
     const currentCommit = await getCurrentCommit(octo, org, repo, branch);
 
@@ -316,6 +326,16 @@ export async function deleteFile(octo: Octokit, org: string, repo: string, branc
         if (t.path === filename) {
             console.log("find target:" + filepath + ", tsha:" + t.sha);
             try{
+                const blobdata = (await octo.git.getBlob({
+                    owner: org,
+                    repo,
+                    file_sha: t.sha,
+                })).data;
+    
+                let buff = Buffer.from(blobdata.content, 'base64');  
+                let content = buff.toString('utf-8');
+                console.log(content);
+                // content = blobdata.content;
                 const deleteResult = await octo.repos.deleteFile({
                     owner: org,
                     repo,

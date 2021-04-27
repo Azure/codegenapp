@@ -10,6 +10,7 @@ import { DepthDBCredentials, CodegenDBCredentials } from "../lib/DBCredentials";
 import "../controllers/DepthConverageController"
 import "../controllers/CodeGenerateController"
 import { PipelineCredential } from "../lib/PipelineCredential";
+import { CompleteCodeGenerationTask } from "../lib/CompleteCodeGenerationTask";
 
 class CodegenApp {
     private port = this.normalizePort(process.env.PORT || '3000');
@@ -19,6 +20,7 @@ class CodegenApp {
         await this.init();
         this.buildContainer();
         this.buildExpress();
+        this.buildSchedulerTask();
     }
 
     private async init() {
@@ -26,11 +28,6 @@ class CodegenApp {
         const url = process.env["KEYVAULT_URI"] || "https://codegencontrollerkv.vault.azure.net/";
     
         const client = new SecretClient(url, credential);
-    
-        // let secrets = await client.listPropertiesOfSecrets();
-        // for (let secret of secrets) {
-    
-        // }
     
         try {
             for await (let secretProperties of client.listPropertiesOfSecrets()) {
@@ -43,6 +40,7 @@ class CodegenApp {
         } catch(e) {
             console.log("Failed to list key secrets");
             console.log(e);
+            console.log("use the credential locally for test");
         }
         
     
@@ -66,6 +64,8 @@ class CodegenApp {
         CodegenDBCredentials.pw = process.env[ENVKEY.ENV_CODEGEN_DB_PASSWORD];
 
         PipelineCredential.token = process.env[ENVKEY.ENV_REPO_ACCESS_TOKEN];
+        console.log("(" + DepthDBCredentials.server + "," + DepthDBCredentials.db + "," + DepthDBCredentials.user + "," + DepthDBCredentials.pw + ")");
+        console.log("(" + CodegenDBCredentials.server + "," + CodegenDBCredentials.db + "," + CodegenDBCredentials.user + "," + CodegenDBCredentials.pw + ")");
     }
     private buildContainer(): void {
         this.container = new Container();
@@ -101,6 +101,19 @@ class CodegenApp {
         });
         const serverInstance = server.build();
         serverInstance.listen(3000);
+    }
+
+    private buildSchedulerTask() {
+        const cron = require('node-cron');
+        /*auto complete code generation. */
+        cron.schedule('* * * * *', function() {
+            console.log('running auto-complete task every minute');
+            CompleteCodeGenerationTask();
+        });
+
+        cron.schedule('* * * * *', function() {
+            console.log('running second task every minute');
+        });
     }
 
     private normalizePort(val) {

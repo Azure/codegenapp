@@ -1,4 +1,4 @@
-import { NewOctoKit, deleteBranch, getPullRequest, getBlobContent, deleteFile, createPullRequest, listPullRequest } from "../gitutil/GitAPI";
+import { NewOctoKit, deleteBranch, getPullRequest, getBlobContent, deleteFile, createPullRequest, listPullRequest, checkIfMergedPullRequest } from "../gitutil/GitAPI";
 
 export async function DeleteBranch(token: string, org: string, repo: string, branch: string) :Promise<any> {
     try {
@@ -74,7 +74,56 @@ export async function SubmitPullRequest(token: string, org: string, repo: string
 /* list pull request. */
 export async function listOpenPullRequest(token: string, org: string, repo: string, head: string, base:string):Promise<string[]> {
     const octo = NewOctoKit(token);
-    return listPullRequest(octo, org, repo, "open", org + ":" + head, base);
-    // let result:string[] = [];
-    // return result;
+    try {
+        return await listPullRequest(octo, org, repo, "open", org + ":" + head, base);
+    }catch (e) {
+        console.log(e);
+        return []
+    }
+    // return listPullRequest(octo, org, repo, "open", org + ":" + head, base);
+}
+
+/**
+ * 
+ * @param token github access token
+ * @param prlink pull request link, e.g https://github.com/Azure/depth-coverage-pipeline/pull/1238
+ */
+export async function GetPullRequest(token: string, prlink: string) {
+    const octo = NewOctoKit(token);
+    const prpaths: string[] = prlink.split("/");
+    // const org = prpaths[3];
+    // const repo = prpaths[4];
+    const pullNumber = Number(prpaths.pop());
+    prpaths.pop();
+    const repo = prpaths.pop();
+    const org = prpaths.pop();
+    
+    try {
+        const prdata = await getPullRequest(octo, org, repo, pullNumber);
+        return prdata;
+    } catch (e) {
+        console.log(e);
+    }
+
+    return undefined;
+}
+
+export async function IsMergedPullRequest(token: string, prlink: string): Promise<boolean> {
+    let ret: boolean = false;
+    const octo = NewOctoKit(token);
+    const prpaths: string[] = prlink.split("/");
+    // const org = prpaths[3];
+    // const repo = prpaths[4];
+    const pullNumber = Number(prpaths.pop());
+    prpaths.pop();
+    const repo = prpaths.pop();
+    const org = prpaths.pop();
+
+    try {
+        const prdata = await checkIfMergedPullRequest(octo, org, repo, pullNumber);
+        return prdata.statusCode === 204;
+    } catch (e) {
+        console.log(e);
+    }
+    return ret;
 }

@@ -103,7 +103,7 @@ export class CodeGenerateHandler {
             let content = await getBlobContent(octo, org, repo, branchName, RESOUCEMAPFile);
             console.log(content);
 
-            /* update code generation status table. */
+            /* insert code generation status table. */
             let cg: CodeGeneration = new CodeGeneration(rpToGen.RPName, rpToGen.target, rpToGen.onboardType);
             let e = await InsertCodeGeneration(process.env[ENVKEY.ENV_CODEGEN_DB_SERVER],
                     process.env[ENVKEY.ENV_CODEGEN_DATABASE],
@@ -293,6 +293,22 @@ export class CodeGenerateHandler {
              /* close work sdk branch. */
              let workbranch = type + "-code-" + sdk + "-" + rp;
              await DeleteBranch(token, sdkorg, sdkrepo, workbranch);
+
+             /* update the code generation status. */
+              /* update code generation status table. */
+            const uperr = await UpdateCodeGenerationValue(process.env[ENVKEY.ENV_CODEGEN_DB_SERVER],
+                process.env[ENVKEY.ENV_CODEGEN_DATABASE],
+                process.env[ENVKEY.ENV_CODEGEN_DB_USER],
+                process.env[ENVKEY.ENV_CODEGEN_DB_PASSWORD],
+                rp,
+                sdk,
+                type,
+                CodeGenerationDBColumn.CODE_GENERATION_COLUMN_STATUS,
+                CodeGenerationStatus.CODE_GENERATION_STATUS_PIPELINE_COMPLETED);
+
+            if (uperr !== undefined) {
+                console.log(uperr);
+            }
     
         } catch(err) {
             console.log(err);
@@ -305,6 +321,7 @@ export class CodeGenerateHandler {
     /*customize an code generation. */
     public async CustomizeCodeGeneration(token:string, rp: string, sdk: string, onboardType:string, triggerPR: string, codePR: string, org: string = undefined, excludeTest: boolean = false):Promise<any> {
         const octo = NewOctoKit(token);
+        let custmizeerr:any = undefined;
         // const org = ORG.AZURE;
         let sdkorg = ORG.AZURE;
         sdk = sdk.toLowerCase();
@@ -420,6 +437,18 @@ export class CodeGenerateHandler {
         
     
     
+        if (custmizeerr === undefined) {
+            /* update the code generation status. */
+            const uperr = await UpdateCodeGenerationValue(process.env[ENVKEY.ENV_CODEGEN_DB_SERVER],
+                                                        process.env[ENVKEY.ENV_CODEGEN_DATABASE],
+                                                        process.env[ENVKEY.ENV_CODEGEN_DB_USER],
+                                                        process.env[ENVKEY.ENV_CODEGEN_DB_PASSWORD],
+                                                        rp, 
+                                                        sdk,
+                                                        onboardType,
+                                                        CodeGenerationDBColumn.CODE_GENERATION_COLUMN_STATUS,
+                                                        CodeGenerationStatus.CODE_GENERATION_STATUS_CUSTOMIZING);
+        }
         /* delete sdk rp branch. */
 
         return undefined;
