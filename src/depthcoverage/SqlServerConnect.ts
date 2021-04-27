@@ -1,4 +1,3 @@
-
 // export function SQLServerConnection(server: string, database: string, user: string, password:string): sql.Connection{
 //     let sql = require("mssql");
 //     var config = {

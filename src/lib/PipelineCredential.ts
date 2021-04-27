@@ -1,5 +1,5 @@
 let PipelineCredential = {
-    token: ""
-}
+  token: "",
+};
 
-export {PipelineCredential};
+export { PipelineCredential };
