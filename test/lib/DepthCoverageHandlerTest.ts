@@ -29,13 +29,13 @@ describe("depth coverage handler test", () => {
     }
   }
 
-  // it('trigger depth coverage', async () => {
-  //     DepthCoverageHandler.TriggerOnboard(process.env[ENVKEY.ENV_DEPTH_DB_SERVER],
-  //         process.env[ENVKEY.ENV_DEPTH_DATABASE],
-  //         process.env[ENVKEY.ENV_DEPTH_DB_USER],
-  //         process.env[ENVKEY.ENV_DEPTH_DB_PASSWORD],
-  //         "4f655f07cb244bd5771b8625bf27859b710f9efd",
-  //         "chunyu3",
-  //         "depth-coverage-pipeline");
-  // });
+  it('trigger depth coverage', async () => {
+      DepthCoverageHandler.TriggerOnboard(process.env[ENVKEY.ENV_DEPTH_DB_SERVER],
+          process.env[ENVKEY.ENV_DEPTH_DATABASE],
+          process.env[ENVKEY.ENV_DEPTH_DB_USER],
+          process.env[ENVKEY.ENV_DEPTH_DB_PASSWORD],
+          "4f655f07cb244bd5771b8625bf27859b710f9efd",
+          "chunyu3",
+          "depth-coverage-pipeline");
+  });
 });

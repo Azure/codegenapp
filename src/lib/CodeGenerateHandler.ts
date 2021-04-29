@@ -30,95 +30,12 @@ import { SDK, REPO, ORG, README } from "./common";
 export class CodeGenerateHandler {
   /**
    *
-   * @param token The Github token
-   * @param org The code gen pipeline org
-   * @param repo The code gen pipeline repo
-   * @param basebranch The base branch
-   * @param rp The resource provider to generate
-   * @param sdk The target sdk
-   * @param onbaordtype onbaord type
-   * @param resources The resource list to generate
+   * @param token the pipeline access token
+   * @param org the codegen pipeline org
+   * @param repo the codegen pipeline repo
+   * @param basebranch the basebranch
+   * @param rpToGen the resources to generation.
    */
-  public async TriggerCodeGeneration2(
-    token: string,
-    org: string,
-    repo: string,
-    basebranch: string,
-    rp: string,
-    sdk: string,
-    onbaordtype: string,
-    resources: string = undefined
-  ) {
-    // const RESOUCEMAPFile = "ToGenerate.json";
-    const octo = NewOctoKit(token);
-    let alreadyOnboard: boolean = await IsValidCodeGenerationExist(
-      process.env[ENVKEY.ENV_CODEGEN_DB_SERVER],
-      process.env[ENVKEY.ENV_CODEGEN_DATABASE],
-      process.env[ENVKEY.ENV_CODEGEN_DB_USER],
-      process.env[ENVKEY.ENV_CODEGEN_DB_PASSWORD],
-      rp,
-      sdk,
-      onbaordtype
-    );
-    if (alreadyOnboard) {
-      console.log("Already triggerred to onboard " + rp + ". Ignore this one.");
-      return;
-    }
-
-    let readmefile: string = "";
-    let rs: ResourceAndOperation = new ResourceAndOperation(
-      rp,
-      readmefile,
-      [],
-      sdk
-    );
-    rs.generateResourceList();
-    if (resources !== undefined) rs.resourcelist = resources;
-
-    const branchName = onbaordtype + "-" + rs.target + "-" + rs.RPName;
-    const baseCommit = await getCurrentCommit(octo, org, repo, basebranch);
-    const targetBranch = await getBranch(octo, org, repo, branchName);
-    // if (targetBranch !== undefined) {
-    //     console.log("resource branch already exist.")
-    //     return;
-    // }
-    await createBranch(octo, org, repo, branchName, baseCommit.commitSha);
-    const fs = require("fs");
-    fs.writeFileSync(RESOUCEMAPFile, JSON.stringify(rs, null, 2));
-    await uploadToRepo(octo, ["ToGenerate.json"], org, repo, branchName);
-    /* create pull request. */
-    await createPullRequest(
-      octo,
-      org,
-      repo,
-      basebranch,
-      branchName,
-      "pull request from branch " + branchName
-    );
-
-    let content = await getBlobContent(
-      octo,
-      org,
-      repo,
-      branchName,
-      RESOUCEMAPFile
-    );
-    console.log(content);
-
-    /* update code generation status table. */
-    let cg: CodeGeneration = new CodeGeneration(rp, sdk, onbaordtype);
-    let e = await InsertCodeGeneration(
-      process.env[ENVKEY.ENV_CODEGEN_DB_SERVER],
-      process.env[ENVKEY.ENV_CODEGEN_DATABASE],
-      process.env[ENVKEY.ENV_CODEGEN_DB_USER],
-      process.env[ENVKEY.ENV_CODEGEN_DB_PASSWORD],
-      cg
-    );
-    if (e !== undefined) {
-      console.log(e);
-    }
-  }
-
   public async TriggerCodeGeneration(
     token: string,
     org: string,
@@ -144,10 +61,6 @@ export class CodeGenerateHandler {
       return;
     }
 
-    // let readmefile: string = ""
-    // let rs: ResourceAndOperation = new ResourceAndOperation(rp, readmefile, [], sdk);
-    // rs.generateResourceList();
-    // if (resources !== undefined) rs.resourcelist = resources;
     try {
       const branchName =
         rpToGen.onboardType + "-" + rpToGen.target + "-" + rpToGen.RPName;
@@ -212,37 +125,6 @@ export class CodeGenerateHandler {
     sdkorg: string,
     swaggerorg: string
   ): Promise<any> {
-    //     const branch = onbaordtype + "-" + sdk.toLowerCase() + "-" + rp;
-    //     /* delete depth-coverage rp branch */
-    //     let err = await DeleteBranch(token, codegenorg, REPO.DEPTH_COVERAGE_REPO, branch);
-
-    //     /* delete sdk rp branch. */
-    //     let sdkrepo = "";
-    //     if (sdk === SDK.TF_SDK) {
-    //         sdkrepo = REPO.TF_PROVIDER_REPO;
-    //     } else if (sdk === SDK.CLI_CORE_SDK) {
-    //         sdkrepo = REPO.CLI_REPO;
-    //     } else if (sdk === SDK.CLI_EXTENSTION_SDK) {
-    //         sdkrepo = REPO.CLI_EXTENSION_REPO;
-    //     }
-
-    //     try {
-    //         await DeleteBranch(token, sdkorg, sdkrepo, branch);
-    //         let codebranch = onbaordtype + "-code-" + sdk.toLowerCase() + "-" + rp;
-    //         await DeleteBranch(token, sdkorg, sdkrepo, codebranch);
-    //     } catch(e) {
-    //         console.log("Failed to delete sdk branch: " + branch);
-    //         console.log(e);
-    //     }
-
-    //     /*delete swagger rp branch */
-    //     try {
-    //         await DeleteBranch(token, swaggerorg, REPO.SWAGGER_REPO, branch);
-    //     } catch(e) {
-    //         console.log("Failed to delete swagger branch: " + branch);
-    //         console.log(e);
-    //     }
-
     const err = this.ClearCodeGenerationWorkSpace(
       token,
       rp,
@@ -281,37 +163,6 @@ export class CodeGenerateHandler {
     sdkorg: string,
     swaggerorg: string
   ): Promise<any> {
-    //     const branch = onbaordtype + "-" + sdk.toLowerCase() + "-" + rp;
-    //     /* delete depth-coverage rp branch */
-    //     let err = await DeleteBranch(token, codegenorg, REPO.DEPTH_COVERAGE_REPO, branch);
-
-    //     /* delete sdk rp branch. */
-    //     let sdkrepo = "";
-    //     if (sdk === SDK.TF_SDK) {
-    //         sdkrepo = REPO.TF_PROVIDER_REPO;
-    //     } else if (sdk === SDK.CLI_CORE_SDK) {
-    //         sdkrepo = REPO.CLI_REPO;
-    //     } else if (sdk === SDK.CLI_EXTENSTION_SDK) {
-    //         sdkrepo = REPO.CLI_EXTENSION_REPO;
-    //     }
-
-    //     try {
-    //         await DeleteBranch(token, sdkorg, sdkrepo, branch);
-    //         let codebranch = onbaordtype + "-code-" + sdk.toLowerCase() + "-" + rp;
-    //         await DeleteBranch(token, sdkorg, sdkrepo, codebranch);
-    //     } catch(e) {
-    //         console.log("Failed to delete sdk branch: " + branch);
-    //         console.log(e);
-    //     }
-
-    //     /*delete swagger rp branch */
-    //     try {
-    //         await DeleteBranch(token, swaggerorg, REPO.SWAGGER_REPO, branch);
-    //     } catch(e) {
-    //         console.log("Failed to delete swagger branch: " + branch);
-    //         console.log(e);
-    //     }
-
     const err = this.ClearCodeGenerationWorkSpace(
       token,
       rp,

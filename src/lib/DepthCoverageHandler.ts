@@ -543,50 +543,6 @@ export class DepthCoverageHandler {
     for (let rs of resources) {
       try {
         rs.generateResourceList();
-        // let alreadyOnboard: boolean = await IsValidCodeGenerationExist(process.env[ENVKEY.ENV_CODEGEN_DB_SERVER],
-        //                                                     process.env[ENVKEY.ENV_CODEGEN_DATABASE],
-        //                                                     process.env[ENVKEY.ENV_CODEGEN_DB_USER],
-        //                                                     process.env[ENVKEY.ENV_CODEGEN_DB_PASSWORD],
-        //                                                     rs.RPName,
-        //                                                     rs.target,
-        //                                                     type);
-        // if (alreadyOnboard) {
-        //     console.log("Already triggerred to onboard " + rs.RPName + ". Ignore this one.");
-        //     continue;
-        // }
-
-        // const branchName = type + "-" + rs.target + "-" + rs.RPName;
-        // const baseCommit = await getCurrentCommit(octo, org, repo, basebranch);
-        // const targetBranch = await getBranch(octo, org, repo, branchName);
-        // if (targetBranch !== undefined) {
-        //     console.log("resource branch already exist.")
-        //     continue;
-        // }
-        // await createBranch(octo, org, repo, branchName, baseCommit.commitSha);
-        // fs.writeFileSync(RESOUCEMAPFile, JSON.stringify(rs, null, 2));
-        // await uploadToRepo(octo, ["ToGenerate.json"], org, repo, branchName);
-        // /* create pull request. */
-        // await createPullRequest(octo, org, repo, basebranch, branchName, "pull request from branch " + branchName);
-
-        // // let pullData = await getPullRequest(octo, org, repo, 6);
-        // // console.log(pullData);
-
-        // // let commitData = await getCommit(octo, org, repo, "6ae620b1fa2c528e7737c81020fed22dd94356b3");
-        // // console.log(commitData);
-
-        // // let content = await getBlobContent(octo, org, repo, branchName, RESOUCEMAPFile);
-        // // console.log(content);
-
-        // // await deleteBranch(octo, org, repo, branchName);
-
-        // /* update code generation status table. */
-        // let cg: CodeGeneration = new CodeGeneration(rs.RPName, rs.target, rs.onboardType);
-        // // let e = await InsertCodeGeneration(process.env[ENVKEY.ENV_CODEGEN_DB_SERVER], process.env[ENVKEY.ENV_CODEGEN_DATABASE], process.env[ENVKEY.ENV_CODEGEN_DB_USER], process.env[ENVKEY.ENV_CODEGEN_DB_PASSWORD], cg);
-        // console.log("trigger(" + CodegenDBCredentials.server + "," + CodegenDBCredentials.db + "," + CodegenDBCredentials.user + "," + CodegenDBCredentials.pw + ")");
-        // let e = await InsertCodeGeneration(CodegenDBCredentials.server, CodegenDBCredentials.db, CodegenDBCredentials.user, CodegenDBCredentials.pw, cg);
-        // if (e !== undefined) {
-        //     console.log(e);
-        // }
         const err = await CodeGenerateHandler.TriggerCodeGeneration(
           PipelineCredential.token,
           org,

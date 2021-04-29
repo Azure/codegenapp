@@ -11,13 +11,21 @@ import "../controllers/DepthConverageController";
 import "../controllers/CodeGenerateController";
 import { PipelineCredential } from "../lib/PipelineCredential";
 import { CompleteCodeGenerationTask } from "../lib/CompleteCodeGenerationTask";
+import { CodegenAppLogger } from "../lib/CodegenAppLogger";
+import { config } from "../config";
+import { InjectableTypes } from "../lib/injectableTypes";
+import { Config } from "../config/Config";
+import { Logger } from "../lib/Logger";
+import { serializeError } from "serialize-error";
+import { default as _ } from "lodash";
 
 class CodegenApp {
   private port = this.normalizePort(process.env.PORT || "3000");
   private container: Container;
-  // private logger: Logger;
+  private logger: Logger;
   public async start(): Promise<void> {
     await this.init();
+    this.buildLogger();
     this.buildContainer();
     this.buildExpress();
     this.buildSchedulerTask();
@@ -87,20 +95,27 @@ class CodegenApp {
         ")"
     );
   }
+
+  private buildLogger(): void {
+    this.logger = new CodegenAppLogger(config);
+  }
   private buildContainer(): void {
     this.container = new Container();
+    this.container.bind<Config>(InjectableTypes.Config).toConstantValue(config);
+    this.container.bind<Logger>(InjectableTypes.Logger).toConstantValue(this.logger);
   }
 
   private buildExpress(): void {
     const errorHandler: express.ErrorRequestHandler = (err, req, res, next) => {
-      // this.logger.error("Exception was thrown during request", {
-      //     err: serializeError(err),
-      //     type: "request",
-      //     ..._.pick(req, "path", "method", "body", "hostname", "protocol"),
-      //     headers: _.omit(req.headers, "cookie")
-      //   });
-      //   next(err);
-      console.log("Exception was thrown during request");
+      this.logger.error("Exception was thrown during request", {
+          err: serializeError(err),
+          type: "request",
+          ..._.pick(req, "path", "method", "body", "hostname", "protocol"),
+          headers: _.omit(req.headers, "cookie")
+        });
+        next(err);
+      // console.log("Exception was thrown during request");
+      // this.logger.error("Exception was thrown during request");
     };
 
     const server = new InversifyExpressServer(this.container);
@@ -119,10 +134,11 @@ class CodegenApp {
       app.use(bodyParser.json());
       app.use(express.json());
 
-      // app.use("/HelloWorld",)
+      app.use(errorHandler);
     });
     const serverInstance = server.build();
     serverInstance.listen(3000);
+    this.logger.info("codegen app server started, listen on 3000");
   }
 
   private buildSchedulerTask() {

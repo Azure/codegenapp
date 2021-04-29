@@ -21,14 +21,18 @@ import {
 import CodeGenerateHandler from "../lib/CodeGenerateHandler";
 import { PipelineCredential } from "../lib/PipelineCredential";
 import { ResourceAndOperation } from "../lib/Model";
+import { BaseController } from "./BaseController";
+import { InjectableTypes } from "../lib/injectableTypes";
+import { inject } from "inversify";
+import { Logger } from "../lib/Logger";
+// import { Logger } from "winston";
 
 @controller("/codegenerate")
-export class CodeGenerateController extends BaseHttpController {
-  // public token: string = process.env[ENVKEY.ENV_REPO_ACCESS_TOKEN];;
-  // public constructor(tk: string = undefined) {
-  //     super();
-  //     if (tk !== undefined) this.token = tk;
-  // }
+// export class CodeGenerateController extends BaseHttpController {
+export class CodeGenerateController extends BaseController {
+  constructor(@inject(InjectableTypes.Logger) protected logger: Logger) {
+    super(logger);
+  }
   /* generate an pull request. */
   @httpPost("/generatePullRequest")
   public async GenerateCodePullRequest(request: Request): Promise<JsonResult> {
@@ -50,21 +54,6 @@ export class CodeGenerateController extends BaseHttpController {
         ",base:" +
         basebranch
     );
-    // let prlink:string = undefined;
-    // let err:any = undefined;
-    // try {
-    //     const pulls: string[] = await listOpenPullRequest(this.token, org, repo, branch, basebranch);
-    //     if (pulls.length > 0) {
-    //         prlink= pulls[0]
-    //     } else {
-    //         let {prlink:ret, err:e} = await SubmitPullRequest(this.token, org, repo, title, branch, basebranch);
-    //         prlink = ret;
-    //         err = e;
-    //     }
-    // }catch(e) {
-    //     console.log(e);
-    //     err = e;
-    // }
 
     const { prlink, err } = await CodeGenerateHandler.GenerateCodeRullRequest(
       PipelineCredential.token,
@@ -133,6 +122,15 @@ export class CodeGenerateController extends BaseHttpController {
       cg.status != CodeGenerationStatus.CODE_GENERATION_STATUS_COMPLETED
     ) {
       console.log(
+        "The code generation pipeline(" +
+          rp +
+          "," +
+          sdk +
+          ") is under " +
+          cg.status +
+          "Already. Ignore this trigger."
+      );
+      this.logger.info(
         "The code generation pipeline(" +
           rp +
           "," +
@@ -433,19 +431,7 @@ export class CodeGenerateController extends BaseHttpController {
       org,
       excludeTest
     );
-
-    // if (custmizeerr === undefined) {
-    //     /* update the code generation status. */
-    //     const uperr = await UpdateCodeGenerationValue(process.env[ENVKEY.ENV_CODEGEN_DB_SERVER],
-    //                                                 process.env[ENVKEY.ENV_CODEGEN_DATABASE],
-    //                                                 process.env[ENVKEY.ENV_CODEGEN_DB_USER],
-    //                                                 process.env[ENVKEY.ENV_CODEGEN_DB_PASSWORD],
-    //                                                 rp,
-    //                                                 sdk,
-    //                                                 onbaordtype,
-    //                                                 CodeGenerationDBColumn.CODE_GENERATION_COLUMN_STATUS,
-    //                                                 CodeGenerationStatus.CODE_GENERATION_STATUS_CUSTOMIZING);
-    // }
+    
     if (custmizeerr !== undefined) {
       return this.json({ error: custmizeerr }, 400);
     } else {

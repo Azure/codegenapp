@@ -25,10 +25,18 @@ import {
   CodeGenerationDBColumn,
 } from "../lib/CodeGenerationModel";
 import { PipelineCredential } from "../lib/PipelineCredential";
+import { BaseController } from "./BaseController";
+import { InjectableTypes } from "../lib/injectableTypes";
+import { inject } from "inversify";
+import { Logger } from "../lib/Logger";
 // import { JsonResult } from "inversify-express-utils/dts/results/index"
 
 @controller("/depthCoverage")
-export class DepthCoverageController extends BaseHttpController {
+// export class DepthCoverageController extends BaseHttpController {
+export class DepthCoverageController extends BaseController {
+  constructor(@inject(InjectableTypes.Logger) protected logger: Logger) {
+    super(logger);
+  }
   // public token: string = process.env[ENVKEY.ENV_REPO_ACCESS_TOKEN];
   // public constructor(tk: string = undefined) {
   //     super();
@@ -37,6 +45,7 @@ export class DepthCoverageController extends BaseHttpController {
   @httpGet("/")
   public hello(): string {
     console.log(DepthDBCredentials.server);
+    this.logger.info("welcome")
     return "HelloWorld";
   }
 
@@ -171,72 +180,11 @@ export class DepthCoverageController extends BaseHttpController {
     }
 
     return this.json(content, statusCode);
-    // /* delete depth-coverage rp branch */
-    // let err = await DeletePipelineBranch(token, org, REPO.DEPTH_COVERAGE_REPO, branch);
-
-    // /* delete sdk rp branch. */
-    // let sdkrepo = "";
-    // if (sdk === SDK.TF_SDK) {
-    //     sdkrepo = REPO.TF_PROVIDER_REPO;
-    // } else if (sdk === SDK.CLI_CORE_SDK) {
-    //     sdkrepo = REPO.CLI_REPO;
-    // }
-    // try {
-    //     await DeletePipelineBranch(token, sdkorg, sdkrepo, branch);
-    //     let codebranch = "depth-code-" + sdk.toLowerCase() + "-" + rp;
-    //     await DeletePipelineBranch(token, sdkorg, sdkrepo, codebranch);
-    // } catch(e) {
-    //     console.log("Failed to delete sdk branch: " + branch);
-    //     console.log(e);
-    // }
-
-    // /*delete swagger rp branch */
-    // try {
-    //     await DeletePipelineBranch(token, swaggerorg != undefined ? swaggerorg: org, REPO.SWAGGER_REPO, branch);
-    // } catch(e) {
-    //     console.log("Failed to delete swagger branch: " + branch);
-    //     console.log(e);
-    // }
-
-    // let content = {};
-    // let statusCode = 200;
-    // if (err !== undefined) {
-    //     statusCode = 400;
-    //     content = {error: err};
-    // } else {
-    //     statusCode = 200;
-    //     content = rp + " " + sdk + ' onboarding is completed.';
-    // }
-
-    // return this.json(content, statusCode);
   }
 
   /* cancel all depth-coverages. */
   @httpPost("/cancel")
   public async CancelAllDepthCoverages(request: Request): Promise<JsonResult> {
-    // const token = process.env[ENVKEY.ENV_REPO_ACCESS_TOKEN];
-    // const org = request.body.org;
-    // const repo = request.body.repo;
-    // /* delete depth coverage branch. */
-    // let err:any = undefined;
-    // try {
-    //     await DeleteAllDepthBranchs(token, org, repo);
-    // } catch (e) {
-    //     console.log("Failed to delete branches from depthcoverage.")
-    //     console.log(e);
-    //     err = e;
-    // }
-
-    // /* delete sdk branches. */
-    // let content = {};
-    // let statusCode = 200;
-    // if (err !== undefined) {
-    //     statusCode = 400;
-    //     content = {error: err};
-    // } else {
-    //     statusCode = 200;
-    //     content = "All Depth Coverage pipelines were cancelled";
-    // }
     let canceledCodegens: string[] = [];
     let failedCodegens: string[] = [];
     let codegenorg: string = request.body.codegenorg;
@@ -314,21 +262,6 @@ export class DepthCoverageController extends BaseHttpController {
         ",base:" +
         basebranch
     );
-    // let prlink:string = undefined;
-    // let err:any = undefined;
-    // try {
-    //     const pulls: string[] = await listOpenPullRequest(token, org, repo, branch, basebranch);
-    //     if (pulls.length > 0) {
-    //         prlink= pulls[0]
-    //     } else {
-    //         let {prlink:ret, err:e} = await SubmitPullRequest(token, org, repo, title, branch, basebranch);
-    //         prlink = ret;
-    //         err = e;
-    //     }
-    // }catch(e) {
-    //     console.log(e);
-    //     err = e;
-    // }
 
     const { prlink, err } = await CodeGenerateHandler.GenerateCodeRullRequest(
       PipelineCredential.token,
@@ -506,16 +439,6 @@ export class DepthCoverageController extends BaseHttpController {
       excludeTest
     );
 
-    // /* update the code generation status. */
-    // const uperr = await UpdateCodeGenerationValue(process.env[ENVKEY.ENV_CODEGEN_DB_SERVER],
-    //                                             process.env[ENVKEY.ENV_CODEGEN_DATABASE],
-    //                                             process.env[ENVKEY.ENV_CODEGEN_DB_USER],
-    //                                             process.env[ENVKEY.ENV_CODEGEN_DB_PASSWORD],
-    //                                             rp,
-    //                                             sdk,
-    //                                             "depth",
-    //                                             CodeGenerationDBColumn.CODE_GENERATION_COLUMN_STATUS,
-    //                                             CodeGenerationStatus.CODE_GENERATION_STATUS_CUSTOMIZING);
     if (custmizeerr !== undefined) {
       return this.json({ error: custmizeerr }, 400);
     } else {
@@ -606,19 +529,7 @@ export class DepthCoverageController extends BaseHttpController {
       org,
       excludeTest
     );
-
-    // if (custmizeerr === undefined) {
-    //     /* update the code generation status. */
-    //     const uperr = await UpdateCodeGenerationValue(process.env[ENVKEY.ENV_CODEGEN_DB_SERVER],
-    //                                                 process.env[ENVKEY.ENV_CODEGEN_DATABASE],
-    //                                                 process.env[ENVKEY.ENV_CODEGEN_DB_USER],
-    //                                                 process.env[ENVKEY.ENV_CODEGEN_DB_PASSWORD],
-    //                                                 rp,
-    //                                                 sdk,
-    //                                                 onbaordtype,
-    //                                                 CodeGenerationDBColumn.CODE_GENERATION_COLUMN_STATUS,
-    //                                                 CodeGenerationStatus.CODE_GENERATION_STATUS_CUSTOMIZING);
-    // }
+    
     if (custmizeerr !== undefined) {
       return this.json({ error: custmizeerr }, 400);
     } else {

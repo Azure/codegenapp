@@ -70,6 +70,7 @@
     "inversify": "^5.0.5",
     "inversify-express-utils": "^6.3.2",
     "js-yaml": "^3.14.1",
+    "lodash": "^4.17.21",
     "mssql": "^6.3.1",
     "net": "^1.0.2",
     "node": "^12.11.0",
@@ -79,9 +80,12 @@
     "path": "^0.12.7",
     "pluralize": "^8.0.0",
     "reflect-metadata": "^0.1.13",
+    "serialize-error": "^8.1.0",
     "stack-typescript": "1.0.4",
     "ts-node": "^8.10.2",
     "typescript": "^4.1.3",
-    "utf-8-validate": "^5.0.4"
+    "utf-8-validate": "^5.0.4",
+    "winston": "^3.3.3",
+    "winston-daily-rotate-file": "^4.5.2"
   }
 }
