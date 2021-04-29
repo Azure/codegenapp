@@ -145,12 +145,12 @@ class CodegenApp {
     const cron = require("node-cron");
     /*auto complete code generation. */
     cron.schedule("* * * * *", function () {
-      console.log("running auto-complete task every minute");
+      this.logger.info("running auto-complete task every minute");
       CompleteCodeGenerationTask();
     });
 
     cron.schedule("* * * * *", function () {
-      console.log("running second task every minute");
+      this.logger.info("running second task every minute");
     });
   }
 

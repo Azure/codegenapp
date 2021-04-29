@@ -121,15 +121,6 @@ export class CodeGenerateController extends BaseController {
       cg !== undefined &&
       cg.status != CodeGenerationStatus.CODE_GENERATION_STATUS_COMPLETED
     ) {
-      console.log(
-        "The code generation pipeline(" +
-          rp +
-          "," +
-          sdk +
-          ") is under " +
-          cg.status +
-          "Already. Ignore this trigger."
-      );
       this.logger.info(
         "The code generation pipeline(" +
           rp +
@@ -166,9 +157,14 @@ export class CodeGenerateController extends BaseController {
     if (err !== undefined) {
       statusCode = 400;
       content = { error: err };
+      this.logger.error(
+        "Failed to trigger code generation for " + rp + "sdk:" + sdk,
+        err
+      );
     } else {
       statusCode = 200;
       content = "Trigger " + type + " for resource provider " + rp;
+      this.logger.info("Trigger " + type + " for resource provider " + rp);
     }
 
     return this.json(content, statusCode);
@@ -218,9 +214,16 @@ export class CodeGenerateController extends BaseController {
     if (err !== undefined) {
       statusCode = 400;
       content = { error: err };
+      this.logger.error(
+        "Failed to cancel code generation for " + rp + "sdk:" + sdk,
+        err
+      );
     } else {
       statusCode = 200;
       content = "Cancel " + onbaordtype + " for resource provider " + rp;
+      this.logger.info(
+        "Cancel " + onbaordtype + " for resource provider " + rp
+      );
     }
 
     return this.json(content, statusCode);
@@ -269,9 +272,16 @@ export class CodeGenerateController extends BaseController {
     if (err !== undefined) {
       statusCode = 400;
       content = { error: err };
+      this.logger.error(
+        "Failed to cancel code generation for " + rp + "sdk:" + sdk,
+        err
+      );
     } else {
       statusCode = 200;
       content = "Cancel " + onbaordtype + " for resource provider " + rp;
+      this.logger.info(
+        "Cancel " + onbaordtype + " for resource provider " + rp
+      );
     }
 
     return this.json(content, statusCode);
@@ -327,9 +337,14 @@ export class CodeGenerateController extends BaseController {
     if (err !== undefined) {
       statusCode = 400;
       content = { error: err };
+      this.logger.error(
+        "Failed to onboard " + sdk + " for resource provider " + rp,
+        err
+      );
     } else {
       statusCode = 200;
       content = "Onboard " + onbaordtype + " for resource provider " + rp;
+      this.logger.info("onboard " + sdk + " for resource provider " + rp);
     }
 
     return this.json(content, statusCode);
@@ -366,7 +381,7 @@ export class CodeGenerateController extends BaseController {
     );
 
     if (err === undefined || codegen === undefined) {
-      console.log(
+      this.logger.info(
         "No code generation pipeline for " +
           sdk +
           " of resource provider " +
@@ -379,7 +394,7 @@ export class CodeGenerateController extends BaseController {
         CodeGenerationStatus.CODE_GENERATION_STATUS_COMPLETED ||
       codegen.status === CodeGenerationStatus.CODE_GENERATION_STATUS_IN_PROGRESS
     ) {
-      console.log(
+      this.logger.info(
         "The code generation pipeline(" +
           rp +
           "," +
@@ -392,7 +407,7 @@ export class CodeGenerateController extends BaseController {
     } else if (
       codegen.status === CodeGenerationStatus.CODE_GENERATION_STATUS_CANCELED
     ) {
-      console.log(
+      this.logger.info(
         "The code generation pipeline(" +
           rp +
           "," +
@@ -406,7 +421,7 @@ export class CodeGenerateController extends BaseController {
     } else if (
       codegen.status === CodeGenerationStatus.CODE_GENERATION_STATUS_CUSTOMIZING
     ) {
-      console.log(
+      this.logger.info(
         "The code generation pipeline(" +
           rp +
           "," +
@@ -431,10 +446,15 @@ export class CodeGenerateController extends BaseController {
       org,
       excludeTest
     );
-    
+
     if (custmizeerr !== undefined) {
+      this.logger.error(
+        "Failed to customize resource provider " + rp + ", sdk:" + sdk,
+        err
+      );
       return this.json({ error: custmizeerr }, 400);
     } else {
+      this.logger.info("Customize resource provider " + rp + ", sdk:" + sdk);
       return this.json(
         "customize. pipeline: https://devdiv.visualstudio.com/DevDiv/_build?definitionId=" +
           codegen.pipelineBuildID,

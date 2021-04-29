@@ -44,8 +44,8 @@ export class DepthCoverageController extends BaseController {
   // }
   @httpGet("/")
   public hello(): string {
-    console.log(DepthDBCredentials.server);
-    this.logger.info("welcome")
+    this.logger.info(DepthDBCredentials.server);
+    this.logger.info("welcome");
     return "HelloWorld";
   }
 
@@ -79,9 +79,11 @@ export class DepthCoverageController extends BaseController {
     if (err !== undefined) {
       statusCode = 400;
       content = { error: err };
+      this.logger.error("Failed to ingest candidates.", err);
     } else {
       statusCode = 200;
       content = "ingest candidate";
+      this.logger.info("Ingest " + sdk + " candidates.");
     }
     return this.json(content, statusCode);
   }
@@ -130,9 +132,11 @@ export class DepthCoverageController extends BaseController {
     if (err !== undefined) {
       statusCode = 400;
       content = { error: err };
+      this.logger.error("Failed to trigger depthcoverage.", err);
     } else {
       statusCode = 200;
       content = "OK";
+      this.logger.info("Trigger depthcoverage.");
     }
     return this.json(content, statusCode);
   }
@@ -174,9 +178,16 @@ export class DepthCoverageController extends BaseController {
     if (err !== undefined) {
       statusCode = 400;
       content = { error: err };
+      this.logger.error(
+        "Failed to Cancel " + onbaordtype + " for resource provider " + rp,
+        err
+      );
     } else {
       statusCode = 200;
       content = "Cancel " + onbaordtype + " for resource provider " + rp;
+      this.logger.info(
+        "Cancel " + onbaordtype + " for resource provider " + rp
+      );
     }
 
     return this.json(content, statusCode);
@@ -238,6 +249,7 @@ export class DepthCoverageController extends BaseController {
       failed: failedCodegens.join(";"),
     };
 
+    this.logger.info("Cancel all depthcoverage.");
     return this.json(ret, 200);
   }
 
@@ -281,6 +293,7 @@ export class DepthCoverageController extends BaseController {
       content = prlink;
     }
 
+    this.logger.info("Generate pull request.");
     return this.json(content, statusCode);
   }
 
@@ -306,9 +319,11 @@ export class DepthCoverageController extends BaseController {
     if (err !== undefined) {
       statusCode = 400;
       content = { error: err };
+      this.logger.error("Failed to onboard resource provider " + rp, err);
     } else {
       statusCode = 200;
       content = rp + " onboarded";
+      this.logger.info("onboard resource provider " + rp);
     }
 
     return this.json(content, statusCode);
@@ -337,9 +352,11 @@ export class DepthCoverageController extends BaseController {
     if (err !== undefined) {
       statusCode = 400;
       content = { error: err };
+      this.logger.error("Failed to onboard resource provider " + rp, err);
     } else {
       statusCode = 200;
       content = rp + " onboarded";
+      this.logger.info("onboard resource provider " + rp);
     }
 
     return this.json(content, statusCode);
@@ -372,7 +389,7 @@ export class DepthCoverageController extends BaseController {
     );
 
     if (err === undefined || codegen === undefined) {
-      console.log(
+      this.logger.info(
         "No code generation pipeline for " +
           sdk +
           " of resource provider " +
@@ -385,7 +402,7 @@ export class DepthCoverageController extends BaseController {
         CodeGenerationStatus.CODE_GENERATION_STATUS_COMPLETED ||
       codegen.status === CodeGenerationStatus.CODE_GENERATION_STATUS_IN_PROGRESS
     ) {
-      console.log(
+      this.logger.info(
         "The code generation pipeline(" +
           rp +
           "," +
@@ -398,7 +415,7 @@ export class DepthCoverageController extends BaseController {
     } else if (
       codegen.status === CodeGenerationStatus.CODE_GENERATION_STATUS_CANCELED
     ) {
-      console.log(
+      this.logger.info(
         "The code generation pipeline(" +
           rp +
           "," +
@@ -412,7 +429,7 @@ export class DepthCoverageController extends BaseController {
     } else if (
       codegen.status === CodeGenerationStatus.CODE_GENERATION_STATUS_CUSTOMIZING
     ) {
-      console.log(
+      this.logger.info(
         "The code generation pipeline(" +
           rp +
           "," +
@@ -440,8 +457,13 @@ export class DepthCoverageController extends BaseController {
     );
 
     if (custmizeerr !== undefined) {
+      this.logger.error(
+        "Failed to customize resource provider " + rp + ", sdk:" + sdk,
+        err
+      );
       return this.json({ error: custmizeerr }, 400);
     } else {
+      this.logger.info("Customize resource provider " + rp + ", sdk:" + sdk);
       return this.json(
         "customize. pipeline: https://devdiv.visualstudio.com/DevDiv/_build?definitionId=" +
           codegen.pipelineBuildID,
@@ -478,7 +500,7 @@ export class DepthCoverageController extends BaseController {
     );
 
     if (err === undefined || codegen === undefined) {
-      console.log(
+      this.logger.info(
         "No code generation pipeline for " +
           sdk +
           " of resource provider " +
@@ -491,7 +513,7 @@ export class DepthCoverageController extends BaseController {
         CodeGenerationStatus.CODE_GENERATION_STATUS_COMPLETED ||
       codegen.status === CodeGenerationStatus.CODE_GENERATION_STATUS_IN_PROGRESS
     ) {
-      console.log(
+      this.logger.info(
         "The code generation pipeline(" +
           rp +
           "," +
@@ -504,7 +526,7 @@ export class DepthCoverageController extends BaseController {
     } else if (
       codegen.status === CodeGenerationStatus.CODE_GENERATION_STATUS_CUSTOMIZING
     ) {
-      console.log(
+      this.logger.info(
         "The code generation pipeline(" +
           rp +
           "," +
@@ -529,10 +551,15 @@ export class DepthCoverageController extends BaseController {
       org,
       excludeTest
     );
-    
+
     if (custmizeerr !== undefined) {
+      this.logger.error(
+        "Failed to customize resource provider " + rp + ", sdk:" + sdk,
+        err
+      );
       return this.json({ error: custmizeerr }, 400);
     } else {
+      this.logger.info("Customize resource provider " + rp + ", sdk:" + sdk);
       return this.json(
         "customize. pipeline: https://devdiv.visualstudio.com/DevDiv/_build?definitionId=" +
           codegen.pipelineBuildID,
