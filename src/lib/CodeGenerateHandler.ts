@@ -26,6 +26,7 @@ import {
   CodeGenerationStatus,
 } from "./CodeGenerationModel";
 import { SDK, REPO, ORG, README } from "./common";
+import { CodegenDBCredentials } from "./DBCredentials";
 
 export class CodeGenerateHandler {
   /**
@@ -46,10 +47,10 @@ export class CodeGenerateHandler {
     // const RESOUCEMAPFile = "ToGenerate.json";
     const octo = NewOctoKit(token);
     let alreadyOnboard: boolean = await IsValidCodeGenerationExist(
-      process.env[ENVKEY.ENV_CODEGEN_DB_SERVER],
-      process.env[ENVKEY.ENV_CODEGEN_DATABASE],
-      process.env[ENVKEY.ENV_CODEGEN_DB_USER],
-      process.env[ENVKEY.ENV_CODEGEN_DB_PASSWORD],
+      CodegenDBCredentials.server,
+      CodegenDBCredentials.db,
+      CodegenDBCredentials.user,
+      CodegenDBCredentials.pw,
       rpToGen.RPName,
       rpToGen.target,
       rpToGen.onboardType
@@ -100,10 +101,10 @@ export class CodeGenerateHandler {
         rpToGen.onboardType
       );
       let e = await InsertCodeGeneration(
-        process.env[ENVKEY.ENV_CODEGEN_DB_SERVER],
-        process.env[ENVKEY.ENV_CODEGEN_DATABASE],
-        process.env[ENVKEY.ENV_CODEGEN_DB_USER],
-        process.env[ENVKEY.ENV_CODEGEN_DB_PASSWORD],
+        CodegenDBCredentials.server,
+        CodegenDBCredentials.db,
+        CodegenDBCredentials.user,
+        CodegenDBCredentials.pw,
         cg
       );
       if (e !== undefined) {
@@ -136,10 +137,10 @@ export class CodeGenerateHandler {
     );
     /* update code generation status table. */
     const uperr = await UpdateCodeGenerationValue(
-      process.env[ENVKEY.ENV_CODEGEN_DB_SERVER],
-      process.env[ENVKEY.ENV_CODEGEN_DATABASE],
-      process.env[ENVKEY.ENV_CODEGEN_DB_USER],
-      process.env[ENVKEY.ENV_CODEGEN_DB_PASSWORD],
+      CodegenDBCredentials.server,
+      CodegenDBCredentials.db,
+      CodegenDBCredentials.user,
+      CodegenDBCredentials.pw,
       rp,
       sdk,
       onbaordtype,
@@ -174,10 +175,10 @@ export class CodeGenerateHandler {
     );
     /* update code generation status table. */
     const uperr = await UpdateCodeGenerationValue(
-      process.env[ENVKEY.ENV_CODEGEN_DB_SERVER],
-      process.env[ENVKEY.ENV_CODEGEN_DATABASE],
-      process.env[ENVKEY.ENV_CODEGEN_DB_USER],
-      process.env[ENVKEY.ENV_CODEGEN_DB_PASSWORD],
+      CodegenDBCredentials.server,
+      CodegenDBCredentials.db,
+      CodegenDBCredentials.user,
+      CodegenDBCredentials.pw,
       rp,
       sdk,
       onbaordtype,
@@ -298,10 +299,10 @@ export class CodeGenerateHandler {
       /* update the code generation status. */
       /* update code generation status table. */
       const uperr = await UpdateCodeGenerationValue(
-        process.env[ENVKEY.ENV_CODEGEN_DB_SERVER],
-        process.env[ENVKEY.ENV_CODEGEN_DATABASE],
-        process.env[ENVKEY.ENV_CODEGEN_DB_USER],
-        process.env[ENVKEY.ENV_CODEGEN_DB_PASSWORD],
+        CodegenDBCredentials.server,
+        CodegenDBCredentials.db,
+        CodegenDBCredentials.user,
+        CodegenDBCredentials.pw,
         rp,
         sdk,
         type,
@@ -470,10 +471,10 @@ export class CodeGenerateHandler {
     if (custmizeerr === undefined) {
       /* update the code generation status. */
       const uperr = await UpdateCodeGenerationValue(
-        process.env[ENVKEY.ENV_CODEGEN_DB_SERVER],
-        process.env[ENVKEY.ENV_CODEGEN_DATABASE],
-        process.env[ENVKEY.ENV_CODEGEN_DB_USER],
-        process.env[ENVKEY.ENV_CODEGEN_DB_PASSWORD],
+        CodegenDBCredentials.server,
+        CodegenDBCredentials.db,
+        CodegenDBCredentials.user,
+        CodegenDBCredentials.pw,
         rp,
         sdk,
         onboardType,

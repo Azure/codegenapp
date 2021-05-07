@@ -164,7 +164,7 @@ export class DepthCoverageController extends BaseController {
     if (codegenorg === undefined) {
       codegenorg = ORG.AZURE;
     }
-    const err = CodeGenerateHandler.CompleteCodeGeneration(
+    const err = await CodeGenerateHandler.CompleteCodeGeneration(
       PipelineCredential.token,
       rp,
       sdk,
@@ -184,9 +184,9 @@ export class DepthCoverageController extends BaseController {
       );
     } else {
       statusCode = 200;
-      content = "Cancel " + onbaordtype + " for resource provider " + rp;
+      content = "Complete " + onbaordtype + " for resource provider " + rp;
       this.logger.info(
-        "Cancel " + onbaordtype + " for resource provider " + rp
+        "Complete " + onbaordtype + " for resource provider " + rp
       );
     }
 
@@ -227,7 +227,7 @@ export class DepthCoverageController extends BaseController {
           sdkorg = ORG.MS;
         }
       }
-      const err = CodeGenerateHandler.CancelCodeGeneration(
+      const err = await CodeGenerateHandler.CancelCodeGeneration(
         PipelineCredential.token,
         codegen.resourceProvider,
         codegen.sdk,
@@ -362,7 +362,7 @@ export class DepthCoverageController extends BaseController {
     return this.json(content, statusCode);
   }
 
-  @httpGet("resourceProvider/:rpname/SDK/:sdk/customize")
+  @httpGet("/resourceProvider/:rpname/sdk/:sdk/customize")
   public async CustomizeResourceProviderGeneration(
     request: Request
   ): Promise<JsonResult> {
@@ -396,7 +396,7 @@ export class DepthCoverageController extends BaseController {
           rp +
           ". No customize triggered."
       );
-      return this.json({ error: err }, 400);
+      return this.json("No available code generation to trigger customize.", 400);
     } else if (
       codegen.status ===
         CodeGenerationStatus.CODE_GENERATION_STATUS_COMPLETED ||
@@ -445,7 +445,7 @@ export class DepthCoverageController extends BaseController {
       );
     }
 
-    const custmizeerr = CodeGenerateHandler.CustomizeCodeGeneration(
+    const custmizeerr = await CodeGenerateHandler.CustomizeCodeGeneration(
       PipelineCredential.token,
       rp,
       sdk,
@@ -472,7 +472,7 @@ export class DepthCoverageController extends BaseController {
     }
   }
 
-  @httpPost("resourceProvider/:rpname/SDK/:sdk/customize")
+  @httpPost("/resourceProvider/:rpname/sdk/:sdk/customize")
   public async CustomizeResourceProviderGenerationPOST(
     request: Request
   ): Promise<JsonResult> {
@@ -507,7 +507,7 @@ export class DepthCoverageController extends BaseController {
           rp +
           ". No customize triggered."
       );
-      return this.json({ error: err }, 400);
+      return this.json("No available code generation to trigger customize.", 400);
     } else if (
       codegen.status ===
         CodeGenerationStatus.CODE_GENERATION_STATUS_COMPLETED ||
@@ -541,7 +541,7 @@ export class DepthCoverageController extends BaseController {
         201
       );
     }
-    const custmizeerr = CodeGenerateHandler.CustomizeCodeGeneration(
+    const custmizeerr = await CodeGenerateHandler.CustomizeCodeGeneration(
       PipelineCredential.token,
       rp,
       sdk,

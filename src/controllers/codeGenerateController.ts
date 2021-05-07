@@ -200,7 +200,7 @@ export class CodeGenerateController extends BaseController {
       swaggerorg = ORG.AZURE;
     }
 
-    const err = CodeGenerateHandler.CompleteCodeGeneration(
+    const err = await CodeGenerateHandler.CompleteCodeGeneration(
       PipelineCredential.token,
       rp,
       sdk,
@@ -258,7 +258,7 @@ export class CodeGenerateController extends BaseController {
       swaggerorg = ORG.AZURE;
     }
 
-    const err = CodeGenerateHandler.CancelCodeGeneration(
+    const err = await CodeGenerateHandler.CancelCodeGeneration(
       PipelineCredential.token,
       rp,
       sdk,
@@ -323,7 +323,7 @@ export class CodeGenerateController extends BaseController {
     if (swaggerorg === undefined) {
       swaggerorg = ORG.AZURE;
     }
-    const err = CodeGenerateHandler.SubmitGeneratedCode(
+    const err = await CodeGenerateHandler.SubmitGeneratedCode(
       rp,
       sdk,
       PipelineCredential.token,
@@ -388,7 +388,7 @@ export class CodeGenerateController extends BaseController {
           rp +
           ". No customize triggered."
       );
-      return this.json({ error: err }, 400);
+      return this.json("No available code generation to trigger customize.", 400);
     } else if (
       codegen.status ===
         CodeGenerationStatus.CODE_GENERATION_STATUS_COMPLETED ||
@@ -436,7 +436,7 @@ export class CodeGenerateController extends BaseController {
         201
       );
     }
-    const custmizeerr = CodeGenerateHandler.CustomizeCodeGeneration(
+    const custmizeerr = await CodeGenerateHandler.CustomizeCodeGeneration(
       PipelineCredential.token,
       rp,
       sdk,
