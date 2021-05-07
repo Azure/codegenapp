@@ -21,8 +21,8 @@ import {
   listBranchs,
   readCurrentCommitContent,
 } from "../gitutil/GitAPI";
-import { ResourceAndOperation, ENVKEY, RESOUCEMAPFile } from "../common";
 import { IsValidCodeGenerationExist } from "../lib/CodeGeneration";
+import { ENVKEY, RESOUCEMAPFile, ResourceAndOperation } from "../lib/Model";
 
 export async function RetriveResourceToGenerate(
   server: string,

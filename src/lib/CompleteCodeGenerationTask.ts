@@ -1,7 +1,6 @@
-import { CodeGeneration } from "../common";
 import { CodegenDBCredentials } from "./DBCredentials";
 import { ListCodeGenerationsByStatus } from "./CodeGeneration";
-import { CodeGenerationStatus } from "./CodeGenerationModel";
+import { CodeGeneration, CodeGenerationStatus } from "./CodeGenerationModel";
 import { PipelineCredential } from "./PipelineCredential";
 import { GetPullRequest, IsMergedPullRequest } from "./CodeRepoGit";
 import CodeGenerateHandler from "./CodeGenerateHandler";

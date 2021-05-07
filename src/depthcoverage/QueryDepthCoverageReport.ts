@@ -1,10 +1,10 @@
 // import { SQLServerConnection } from "./SqlServerConnect";
-import sql from "mssql";
+
 import {
-  ResourceAndOperation,
   OnboardOperation,
   OnboardResource,
-} from "../common";
+  ResourceAndOperation,
+} from "../lib/Model";
 
 /* the operation schema in depth coverage db. */
 export class Operation {

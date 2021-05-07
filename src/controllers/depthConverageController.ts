@@ -6,7 +6,7 @@ import {
   httpPut,
 } from "inversify-express-utils";
 import { check } from "express-validator/check";
-import { IngestCandidates } from "../CandidateService";
+import { IngestCandidates } from "../lib/CandidateService";
 import { Request, Response, response } from "express";
 import { JsonResult } from "inversify-express-utils/dts/results";
 import {
@@ -396,7 +396,10 @@ export class DepthCoverageController extends BaseController {
           rp +
           ". No customize triggered."
       );
-      return this.json("No available code generation to trigger customize.", 400);
+      return this.json(
+        "No available code generation to trigger customize.",
+        400
+      );
     } else if (
       codegen.status ===
         CodeGenerationStatus.CODE_GENERATION_STATUS_COMPLETED ||
@@ -507,7 +510,10 @@ export class DepthCoverageController extends BaseController {
           rp +
           ". No customize triggered."
       );
-      return this.json("No available code generation to trigger customize.", 400);
+      return this.json(
+        "No available code generation to trigger customize.",
+        400
+      );
     } else if (
       codegen.status ===
         CodeGenerationStatus.CODE_GENERATION_STATUS_COMPLETED ||

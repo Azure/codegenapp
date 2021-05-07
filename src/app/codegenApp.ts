@@ -102,18 +102,20 @@ class CodegenApp {
   private buildContainer(): void {
     this.container = new Container();
     this.container.bind<Config>(InjectableTypes.Config).toConstantValue(config);
-    this.container.bind<Logger>(InjectableTypes.Logger).toConstantValue(this.logger);
+    this.container
+      .bind<Logger>(InjectableTypes.Logger)
+      .toConstantValue(this.logger);
   }
 
   private buildExpress(): void {
     const errorHandler: express.ErrorRequestHandler = (err, req, res, next) => {
       this.logger.error("Exception was thrown during request", {
-          err: serializeError(err),
-          type: "request",
-          ..._.pick(req, "path", "method", "body", "hostname", "protocol"),
-          headers: _.omit(req.headers, "cookie")
-        });
-        next(err);
+        err: serializeError(err),
+        type: "request",
+        ..._.pick(req, "path", "method", "body", "hostname", "protocol"),
+        headers: _.omit(req.headers, "cookie"),
+      });
+      next(err);
       // console.log("Exception was thrown during request");
       // this.logger.error("Exception was thrown during request");
     };

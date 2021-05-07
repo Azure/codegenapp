@@ -4,15 +4,6 @@ import {
   httpPost,
 } from "inversify-express-utils";
 import { JsonResult } from "inversify-express-utils/dts/results";
-import {
-  ENVKEY,
-  ORG,
-  SDK,
-  OnboardType,
-  CodeGenerationStatus,
-  CodeGenerationDBColumn,
-  REPO,
-} from "../common";
 import { Request, Response, response } from "express";
 import {
   getCodeGeneration,
@@ -20,11 +11,13 @@ import {
 } from "../lib/CodeGeneration";
 import CodeGenerateHandler from "../lib/CodeGenerateHandler";
 import { PipelineCredential } from "../lib/PipelineCredential";
-import { ResourceAndOperation } from "../lib/Model";
+import { ENVKEY, ResourceAndOperation } from "../lib/Model";
 import { BaseController } from "./BaseController";
 import { InjectableTypes } from "../lib/injectableTypes";
 import { inject } from "inversify";
 import { Logger } from "../lib/Logger";
+import { OnboardType, ORG, REPO, SDK } from "../lib/common";
+import { CodeGenerationStatus } from "../lib/CodeGenerationModel";
 // import { Logger } from "winston";
 
 @controller("/codegenerate")
@@ -388,7 +381,10 @@ export class CodeGenerateController extends BaseController {
           rp +
           ". No customize triggered."
       );
-      return this.json("No available code generation to trigger customize.", 400);
+      return this.json(
+        "No available code generation to trigger customize.",
+        400
+      );
     } else if (
       codegen.status ===
         CodeGenerationStatus.CODE_GENERATION_STATUS_COMPLETED ||
