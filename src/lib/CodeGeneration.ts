@@ -29,7 +29,7 @@ export async function InsertCodeGeneration(
     );
 
     const request = conn.request();
-    request.input("table", sql.VarChar, table);
+    // request.input("table", sql.VarChar, table);
     request.input("resourceProvider", sql.VarChar, codegen.resourceProvider);
     request.input(
       "resourcesToGenerate",
@@ -98,7 +98,7 @@ export async function getCodeGeneration(
     );
 
     const request = conn.request();
-    request.input("table", sql.VarChar, table);
+    // request.input("table", sql.VarChar, table);
     request.input("resourceProvider", sql.VarChar, resourceProvider);
     request.input("sdk", sql.VarChar, sdk);
     request.input("type", sql.VarChar, type);
@@ -184,7 +184,7 @@ export async function UpdateCodeGeneration(
     );
 
     const request = conn.request();
-    request.input("table", sql.VarChar, table);
+    // request.input("table", sql.VarChar, table);
     request.input("resourceProvider", sql.VarChar, codegen.resourceProvider);
     request.input(
       "resourcesToGenerate",
@@ -248,7 +248,7 @@ export async function UpdateCodeGenerationValue(
     );
 
     const request = conn.request();
-    request.input("table", sql.VarChar, table);
+    // request.input("table", sql.VarChar, table);
     request.input("resourceProvider", sql.VarChar, resourceProvider);
     request.input("sdk", sql.VarChar, sdk);
     request.input("type", sql.VarChar, type);
@@ -297,7 +297,7 @@ export async function DeleteCodeGeneration(
     );
 
     const request = conn.request();
-    request.input("table", sql.VarChar, table);
+    // request.input("table", sql.VarChar, table);
     request.input("resourceProvider", sql.VarChar, resourceProvider);
     request.input("sdk", sql.VarChar, sdk);
     request.input("type", sql.VarChar, type);
@@ -344,7 +344,7 @@ export async function IsValidCodeGenerationExist(
     );
 
     const request = conn.request();
-    request.input("table", sql.VarChar, table);
+    // request.input("table", sql.VarChar, table);
     request.input("resourceProvider", sql.VarChar, resourceProvider);
     request.input("sdk", sql.VarChar, sdk);
     request.input("type", sql.VarChar, type);
@@ -409,7 +409,7 @@ export async function ListCodeGenerations(
     );
 
     const request = conn.request();
-    request.input("table", sql.VarChar, table);
+    // request.input("table", sql.VarChar, table);
     request.input("type", sql.VarChar, type);
 
     let result = await request.query(querystr);
@@ -476,7 +476,7 @@ export async function ListCodeGenerationsByStatus(
     );
 
     const request = conn.request();
-    request.input("table", sql.VarChar, table);
+    // request.input("table", sql.VarChar, table);
     request.input("status", sql.VarChar, status);
 
     let result = await request.query(querystr);

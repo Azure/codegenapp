@@ -29,6 +29,7 @@ import { SDK, REPO, ORG, README } from "./common";
 import { CodegenDBCredentials } from "./DBCredentials";
 
 export class CodeGenerateHandler {
+  public constructor() {}
   /**
    *
    * @param token the pipeline access token
@@ -55,6 +56,7 @@ export class CodeGenerateHandler {
       rpToGen.target,
       rpToGen.onboardType
     );
+
     if (alreadyOnboard) {
       console.log(
         "Already triggerred to onboard " + rpToGen.RPName + ". Ignore this one."
@@ -98,7 +100,8 @@ export class CodeGenerateHandler {
       let cg: CodeGeneration = new CodeGeneration(
         rpToGen.RPName,
         rpToGen.target,
-        rpToGen.onboardType
+        rpToGen.onboardType,
+        rpToGen.resourcelist
       );
       let e = await InsertCodeGeneration(
         CodegenDBCredentials.server,
@@ -126,7 +129,7 @@ export class CodeGenerateHandler {
     sdkorg: string,
     swaggerorg: string
   ): Promise<any> {
-    const err = this.ClearCodeGenerationWorkSpace(
+    const err = await this.ClearCodeGenerationWorkSpace(
       token,
       rp,
       sdk,
@@ -164,7 +167,7 @@ export class CodeGenerateHandler {
     sdkorg: string,
     swaggerorg: string
   ): Promise<any> {
-    const err = this.ClearCodeGenerationWorkSpace(
+    const err = await this.ClearCodeGenerationWorkSpace(
       token,
       rp,
       sdk,

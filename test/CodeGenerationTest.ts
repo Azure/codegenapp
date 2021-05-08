@@ -3,6 +3,7 @@ import {
   getCodeGeneration,
   DeleteCodeGeneration,
   UpdateCodeGenerationValue,
+  IsValidCodeGenerationExist,
 } from "../src/lib/CodeGeneration";
 import { AssertionError } from "assert";
 import { readCVSSync } from "../src/lib/common";
@@ -67,6 +68,18 @@ describe("code generation test", () => {
     assert.equal(codegen.sdk, "terraform");
     assert.equal(codegen.type, "depth");
 
+    let exist: boolean = await IsValidCodeGenerationExist(
+      process.env[ENVKEY.ENV_CODEGEN_DB_SERVER],
+      process.env[ENVKEY.ENV_CODEGEN_DATABASE],
+      process.env[ENVKEY.ENV_CODEGEN_DB_USER],
+      process.env[ENVKEY.ENV_CODEGEN_DB_PASSWORD],
+      "testRP",
+      "terraform",
+      "depth"
+    );
+
+    assert(exist === true);
+
     /* update a code generation. */
     const uperr = await UpdateCodeGenerationValue(
       process.env[ENVKEY.ENV_CODEGEN_DB_SERVER],
@@ -106,5 +119,17 @@ describe("code generation test", () => {
       "depth"
     );
     assert.equal(delret, undefined);
+
+    let alreadyOnboard: boolean = await IsValidCodeGenerationExist(
+      process.env[ENVKEY.ENV_CODEGEN_DB_SERVER],
+      process.env[ENVKEY.ENV_CODEGEN_DATABASE],
+      process.env[ENVKEY.ENV_CODEGEN_DB_USER],
+      process.env[ENVKEY.ENV_CODEGEN_DB_PASSWORD],
+      "testRP",
+      "terraform",
+      "depth"
+    );
+
+    assert(alreadyOnboard === false);
   });
 });

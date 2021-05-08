@@ -16,4 +16,5 @@ module.exports = {
     testRegex: './test/*/.*\\.ts',
     verbose: true,
     rootDir: './',
+    setupFilesAfterEnv: ['./jest.setup.js']
 };

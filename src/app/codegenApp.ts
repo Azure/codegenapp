@@ -24,8 +24,8 @@ class CodegenApp {
   private container: Container;
   private logger: Logger;
   public async start(): Promise<void> {
-    await this.init();
     this.buildLogger();
+    await this.init();
     this.buildContainer();
     this.buildExpress();
     this.buildSchedulerTask();
