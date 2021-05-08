@@ -139,6 +139,10 @@ class CodegenApp {
       app.use(errorHandler);
     });
     const serverInstance = server.build();
+    serverInstance.get("/", function (req, res) {
+      res.send("welcome to codegen app service.");
+    });
+
     serverInstance.listen(3000);
     this.logger.info("codegen app server started, listen on 3000");
   }
