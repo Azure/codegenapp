@@ -41,24 +41,15 @@ class CodegenApp {
 
     try {
       for await (let secretProperties of client.listPropertiesOfSecrets()) {
-        console.log("Secret properties: ", secretProperties);
-        console.log(secretProperties.name);
+        this.logger.info("Secret properties: ", secretProperties);
+        this.logger.info(secretProperties.name);
         const secret = await client.getSecret(secretProperties.name);
         process.env[secretProperties.name] = secret.value;
       }
     } catch (e) {
-      console.log("Failed to list key secrets");
-      console.log(e);
-      console.log("use the credential locally for test");
-    }
-
-    try {
-      const secretName = "DepthDBServer";
-      const secret = await client.getSecret(secretName);
-      process.env[secretName] = secret.value;
-    } catch (e) {
-      console.log("Failed to get secret");
-      console.log(e);
+      this.logger.error("Failed to list key secrets");
+      this.logger.error(e);
+      this.logger.info("use the credential locally for test");
     }
 
     DepthDBCredentials.server = process.env[ENVKEY.ENV_DEPTH_DB_SERVER];
@@ -72,28 +63,6 @@ class CodegenApp {
     CodegenDBCredentials.pw = process.env[ENVKEY.ENV_CODEGEN_DB_PASSWORD];
 
     PipelineCredential.token = process.env[ENVKEY.ENV_REPO_ACCESS_TOKEN];
-    console.log(
-      "(" +
-        DepthDBCredentials.server +
-        "," +
-        DepthDBCredentials.db +
-        "," +
-        DepthDBCredentials.user +
-        "," +
-        DepthDBCredentials.pw +
-        ")"
-    );
-    console.log(
-      "(" +
-        CodegenDBCredentials.server +
-        "," +
-        CodegenDBCredentials.db +
-        "," +
-        CodegenDBCredentials.user +
-        "," +
-        CodegenDBCredentials.pw +
-        ")"
-    );
   }
 
   private buildLogger(): void {
@@ -143,8 +112,9 @@ class CodegenApp {
       res.send("welcome to codegen app service.");
     });
 
-    serverInstance.listen(3000);
-    this.logger.info("codegen app server started, listen on 3000");
+    var port = this.normalizePort(process.env.PORT || "3000");
+    serverInstance.listen(port);
+    this.logger.info("codegen app server started, listen on " + port);
   }
 
   private buildSchedulerTask() {
