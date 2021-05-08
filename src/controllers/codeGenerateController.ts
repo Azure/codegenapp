@@ -208,14 +208,14 @@ export class CodeGenerateController extends BaseController {
       statusCode = 400;
       content = { error: err };
       this.logger.error(
-        "Failed to cancel code generation for " + rp + "sdk:" + sdk,
+        "Failed to complete code generation for " + rp + "sdk:" + sdk,
         err
       );
     } else {
       statusCode = 200;
-      content = "Cancel " + onbaordtype + " for resource provider " + rp;
+      content = "Complete " + onbaordtype + " for resource provider " + rp;
       this.logger.info(
-        "Cancel " + onbaordtype + " for resource provider " + rp
+        "Complete " + onbaordtype + " for resource provider " + rp
       );
     }
 

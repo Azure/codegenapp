@@ -152,13 +152,18 @@ export class DepthCoverageController extends BaseController {
     const rp = request.params.rpname;
     const sdk: string = request.params.sdk;
     let sdkorg: string = request.body.org;
-    const swaggerorg: string = request.body.swaggerorg;
     if (sdkorg === undefined) {
       sdkorg = ORG.AZURE;
       if (sdk.toLowerCase() === SDK.TF_SDK) {
         sdkorg = ORG.MS;
       }
     }
+
+    let swaggerorg: string = request.body.swaggerorg;
+    if (swaggerorg === undefined) {
+      swaggerorg = ORG.AZURE;
+    }
+
     const onbaordtype: string = OnboardType.DEPTH_COVERAGE;
     let codegenorg: string = request.body.codegenorg;
     if (codegenorg === undefined) {
@@ -179,7 +184,7 @@ export class DepthCoverageController extends BaseController {
       statusCode = 400;
       content = { error: err };
       this.logger.error(
-        "Failed to Cancel " + onbaordtype + " for resource provider " + rp,
+        "Failed to Complete " + onbaordtype + " for resource provider " + rp,
         err
       );
     } else {
@@ -187,6 +192,63 @@ export class DepthCoverageController extends BaseController {
       content = "Complete " + onbaordtype + " for resource provider " + rp;
       this.logger.info(
         "Complete " + onbaordtype + " for resource provider " + rp
+      );
+    }
+
+    return this.json(content, statusCode);
+  }
+
+  /* cancel a depth-coverge generation. */
+  @httpPost(
+    "/resourceProvider/:rpname/sdk/:sdk/cancel",
+    check("request").exists()
+  )
+  public async CancelDepthCoverage(request: Request): Promise<JsonResult> {
+    const org = ORG.AZURE;
+    const rp = request.params.rpname;
+    const sdk: string = request.params.sdk;
+    let sdkorg: string = request.body.org;
+    if (sdkorg === undefined) {
+      sdkorg = ORG.AZURE;
+      if (sdk.toLowerCase() === SDK.TF_SDK) {
+        sdkorg = ORG.MS;
+      }
+    }
+
+    let swaggerorg: string = request.body.swaggerorg;
+    if (swaggerorg === undefined) {
+      swaggerorg = ORG.AZURE;
+    }
+
+    const onbaordtype: string = OnboardType.DEPTH_COVERAGE;
+    let codegenorg: string = request.body.codegenorg;
+    if (codegenorg === undefined) {
+      codegenorg = ORG.AZURE;
+    }
+
+    const err = await CodeGenerateHandler.CancelCodeGeneration(
+      PipelineCredential.token,
+      rp,
+      sdk,
+      onbaordtype,
+      codegenorg,
+      sdkorg,
+      swaggerorg
+    );
+    let content = {};
+    let statusCode = 200;
+    if (err !== undefined) {
+      statusCode = 400;
+      content = { error: err };
+      this.logger.error(
+        "Failed to Cancel " + onbaordtype + " for resource provider " + rp,
+        err
+      );
+    } else {
+      statusCode = 200;
+      content = "Cancel " + onbaordtype + " for resource provider " + rp;
+      this.logger.info(
+        "Cancel " + onbaordtype + " for resource provider " + rp
       );
     }
 
