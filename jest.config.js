@@ -13,6 +13,7 @@ module.exports = {
             tsconfig: 'tsconfig.json',
         },
     },
+    testPathIgnorePatterns: ['test/setup'],
     testRegex: './test/*/.*\\.ts',
     verbose: true,
     rootDir: './',
