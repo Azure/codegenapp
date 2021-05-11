@@ -92,7 +92,11 @@ export class DepthCoverageController extends BaseController {
   @httpPost("/trigger")
   public async Trigger(req: Request): Promise<JsonResult> {
     // const token = process.env[ENVKEY.ENV_REPO_ACCESS_TOKEN];
-    const org = req.body.org;
+    /* The code gen pipeline org. */
+    let org = req.body.org;
+    if (org === undefined) {
+      org = ORG.AZURE;
+    }
     const repo = req.body.repo;
     // const dbserver=process.env[ENVKEY.ENV_DEPTH_DB_SERVER];
     // const db=process.env[ENVKEY.ENV_DEPTH_DATABASE];
