@@ -33,15 +33,15 @@ export class CodeGenerateHandler {
   /**
    *
    * @param token the pipeline access token
-   * @param org the codegen pipeline org
-   * @param repo the codegen pipeline repo
+   * @param codegenorg the codegen pipeline org
+   * @param codegenrepo the codegen pipeline repo
    * @param basebranch the basebranch
    * @param rpToGen the resources to generation.
    */
   public async TriggerCodeGeneration(
     token: string,
-    org: string,
-    repo: string,
+    codegenorg: string,
+    codegenrepo: string,
     basebranch: string,
     rpToGen: ResourceAndOperation
   ): Promise<any> {
@@ -67,21 +67,43 @@ export class CodeGenerateHandler {
     try {
       const branchName =
         rpToGen.onboardType + "-" + rpToGen.target + "-" + rpToGen.RPName;
-      const baseCommit = await getCurrentCommit(octo, org, repo, basebranch);
-      const targetBranch = await getBranch(octo, org, repo, branchName);
+      const baseCommit = await getCurrentCommit(
+        octo,
+        codegenorg,
+        codegenrepo,
+        basebranch
+      );
+      const targetBranch = await getBranch(
+        octo,
+        codegenorg,
+        codegenrepo,
+        branchName
+      );
       // if (targetBranch !== undefined) {
       //     console.log("resource branch already exist.")
       //     return;
       // }
-      await createBranch(octo, org, repo, branchName, baseCommit.commitSha);
+      await createBranch(
+        octo,
+        codegenorg,
+        codegenrepo,
+        branchName,
+        baseCommit.commitSha
+      );
       const fs = require("fs");
       fs.writeFileSync(RESOUCEMAPFile, JSON.stringify(rpToGen, null, 2));
-      await uploadToRepo(octo, ["ToGenerate.json"], org, repo, branchName);
+      await uploadToRepo(
+        octo,
+        ["ToGenerate.json"],
+        codegenorg,
+        codegenrepo,
+        branchName
+      );
       /* create pull request. */
       await createPullRequest(
         octo,
-        org,
-        repo,
+        codegenorg,
+        codegenrepo,
         basebranch,
         branchName,
         "pull request from branch " + branchName
@@ -89,8 +111,8 @@ export class CodeGenerateHandler {
 
       let content = await getBlobContent(
         octo,
-        org,
-        repo,
+        codegenorg,
+        codegenrepo,
         branchName,
         RESOUCEMAPFile
       );
@@ -120,6 +142,18 @@ export class CodeGenerateHandler {
 
     return undefined;
   }
+
+  /**
+   *
+   * @param token the github access token
+   * @param rp the resource provider
+   * @param sdk the target sdk, terraform, cli or others
+   * @param onbaordtype the onboard type, depth, ad-hoc
+   * @param codegenorg the org of codegen
+   * @param sdkorg the org of sdk
+   * @param swaggerorg the swagger org
+   * @returns
+   */
   public async CompleteCodeGeneration(
     token: string,
     rp: string,
@@ -158,6 +192,17 @@ export class CodeGenerateHandler {
     return err;
   }
 
+  /**
+   *
+   * @param token The github access token
+   * @param rp The resource provider
+   * @param sdk The target sdk, terrform, cli or others
+   * @param onbaordtype The onboard type, depth ad-hoc or others
+   * @param codegenorg The codegen org
+   * @param sdkorg The sdk org
+   * @param swaggerorg The swagger org
+   * @returns
+   */
   public async CancelCodeGeneration(
     token: string,
     rp: string,
@@ -196,6 +241,17 @@ export class CodeGenerateHandler {
     return err;
   }
 
+  /**
+   *
+   * @param token The github access token
+   * @param rp The resource provider
+   * @param sdk The target sdk, terrform, cli or others
+   * @param onbaordtype The onboard type, depth ad-hoc or others
+   * @param codegenorg The codegen org
+   * @param sdkorg The sdk org
+   * @param swaggerorg The swagger org
+   * @returns
+   */
   public async ClearCodeGenerationWorkSpace(
     token: string,
     rp: string,
@@ -245,20 +301,30 @@ export class CodeGenerateHandler {
   }
 
   /*Onboard, submit generated code to sdk repo, and readme to swagger repo. */
+  /**
+   *
+   * @param rp The resource provider
+   * @param sdk The target sdk, terraform, cli or others
+   * @param token The github access token
+   * @param swaggerorg The swagger org
+   * @param sdkorg The sdk org
+   * @param onboardtype The onboard type, depth, ad-hoc or others
+   * @returns err if failure
+   */
   public async SubmitGeneratedCode(
     rp: string,
     sdk: string,
     token: string,
     swaggerorg: string = undefined,
-    org: string = undefined,
-    type: string = "depth"
+    sdkorg: string = undefined,
+    onboardtype: string = "depth"
   ): Promise<any> {
     try {
       const octo = NewOctoKit(token);
       /* generate PR in swagger repo. */
       let basebranch = "master";
       sdk = sdk.toLowerCase();
-      let branch = type + "-" + sdk + "-" + rp;
+      let branch = onboardtype + "-" + sdk + "-" + rp;
 
       await createPullRequest(
         octo,
@@ -272,7 +338,7 @@ export class CodeGenerateHandler {
       /* generate PR in sdk code repo. */
       let sdkrepo = "";
       let sdkbasebranch = "master";
-      let sdkorg = org;
+      // let sdkorg = sdkorg;
       if (sdkorg === undefined) {
         if (sdk === SDK.TF_SDK) {
           sdkrepo = REPO.TF_PROVIDER_REPO;
@@ -296,7 +362,7 @@ export class CodeGenerateHandler {
       );
 
       /* close work sdk branch. */
-      let workbranch = type + "-code-" + sdk + "-" + rp;
+      let workbranch = onboardtype + "-code-" + sdk + "-" + rp;
       await DeleteBranch(token, sdkorg, sdkrepo, workbranch);
 
       /* update the code generation status. */
@@ -308,7 +374,7 @@ export class CodeGenerateHandler {
         CodegenDBCredentials.pw,
         rp,
         sdk,
-        type,
+        onboardtype,
         CodeGenerationDBColumn.CODE_GENERATION_COLUMN_STATUS,
         CodeGenerationStatus.CODE_GENERATION_STATUS_PIPELINE_COMPLETED
       );
@@ -325,6 +391,18 @@ export class CodeGenerateHandler {
   }
 
   /*customize an code generation. */
+  /**
+   *
+   * @param token The github access token
+   * @param rp The resource provider
+   * @param sdk The target sdk, terraform, cli or others
+   * @param onboardType The onboard type, depth, ad-hoc or others
+   * @param triggerPR The code generation pipeline trigger Pull Request
+   * @param codePR The pull request for the generated code
+   * @param sdkorg The sdk org
+   * @param excludeTest indicate if ignore to run mock-test, live-test during this round of customize
+   * @returns err if failure
+   */
   public async CustomizeCodeGeneration(
     token: string,
     rp: string,
@@ -332,13 +410,16 @@ export class CodeGenerateHandler {
     onboardType: string,
     triggerPR: string,
     codePR: string,
-    org: string = undefined,
+    sdkorg: string = undefined,
     excludeTest: boolean = false
   ): Promise<any> {
     const octo = NewOctoKit(token);
     let custmizeerr: any = undefined;
     // const org = ORG.AZURE;
-    let sdkorg = ORG.AZURE;
+    // let sdkorg = ORG.AZURE;
+    if (sdkorg === undefined) {
+      sdkorg = ORG.AZURE;
+    }
     sdk = sdk.toLowerCase();
     if (sdk === SDK.TF_SDK) {
       sdkorg = ORG.MS;
@@ -406,13 +487,7 @@ export class CodeGenerateHandler {
 
     const prNumber = codePR.split("/").pop();
     const filelist: string[] = [readfile, "schema.json"];
-    await ReadCustomizeFiles(
-      token,
-      org !== undefined ? org : sdkorg,
-      sdkrepo,
-      +prNumber,
-      filelist
-    );
+    await ReadCustomizeFiles(token, sdkorg, sdkrepo, +prNumber, filelist);
 
     /* copy configuration to swagger repo */
 
@@ -490,6 +565,16 @@ export class CodeGenerateHandler {
     return undefined;
   }
 
+  /**
+   * Generate pull request for the generated code
+   * @param token The github access token
+   * @param org The org of the repo to submit code to
+   * @param repo The repository to submit code to
+   * @param title The pull request title
+   * @param branch The head branch of the pull request
+   * @param basebranch The base branch of the pull request
+   * @returns
+   */
   public async GenerateCodeRullRequest(
     token: string,
     org: string,

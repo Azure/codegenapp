@@ -30,7 +30,7 @@ describe("code generate handler test", () => {
       "dev",
       rs
     );
-    
+
     if (err !== undefined) {
       console.log(err);
     }

@@ -351,8 +351,8 @@ export async function IsValidCodeGenerationExist(
 
     let result = await request.query(querystr);
 
-    if (result.recordset !== undefined && result.recordset.length > 0)
-      return true;
+    if (result.recordset === undefined && result.recordset.length <= 0)
+      return false;
     for (let record of result.recordset) {
       const codegen = new CodeGeneration(
         record["resourceProvider"],
@@ -368,7 +368,9 @@ export async function IsValidCodeGenerationExist(
         record["status"]
       );
       if (
-        codegen.status !== CodeGenerationStatus.CODE_GENERATION_STATUS_COMPLETED
+        codegen.status !==
+          CodeGenerationStatus.CODE_GENERATION_STATUS_COMPLETED &&
+        codegen.status !== CodeGenerationStatus.CODE_GENERATION_STATUS_CANCELED
       )
         return true;
     }

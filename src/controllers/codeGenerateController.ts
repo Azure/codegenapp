@@ -77,14 +77,14 @@ export class CodeGenerateController extends BaseController {
     const sdk: string = request.params.sdk;
     const resources: string = request.params.resources;
 
-    let codegenorg: string = request.body.org;
+    let codegenorg: string = request.body.codegenorg;
     if (codegenorg === undefined) {
       codegenorg = ORG.AZURE;
     }
 
-    let repo: string = request.body.repo;
-    if (repo === undefined) {
-      repo = REPO.DEPTH_COVERAGE_REPO;
+    let codegenrepo: string = request.body.codegenrepo;
+    if (codegenrepo === undefined) {
+      codegenrepo = REPO.DEPTH_COVERAGE_REPO;
     }
 
     let type = request.body.type;
@@ -112,7 +112,8 @@ export class CodeGenerateController extends BaseController {
     if (
       getErr === undefined &&
       cg !== undefined &&
-      cg.status != CodeGenerationStatus.CODE_GENERATION_STATUS_COMPLETED
+      cg.status != CodeGenerationStatus.CODE_GENERATION_STATUS_COMPLETED &&
+      cg.status != CodeGenerationStatus.CODE_GENERATION_STATUS_CANCELED
     ) {
       this.logger.info(
         "The code generation pipeline(" +
@@ -141,7 +142,7 @@ export class CodeGenerateController extends BaseController {
     const err = await CodeGenerateHandler.TriggerCodeGeneration(
       PipelineCredential.token,
       codegenorg,
-      repo,
+      codegenrepo,
       branch,
       rs
     );
