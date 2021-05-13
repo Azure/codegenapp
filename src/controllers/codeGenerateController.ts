@@ -87,16 +87,16 @@ export class CodeGenerateController extends BaseController {
       codegenrepo = REPO.DEPTH_COVERAGE_REPO;
     }
 
-    let type = request.body.type;
-    if (type === undefined) {
-      type = OnboardType.ADHOC_ONBOARD;
+    let onboardtype = request.body.onboardtype;
+    if (onboardtype === undefined) {
+      onboardtype = OnboardType.ADHOC_ONBOARD;
     }
 
     const platform = request.body.platform;
     let branch = "main";
     if (platform !== undefined && platform.toLowerCase() === "dev") {
       branch = "dev";
-      type = "dev";
+      onboardtype = "dev";
     }
 
     let { codegen: cg, err: getErr } = await getCodeGeneration(
@@ -106,7 +106,7 @@ export class CodeGenerateController extends BaseController {
       process.env[ENVKEY.ENV_CODEGEN_DB_PASSWORD],
       rp,
       sdk,
-      type
+      onboardtype
     );
 
     if (
@@ -134,7 +134,7 @@ export class CodeGenerateController extends BaseController {
       readmefile,
       [],
       sdk,
-      type
+      onboardtype
     );
     rs.generateResourceList();
     if (resources !== undefined) rs.resourcelist = resources;
@@ -157,8 +157,10 @@ export class CodeGenerateController extends BaseController {
       );
     } else {
       statusCode = 200;
-      content = "Trigger " + type + " for resource provider " + rp;
-      this.logger.info("Trigger " + type + " for resource provider " + rp);
+      content = "Trigger " + onboardtype + " for resource provider " + rp;
+      this.logger.info(
+        "Trigger " + onboardtype + " for resource provider " + rp
+      );
     }
 
     return this.json(content, statusCode);

@@ -104,7 +104,7 @@ export async function QueryCandidateResources(
 
   let conn = undefined;
   try {
-    let conn = await sql.connect(config);
+    conn = await sql.connect(config);
 
     let queryStr = "";
     switch (depthcoverageType) {
@@ -138,6 +138,9 @@ export async function QueryCandidateResources(
     console.log(e);
   }
 
+  if (conn !== undefined) await conn.close();
+  await sql.close();
+
   return candidates;
 }
 
@@ -159,7 +162,7 @@ export async function QueryDepthCoverageReport(
 
   let conn = undefined;
   try {
-    let conn = await sql.connect(config);
+    conn = await sql.connect(config);
 
     let queryStr = "";
     let sdk = "";
@@ -212,10 +215,12 @@ export async function QueryDepthCoverageReport(
     }
   } catch (e) {
     console.log(e);
-    if (conn !== undefined) conn.close();
-    sql.close();
+    if (conn !== undefined) await conn.close();
+    await sql.close();
   }
 
+  if (conn !== undefined) await conn.close();
+  await sql.close();
   console.log("missing:" + missing.length);
   return missing;
 }

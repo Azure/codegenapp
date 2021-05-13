@@ -22,7 +22,7 @@ export async function IngestCandidatesFromFile(
 
   let conn = undefined;
   try {
-    let conn = await sql.connect(config);
+    conn = await sql.connect(config);
     let deletsqlstr = require("util").format(
       SQLStr.SQLSTR_CLEAR_CANDIDATE,
       table
@@ -57,9 +57,13 @@ export async function IngestCandidatesFromFile(
     }
   } catch (e) {
     console.log(e);
+    if (conn !== undefined) await conn.close();
+    await sql.close();
     return e;
   }
 
+  if (conn !== undefined) await conn.close();
+  await sql.close();
   return undefined;
 }
 
@@ -87,7 +91,7 @@ export async function IngestCandidates(
   }
   let conn = undefined;
   try {
-    let conn = await sql.connect(config);
+    conn = await sql.connect(config);
     let deletsqlstr = require("util").format(
       SQLStr.SQLSTR_CLEAR_CANDIDATE,
       table
@@ -137,8 +141,13 @@ export async function IngestCandidates(
     }
   } catch (e) {
     console.log(e);
+    if (conn !== undefined) await conn.close();
+    await sql.close();
     return e;
   }
+
+  if (conn !== undefined) await conn.close();
+  await sql.close();
 
   return undefined;
 }
@@ -168,7 +177,7 @@ export async function addCandidate(
 
   let conn = undefined;
   try {
-    let conn = await sql.connect(config);
+    conn = await sql.connect(config);
     /* delete existing one first. */
     let deletsqlstr = require("util").format(
       SQLStr.SQLSTR_DELETE,
@@ -212,8 +221,13 @@ export async function addCandidate(
     }
   } catch (e) {
     console.log(e);
+    if (conn !== undefined) await conn.close();
+    await sql.close();
     return e;
   }
+
+  if (conn !== undefined) await conn.close();
+  await sql.close();
 
   return undefined;
 }

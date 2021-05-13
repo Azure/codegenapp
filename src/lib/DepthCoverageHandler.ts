@@ -119,7 +119,7 @@ export class DepthCoverageHandler {
 
     let conn = undefined;
     try {
-      let conn = await sql.connect(config);
+      conn = await sql.connect(config);
 
       let queryStr = "";
       switch (depthcoverageType) {
@@ -153,6 +153,8 @@ export class DepthCoverageHandler {
       console.log(e);
     }
 
+    if (conn !== undefined) await conn.close();
+    await sql.close();
     return candidates;
   }
 
@@ -174,7 +176,7 @@ export class DepthCoverageHandler {
 
     let conn = undefined;
     try {
-      let conn = await sql.connect(config);
+      conn = await sql.connect(config);
 
       let queryStr = "";
       let sdk = "";
@@ -228,10 +230,12 @@ export class DepthCoverageHandler {
     } catch (e) {
       console.log(e);
       if (conn !== undefined) conn.close();
-      sql.close();
+      await sql.close();
     }
 
     console.log("missing:" + missing.length);
+    if (conn !== undefined) await conn.close();
+    await sql.close();
     return missing;
   }
 

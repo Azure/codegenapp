@@ -29,4 +29,4 @@ export enum CandidateTable {
   CLI_CANDIDATE_RESOURCE_TABLE = "AMEClientTools_Coverage_CLICandidateOperations",
   TF_CANDIDATE_RESOURCE_TABLE = "AMEClientTools_Coverage_TFCandidateResources",
 }
-export const CodegenStatusTable = "dbo.AMEClientTools_Resource_Generate_Status";
+export const CodegenStatusTable = "AMEClientTools_Resource_Generate_Status";

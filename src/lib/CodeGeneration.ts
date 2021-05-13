@@ -21,7 +21,7 @@ export async function InsertCodeGeneration(
 
   let conn = undefined;
   try {
-    let conn = await sql.connect(config);
+    conn = await sql.connect(config);
 
     let querystr = require("util").format(
       SQLStr.SQLSTR_INSERT_CODEGENERATION,
@@ -55,12 +55,19 @@ export async function InsertCodeGeneration(
     let { result, err } = await request.query(querystr);
     if (err != undefined) {
       console.log(err);
+      if (conn !== undefined) await conn.close();
+      await sql.close();
       return err;
     }
   } catch (e) {
     console.log(e);
+    if (conn !== undefined) await conn.close();
+    await sql.close();
     return e;
   }
+
+  if (conn !== undefined) await conn.close();
+  await sql.close();
 
   return undefined;
 }
@@ -90,7 +97,7 @@ export async function getCodeGeneration(
 
   let conn = undefined;
   try {
-    let conn = await sql.connect(config);
+    conn = await sql.connect(config);
 
     let querystr = require("util").format(
       SQLStr.SQLSTR_SELECT_CODEGENERATION,
@@ -149,6 +156,9 @@ export async function getCodeGeneration(
     error = e;
   }
 
+  if (conn !== undefined) await conn.close();
+  await sql.close();
+
   return {
     codegen: codegen,
     err: undefined,
@@ -176,7 +186,7 @@ export async function UpdateCodeGeneration(
 
   let conn = undefined;
   try {
-    let conn = await sql.connect(config);
+    conn = await sql.connect(config);
 
     let querystr = require("util").format(
       SQLStr.SQLSTR_UPDATE_CODEGENERATION,
@@ -208,9 +218,13 @@ export async function UpdateCodeGeneration(
     }
   } catch (e) {
     console.log(e);
+    if (conn !== undefined) await conn.close();
+    await sql.close();
     return e;
   }
 
+  if (conn !== undefined) await conn.close();
+  await sql.close();
   return undefined;
 }
 
@@ -238,7 +252,7 @@ export async function UpdateCodeGenerationValue(
 
   let conn = undefined;
   try {
-    let conn = await sql.connect(config);
+    conn = await sql.connect(config);
 
     let querystr = require("util").format(
       SQLStr.SQLSTR_UPDATE_CODEGENERATION_VALUE,
@@ -261,9 +275,13 @@ export async function UpdateCodeGenerationValue(
     }
   } catch (e) {
     console.log(e);
+    if (conn !== undefined) await conn.close();
+    await sql.close();
     return e;
   }
 
+  if (conn !== undefined) await conn.close();
+  await sql.close();
   return undefined;
 }
 
@@ -289,7 +307,7 @@ export async function DeleteCodeGeneration(
 
   let conn = undefined;
   try {
-    let conn = await sql.connect(config);
+    conn = await sql.connect(config);
 
     let querystr = require("util").format(
       SQLStr.SQLSTR_DELETE_CODEGENERATION,
@@ -309,9 +327,13 @@ export async function DeleteCodeGeneration(
     }
   } catch (e) {
     console.log(e);
+    if (conn !== undefined) await conn.close();
+    await sql.close();
     return e;
   }
 
+  if (conn !== undefined) await conn.close();
+  await sql.close();
   return undefined;
 }
 
@@ -335,8 +357,9 @@ export async function IsValidCodeGenerationExist(
 
   let table: string = CodegenStatusTable;
 
+  let conn = undefined;
   try {
-    let conn = await sql.connect(config);
+    conn = await sql.connect(config);
 
     let querystr = require("util").format(
       SQLStr.SQLSTR_SELECT_CODEGENERATION,
@@ -371,14 +394,20 @@ export async function IsValidCodeGenerationExist(
         codegen.status !==
           CodeGenerationStatus.CODE_GENERATION_STATUS_COMPLETED &&
         codegen.status !== CodeGenerationStatus.CODE_GENERATION_STATUS_CANCELED
-      )
+      ) {
+        if (conn !== undefined) await conn.close();
         return true;
+      }
     }
   } catch (e) {
     console.log(e);
+    if (conn !== undefined) await conn.close();
+    await sql.close();
     return false;
   }
 
+  if (conn !== undefined) await conn.close();
+  await sql.close();
   return false;
 }
 
@@ -402,8 +431,9 @@ export async function ListCodeGenerations(
 
   let table: string = CodegenStatusTable;
 
+  let conn = undefined;
   try {
-    let conn = await sql.connect(config);
+    conn = await sql.connect(config);
 
     let querystr = require("util").format(
       SQLStr.SQLSTR_LIST_CODEGENERATION,
@@ -447,6 +477,8 @@ export async function ListCodeGenerations(
     console.log(e);
   }
 
+  if (conn !== undefined) await conn.close();
+  await sql.close();
   return codegens;
 }
 
@@ -469,8 +501,9 @@ export async function ListCodeGenerationsByStatus(
 
   let table: string = CodegenStatusTable;
 
+  let conn = undefined;
   try {
-    let conn = await sql.connect(config);
+    conn = await sql.connect(config);
 
     let querystr = require("util").format(
       SQLStr.SQLSTR_LIST_CODEGENERATION,
@@ -505,5 +538,7 @@ export async function ListCodeGenerationsByStatus(
     console.log(e);
   }
 
+  if (conn !== undefined) await conn.close();
+  await sql.close();
   return codegens;
 }
