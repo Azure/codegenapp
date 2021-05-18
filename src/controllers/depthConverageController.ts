@@ -10,9 +10,8 @@ import { IngestCandidates } from "../lib/CandidateService";
 import { Request, Response, response } from "express";
 import { JsonResult } from "inversify-express-utils/dts/results";
 import {
-  getCodeGeneration,
-  UpdateCodeGenerationValue,
   ListCodeGenerations,
+  getAvailableCodeGeneration,
 } from "../lib/CodeGeneration";
 import { OnboardType, ORG, SDK } from "../lib/common";
 import CodeGenerateHandler from "../lib/CodeGenerateHandler";
@@ -211,7 +210,7 @@ export class DepthCoverageController extends BaseController {
     const org = ORG.AZURE;
     const rp = request.params.rpname;
     const sdk: string = request.params.sdk;
-    let sdkorg: string = request.body.org;
+    let sdkorg: string = request.body.sdkorg;
     if (sdkorg === undefined) {
       sdkorg = ORG.AZURE;
       if (sdk.toLowerCase() === SDK.TF_SDK) {
@@ -444,7 +443,7 @@ export class DepthCoverageController extends BaseController {
     }
 
     const onbaordtype: string = OnboardType.DEPTH_COVERAGE;
-    let { codegen, err } = await getCodeGeneration(
+    let { codegen, err } = await getAvailableCodeGeneration(
       process.env[ENVKEY.ENV_CODEGEN_DB_SERVER],
       process.env[ENVKEY.ENV_CODEGEN_DATABASE],
       process.env[ENVKEY.ENV_CODEGEN_DB_USER],
@@ -454,7 +453,7 @@ export class DepthCoverageController extends BaseController {
       "depth"
     );
 
-    if (err === undefined || codegen === undefined) {
+    if (err !== undefined || codegen === undefined) {
       this.logger.info(
         "No code generation pipeline for " +
           sdk +
@@ -558,7 +557,7 @@ export class DepthCoverageController extends BaseController {
 
     const onbaordtype: string = OnboardType.DEPTH_COVERAGE;
 
-    let { codegen, err } = await getCodeGeneration(
+    let { codegen, err } = await getAvailableCodeGeneration(
       process.env[ENVKEY.ENV_CODEGEN_DB_SERVER],
       process.env[ENVKEY.ENV_CODEGEN_DATABASE],
       process.env[ENVKEY.ENV_CODEGEN_DB_USER],

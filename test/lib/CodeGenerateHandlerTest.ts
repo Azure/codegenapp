@@ -46,5 +46,16 @@ describe("code generate handler test", () => {
       "chunyu3"
     );
     assert(cancelErr === undefined);
+
+    const completeErr = await CodeGenerateHandler.CompleteCodeGeneration(
+      PipelineCredential.token,
+      "testcodegenRP",
+      "terraform",
+      "dev",
+      "chunyu3",
+      "chunyu3",
+      "chunyu3"
+    );
+    assert(completeErr === undefined);
   });
 });

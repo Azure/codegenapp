@@ -166,6 +166,85 @@ export async function getCodeGeneration(
   // return codegen;
 }
 
+/* get valid resource provider code-gen information. */
+export async function getAvailableCodeGeneration(
+  server: string,
+  database: string,
+  user: string,
+  password: string,
+  resourceProvider: string,
+  sdk: string,
+  type: string
+): Promise<{ codegen: CodeGeneration; err: any }> {
+  // let codegens: CodeGeneration[] = [];
+  let codegen: CodeGeneration = undefined;
+  let error: any = undefined;
+  var sql = require("mssql");
+  var config = {
+    user: user,
+    password: password,
+    server: server,
+    database: database,
+  };
+
+  let table: string = CodegenStatusTable;
+
+  let conn = undefined;
+  try {
+    conn = await sql.connect(config);
+
+    let querystr = require("util").format(
+      SQLStr.SQLSTR_SELECT_CODEGENERATION,
+      table
+    );
+
+    const request = conn.request();
+    // request.input("table", sql.VarChar, table);
+    request.input("resourceProvider", sql.VarChar, resourceProvider);
+    request.input("sdk", sql.VarChar, sdk);
+    request.input("type", sql.VarChar, type);
+
+    let result = await request.query(querystr);
+    for (let record of result.recordset) {
+      if (
+        record["status"] ===
+          CodeGenerationStatus.CODE_GENERATION_STATUS_COMPLETED ||
+        record["status"] ===
+          CodeGenerationStatus.CODE_GENERATION_STATUS_CANCELED
+      ) {
+        continue;
+      }
+      codegen = new CodeGeneration(
+        record["resourceProvider"],
+        record["sdk"],
+        record["type"],
+        record["resourcesToGenerate"],
+        record["tag"],
+        record["swaggerPR"],
+        record["codePR"],
+        record["ignoreFailure"],
+        record["excludeStages"],
+        record["pipelineBuildID"],
+        record["status"]
+      );
+      //codegens.push(cg);
+      break;
+    }
+  } catch (e) {
+    console.log(e);
+    error = e;
+  }
+
+  if (conn !== undefined) await conn.close();
+  await sql.close();
+
+  return {
+    codegen: codegen,
+    err: undefined,
+  };
+  // return codegen;
+}
+
 /* update code-gen information. */
 export async function UpdateCodeGeneration(
   server: string,

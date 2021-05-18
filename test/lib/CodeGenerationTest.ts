@@ -4,12 +4,12 @@ import {
   DeleteCodeGeneration,
   UpdateCodeGenerationValue,
   IsValidCodeGenerationExist,
-} from "../src/lib/CodeGeneration";
+} from "../../src/lib/CodeGeneration";
 import { AssertionError } from "assert";
-import { readCVSSync } from "../src/lib/common";
-import { ENVKEY } from "../src/lib/Model";
-import { CodeGeneration } from "../src/lib/CodeGenerationModel";
-import { setup } from "./setup/setup";
+import { readCVSSync } from "../../src/lib/common";
+import { ENVKEY } from "../../src/lib/Model";
+import { CodeGeneration } from "../../src/lib/CodeGenerationModel";
+import { setup } from "../setup/setup";
 
 var assert = require("assert");
 describe("code generation test", () => {

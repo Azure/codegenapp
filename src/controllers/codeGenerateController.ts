@@ -6,6 +6,7 @@ import {
 import { JsonResult } from "inversify-express-utils/dts/results";
 import { Request, Response, response } from "express";
 import {
+  getAvailableCodeGeneration,
   getCodeGeneration,
   UpdateCodeGenerationValue,
 } from "../lib/CodeGeneration";
@@ -96,7 +97,7 @@ export class CodeGenerateController extends BaseController {
     let branch = "main";
     if (platform !== undefined && platform.toLowerCase() === "dev") {
       branch = "dev";
-      onboardtype = "dev";
+      // onboardtype = "dev";
     }
 
     let { codegen: cg, err: getErr } = await getCodeGeneration(
@@ -128,7 +129,8 @@ export class CodeGenerateController extends BaseController {
     }
 
     // const err = await CodeGenerateHandler.TriggerCodeGeneration(PipelineCredential.token, codegenorg, repo, branch, rp, sdk, type);
-    let readmefile: string = "";
+    let readmefile: string =
+      "specification/" + rp + "/resource-manager/readme.md";
     let rs: ResourceAndOperation = new ResourceAndOperation(
       rp,
       readmefile,
@@ -242,7 +244,7 @@ export class CodeGenerateController extends BaseController {
       codegenorg = ORG.AZURE;
     }
 
-    let sdkorg: string = request.body.org;
+    let sdkorg: string = request.body.sdkorg;
     let swaggerorg: string = request.body.swaggerorg;
     if (sdkorg === undefined) {
       sdkorg = ORG.AZURE;
@@ -366,7 +368,7 @@ export class CodeGenerateController extends BaseController {
       onbaordtype = OnboardType.ADHOC_ONBOARD;
     }
 
-    let { codegen, err } = await getCodeGeneration(
+    let { codegen, err } = await getAvailableCodeGeneration(
       process.env[ENVKEY.ENV_CODEGEN_DB_SERVER],
       process.env[ENVKEY.ENV_CODEGEN_DATABASE],
       process.env[ENVKEY.ENV_CODEGEN_DB_USER],
@@ -376,7 +378,7 @@ export class CodeGenerateController extends BaseController {
       onbaordtype
     );
 
-    if (err === undefined || codegen === undefined) {
+    if (err !== undefined || codegen === undefined) {
       this.logger.info(
         "No code generation pipeline for " +
           sdk +
