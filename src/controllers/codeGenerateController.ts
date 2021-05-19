@@ -130,7 +130,7 @@ export class CodeGenerateController extends BaseController {
 
     // const err = await CodeGenerateHandler.TriggerCodeGeneration(PipelineCredential.token, codegenorg, repo, branch, rp, sdk, type);
     let readmefile: string =
-      "specification/" + rp + "/resource-manager/readme.md";
+      "/specification/" + rp + "/resource-manager/readme.md";
     let rs: ResourceAndOperation = new ResourceAndOperation(
       rp,
       readmefile,

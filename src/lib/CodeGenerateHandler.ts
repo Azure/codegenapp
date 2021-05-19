@@ -27,6 +27,9 @@ import {
 } from "./CodeGenerationModel";
 import { SDK, REPO, ORG, README } from "./common";
 import { CodegenDBCredentials } from "./DBCredentials";
+import { PipelineVariables } from "./PipelineVariableModel";
+import * as yaml from "node-yaml";
+import { PipelineVariablesInterface } from "../config/pipelineVariables";
 
 export class CodeGenerateHandler {
   public constructor() {}
@@ -92,9 +95,18 @@ export class CodeGenerateHandler {
       );
       const fs = require("fs");
       fs.writeFileSync(RESOUCEMAPFile, JSON.stringify(rpToGen, null, 2));
+
+      /* generate variable yml file */
+      const v: PipelineVariablesInterface = {
+        variables: {
+            SDK: rpToGen.target,
+        }
+    }
+      fs.writeFileSync("Variables.yml", yaml.dump(v));
+
       await uploadToRepo(
         octo,
-        ["ToGenerate.json"],
+        ["ToGenerate.json", "Variables.yml"],
         codegenorg,
         codegenrepo,
         branchName
