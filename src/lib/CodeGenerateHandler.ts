@@ -99,9 +99,9 @@ export class CodeGenerateHandler {
       /* generate variable yml file */
       const v: PipelineVariablesInterface = {
         variables: {
-            SDK: rpToGen.target,
-        }
-    }
+          SDK: rpToGen.target,
+        },
+      };
       fs.writeFileSync("Variables.yml", yaml.dump(v));
 
       await uploadToRepo(

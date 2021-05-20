@@ -2,10 +2,10 @@ import * as yaml from "node-yaml";
 /**
  * pipeline meta-data varaibles build in compile.
  */
- export interface PipelineVariablesInterface {
+export interface PipelineVariablesInterface {
   variables: {
-      SDK: string;
-    }
+    SDK: string;
+  };
 }
 
 // export function main() {

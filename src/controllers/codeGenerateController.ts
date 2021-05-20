@@ -1,6 +1,7 @@
 import {
   BaseHttpController,
   controller,
+  httpGet,
   httpPost,
 } from "inversify-express-utils";
 import { JsonResult } from "inversify-express-utils/dts/results";
@@ -366,6 +367,126 @@ export class CodeGenerateController extends BaseController {
     let onbaordtype = request.body.type;
     if (onbaordtype === undefined) {
       onbaordtype = OnboardType.ADHOC_ONBOARD;
+    }
+
+    let { codegen, err } = await getAvailableCodeGeneration(
+      process.env[ENVKEY.ENV_CODEGEN_DB_SERVER],
+      process.env[ENVKEY.ENV_CODEGEN_DATABASE],
+      process.env[ENVKEY.ENV_CODEGEN_DB_USER],
+      process.env[ENVKEY.ENV_CODEGEN_DB_PASSWORD],
+      rp,
+      sdk,
+      onbaordtype
+    );
+
+    if (err !== undefined || codegen === undefined) {
+      this.logger.info(
+        "No code generation pipeline for " +
+          sdk +
+          " of resource provider " +
+          rp +
+          ". No customize triggered."
+      );
+      return this.json(
+        "No available code generation to trigger customize.",
+        400
+      );
+    } else if (
+      codegen.status ===
+        CodeGenerationStatus.CODE_GENERATION_STATUS_COMPLETED ||
+      codegen.status === CodeGenerationStatus.CODE_GENERATION_STATUS_IN_PROGRESS
+    ) {
+      this.logger.info(
+        "The code generation pipeline(" +
+          rp +
+          "," +
+          sdk +
+          ") is under " +
+          codegen.status +
+          ". No avaialbe to trigger customize now."
+      );
+      return this.json("No available to trigger customize now", 400);
+    } else if (
+      codegen.status === CodeGenerationStatus.CODE_GENERATION_STATUS_CANCELED
+    ) {
+      this.logger.info(
+        "The code generation pipeline(" +
+          rp +
+          "," +
+          sdk +
+          ") is cancelled. No avaialbe to trigger customize now."
+      );
+      return this.json(
+        "The code generation pipeline is cancelled. Cannot customize.",
+        400
+      );
+    } else if (
+      codegen.status === CodeGenerationStatus.CODE_GENERATION_STATUS_CUSTOMIZING
+    ) {
+      this.logger.info(
+        "The code generation pipeline(" +
+          rp +
+          "," +
+          sdk +
+          ") is under " +
+          codegen.status +
+          "Already. Ignore this trigger."
+      );
+      return this.json(
+        "customize. pipeline: https://devdiv.visualstudio.com/DevDiv/_build?definitionId=" +
+          codegen.pipelineBuildID,
+        201
+      );
+    }
+    const custmizeerr = await CodeGenerateHandler.CustomizeCodeGeneration(
+      PipelineCredential.token,
+      rp,
+      sdk,
+      onbaordtype,
+      triggerPR,
+      codePR,
+      org,
+      excludeTest
+    );
+
+    if (custmizeerr !== undefined) {
+      this.logger.error(
+        "Failed to customize resource provider " + rp + ", sdk:" + sdk,
+        err
+      );
+      return this.json({ error: custmizeerr }, 400);
+    } else {
+      this.logger.info("Customize resource provider " + rp + ", sdk:" + sdk);
+      return this.json(
+        "customize. pipeline: https://devdiv.visualstudio.com/DevDiv/_build?definitionId=" +
+          codegen.pipelineBuildID,
+        201
+      );
+    }
+  }
+
+  /*customize an code generation. */
+  @httpGet("/resourceProvider/:rpname/sdk/:sdk/customize")
+  public async CustomizeCodegenerationGET(
+    request: Request
+  ): Promise<JsonResult> {
+    // const token = process.env[ENVKEY.ENV_REPO_ACCESS_TOKEN];
+    const rp = request.params.rpname;
+    const sdk = request.params.sdk;
+
+    const org = request.query.org as string;
+    // const token = process.env[ENVKEY.ENV_REPO_ACCESS_TOKEN];
+
+    const triggerPR = request.query.triggerPR as string;
+    const codePR = request.query.codePR as string;
+    let excludeTest: boolean = false;
+    if (request.query.excludeTest !== undefined) {
+      excludeTest = Boolean(request.query.excludeTest);
+    }
+
+    let onbaordtype = request.query.type as string;
+    if (onbaordtype === undefined) {
+      onbaordtype = OnboardType.DEV_ONBOARD;
     }
 
     let { codegen, err } = await getAvailableCodeGeneration(
