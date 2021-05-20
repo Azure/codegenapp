@@ -12,7 +12,7 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
-            "program": "${workspaceFolder}\\dist\\app.js",
+            "program": "${workspaceFolder}\\dist\\src\\app.js",
             "preLaunchTask": "tsc: build -tsconfig.json",
             "outFiles": [
                 "${workspaceFolder}/dist/**/*.js"
@@ -25,7 +25,20 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
-            "program": "${workspaceFolder}\\dist\\main.js",
+            "program": "${workspaceFolder}\\dist\\src\\main.js",
+            "preLaunchTask": "tsc: build -tsconfig.json",
+            "outFiles": [
+                "${workspaceFolder}/dist/**/*.js"
+            ]
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch reversify app",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "program": "${workspaceFolder}\\dist\\app\\src\\index.js",
             "preLaunchTask": "tsc: build -tsconfig.json",
             "outFiles": [
                 "${workspaceFolder}/dist/**/*.js"
