@@ -1,6 +1,7 @@
 // import { SQLServerConnection } from "./SqlServerConnect";
 
 import {
+  JsonOperationMap,
   OnboardOperation,
   OnboardResource,
   ResourceAndOperation,
@@ -349,8 +350,26 @@ export async function ConvertOperationToDepthCoverageResourceAndOperation(
       rp.resources.push(rs);
     }
     if (tag !== undefined) rs.tag = tag;
-    if (!Contains(rp.jsonFilelist, op.fileName))
-      rp.jsonFilelist.push(op.fileName);
+    let joMap: JsonOperationMap = this.GetJsonFileOperationMap(
+      rp.jsonFileList,
+      op.fileName
+    );
+    if (joMap === undefined) {
+      joMap = {
+        jsonfile: op.fileName,
+        ops: op.operationId,
+      };
+      rp.jsonFileList.push(joMap);
+    } else {
+      let ops = joMap.ops;
+      if (ops === undefined || ops.length === 0) {
+        ops = op.operationId;
+      } else {
+        ops = ops + "," + op.operationId;
+      }
+
+      joMap.ops = ops;
+    }
   }
 
   return result;
@@ -425,8 +444,17 @@ export async function ConvertResourceToDepthCoverageResourceAndOperation(
     if (rs === undefined) {
       rs = new OnboardResource(crs.fullResourceType, apiVersion);
       rp.resources.push(rs);
-      if (!Contains(rp.jsonFilelist, crs.fileName))
-        rp.jsonFilelist.push(crs.fileName);
+      let joMap: JsonOperationMap = this.GetJsonFileOperationMap(
+        rp.jsonFileList,
+        crs.fileName
+      );
+      if (joMap === undefined) {
+        joMap = {
+          jsonfile: crs.fileName,
+          ops: "",
+        };
+        rp.jsonFileList.push(joMap);
+      }
     }
     if (tag !== undefined) rs.tag = tag;
   }

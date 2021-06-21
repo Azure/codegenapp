@@ -9,6 +9,7 @@ import { Request, Response, response } from "express";
 import {
   getAvailableCodeGeneration,
   getCodeGeneration,
+  ListCodeGenerations,
   UpdateCodeGenerationValue,
 } from "../lib/CodeGeneration";
 import CodeGenerateHandler from "../lib/CodeGenerateHandler";
@@ -19,7 +20,8 @@ import { InjectableTypes } from "../lib/injectableTypes";
 import { inject } from "inversify";
 import { Logger } from "../lib/Logger";
 import { OnboardType, ORG, REPO, SDK } from "../lib/common";
-import { CodeGenerationStatus } from "../lib/CodeGenerationModel";
+import { CodeGeneration, CodeGenerationStatus } from "../lib/CodeGenerationModel";
+import { CodegenDBCredentials } from "../lib/DBCredentials";
 // import { Logger } from "winston";
 
 @controller("/codegenerate")
@@ -124,7 +126,7 @@ export class CodeGenerateController extends BaseController {
           sdk +
           ") is under " +
           cg.status +
-          "Already. Ignore this trigger."
+          " Already. Ignore this trigger."
       );
       return this.json("Aleady Exists.", 201);
     }
@@ -155,7 +157,7 @@ export class CodeGenerateController extends BaseController {
       statusCode = 400;
       content = { error: err };
       this.logger.error(
-        "Failed to trigger code generation for " + rp + "sdk:" + sdk,
+        "Failed to trigger code generation for " + rp + " sdk:" + sdk,
         err
       );
     } else {
@@ -272,7 +274,7 @@ export class CodeGenerateController extends BaseController {
       statusCode = 400;
       content = { error: err };
       this.logger.error(
-        "Failed to cancel code generation for " + rp + "sdk:" + sdk,
+        "Failed to cancel code generation for " + rp + ",sdk:" + sdk,
         err
       );
     } else {
@@ -583,5 +585,25 @@ export class CodeGenerateController extends BaseController {
         201
       );
     }
+  }
+
+  /* list code generations. */
+  @httpPost("/list")
+  public async ListCodeGenerationsPOST(request: Request): Promise<JsonResult> {
+    let onbaordtype = request.body.onboardtype;
+    if (onbaordtype === undefined) {
+      onbaordtype = OnboardType.ADHOC_ONBOARD;
+    }
+    const codegens: CodeGeneration[] = await ListCodeGenerations(
+      CodegenDBCredentials.server,
+      CodegenDBCredentials.db,
+      CodegenDBCredentials.user,
+      CodegenDBCredentials.pw,
+      onbaordtype,
+      true
+    );
+
+    return this.json(codegens, 200);
+
   }
 }

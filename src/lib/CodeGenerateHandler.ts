@@ -27,7 +27,6 @@ import {
 } from "./CodeGenerationModel";
 import { SDK, REPO, ORG, README } from "./common";
 import { CodegenDBCredentials } from "./DBCredentials";
-import { PipelineVariables } from "./PipelineVariableModel";
 import * as yaml from "node-yaml";
 import { PipelineVariablesInterface } from "../config/pipelineVariables";
 

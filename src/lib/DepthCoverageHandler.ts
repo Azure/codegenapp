@@ -21,6 +21,7 @@ import {
   OnboardResource,
   ENVKEY,
   RESOUCEMAPFile,
+  JsonOperationMap,
 } from "./Model";
 import { CandidateResource } from "./ResourceCandiateModel";
 import { AutorestSDK } from "./common";
@@ -368,8 +369,27 @@ export class DepthCoverageHandler {
         rp.resources.push(rs);
       }
       if (tag !== undefined) rs.tag = tag;
-      if (!this.Contains(rp.jsonFilelist, op.fileName))
-        rp.jsonFilelist.push(op.fileName);
+
+      let joMap: JsonOperationMap = this.GetJsonFileOperationMap(
+        rp.jsonFileList,
+        op.fileName
+      );
+      if (joMap === undefined) {
+        joMap = {
+          jsonfile: op.fileName,
+          ops: op.operationId,
+        };
+        rp.jsonFileList.push(joMap);
+      } else {
+        let ops = joMap.ops;
+        if (ops === undefined || ops.length === 0) {
+          ops = op.operationId;
+        } else {
+          ops = ops + "," + op.operationId;
+        }
+
+        joMap.ops = ops;
+      }
     }
 
     return result;
@@ -449,8 +469,18 @@ export class DepthCoverageHandler {
       if (rs === undefined) {
         rs = new OnboardResource(crs.fullResourceType, apiVersion);
         rp.resources.push(rs);
-        if (!this.Contains(rp.jsonFilelist, crs.fileName))
-          rp.jsonFilelist.push(crs.fileName);
+
+        let joMap: JsonOperationMap = this.GetJsonFileOperationMap(
+          rp.jsonFileList,
+          crs.fileName
+        );
+        if (joMap === undefined) {
+          joMap = {
+            jsonfile: crs.fileName,
+            ops: "",
+          };
+          rp.jsonFileList.push(joMap);
+        }
       }
       if (tag !== undefined) rs.tag = tag;
     }
@@ -558,6 +588,17 @@ export class DepthCoverageHandler {
         console.log(err);
         return err;
       }
+    }
+
+    return undefined;
+  }
+
+  public GetJsonFileOperationMap(
+    list: JsonOperationMap[],
+    target: string
+  ): JsonOperationMap {
+    for (let m of list) {
+      if (m.jsonfile === target) return m;
     }
 
     return undefined;

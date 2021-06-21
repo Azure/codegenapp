@@ -13,6 +13,12 @@ export enum ENVKEY {
   ENV_CODEGEN_DB_USER = "DBUsername",
   ENV_CODEGEN_DB_PASSWORD = "DBPassword",
 }
+
+export interface JsonOperationMap {
+  jsonfile: string;
+  ops: string;
+}
+
 export class ResourceAndOperation {
   public constructor(
     RPName: string,
@@ -35,8 +41,11 @@ export class ResourceAndOperation {
   public excludeStages: string;
   public tag: string;
   public resourcelist: string = "";
-  public jsonFilelist: string[] = [];
   public onboardType: string = OnboardType.DEPTH_COVERAGE;
+
+  // public jsonFilelist: string[] = [];
+  public jsonFileList: JsonOperationMap[] = [];
+
   // public Resource: string;
   // public operations: DepthCoverageOperation[] = [];
   public generateResourceList() {
