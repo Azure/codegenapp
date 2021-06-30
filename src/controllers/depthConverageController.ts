@@ -23,7 +23,7 @@ import {
   CodeGenerationStatus,
   CodeGenerationDBColumn,
 } from "../lib/CodeGenerationModel";
-import { PipelineCredential } from "../lib/PipelineCredential";
+import { PipelineCredential } from "../lib/pipeline/PipelineCredential";
 import { BaseController } from "./BaseController";
 import { InjectableTypes } from "../lib/injectableTypes";
 import { inject } from "inversify";

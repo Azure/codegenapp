@@ -4,7 +4,7 @@ import {
   DepthDBCredentials,
 } from "../../src/lib/DBCredentials";
 import { ENVKEY } from "../../src/lib/Model";
-import { PipelineCredential } from "../../src/lib/PipelineCredential";
+import { PipelineCredential } from "../../src/lib/pipeline/PipelineCredential";
 
 export function setup() {
   const depthDBcredentialFile = "test\\depthDB.csv";

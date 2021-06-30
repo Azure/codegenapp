@@ -1,4 +1,11 @@
-import { OnboardType } from "./common";
+import {
+  default_codegen_repo,
+  default_swagger_repo,
+  sdk_repos,
+} from "../config";
+import { Resource } from "../depthcoverage/QueryDepthCoverageReport";
+import { RepoInfo } from "./CodeGenerationModel";
+import { OnboardType, SDK } from "./common";
 
 export const RESOUCEMAPFile = "ToGenerate.json";
 
@@ -14,6 +21,11 @@ export enum ENVKEY {
   ENV_CODEGEN_DB_PASSWORD = "DBPassword",
 }
 
+export enum SERVICE_TYPE {
+  RESOURCE_MANAGE = "resource-manager",
+  DATA_PLAN = "data-plan",
+}
+
 export interface JsonOperationMap {
   jsonfile: string;
   ops: string;
@@ -25,15 +37,32 @@ export class ResourceAndOperation {
     readme: string,
     resources: OnboardResource[],
     target: string,
-    type: string = OnboardType.DEPTH_COVERAGE
+    type: string = OnboardType.DEPTH_COVERAGE,
+    stype?: string,
+    swagger?: RepoInfo,
+    codegen_repo?: RepoInfo
   ) {
     this.RPName = RPName;
     this.readmeFile = readme;
     this.resources = resources;
     this.target = target;
     this.onboardType = type;
+    if (stype !== undefined) {
+      this.serviceType = stype;
+    }
+    this.sdkRepo = sdk_repos[target];
+
+    if (swagger !== undefined) {
+      this.swaggerRepo = swagger;
+    }
+
+    if (codegen_repo !== undefined) {
+      this.codegenRepo = codegen_repo;
+    }
   }
+  public name: string;
   public RPName: string;
+  public serviceType: string = SERVICE_TYPE.RESOURCE_MANAGE;
   public readmeFile: string;
   public target: string;
   public resources: OnboardResource[] = [];
@@ -42,6 +71,9 @@ export class ResourceAndOperation {
   public tag: string;
   public resourcelist: string = "";
   public onboardType: string = OnboardType.DEPTH_COVERAGE;
+  public swaggerRepo: RepoInfo = default_swagger_repo;
+  public sdkRepo: RepoInfo = undefined;
+  public codegenRepo: RepoInfo = default_codegen_repo;
 
   // public jsonFilelist: string[] = [];
   public jsonFileList: JsonOperationMap[] = [];

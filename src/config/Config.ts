@@ -1,3 +1,5 @@
+import { RepoInfo } from "../lib/CodeGenerationModel";
+
 /**
  * code gen service configuration properties.
  */
@@ -11,4 +13,5 @@ export interface Config {
   statsdHost: string;
   statsdPort: number;
   namespaceName: string;
+  defaultSwaggerRepo: RepoInfo;
 }

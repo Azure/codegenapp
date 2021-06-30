@@ -9,7 +9,7 @@ import { DepthDBCredentials, CodegenDBCredentials } from "../lib/DBCredentials";
 
 import "../controllers/DepthConverageController";
 import "../controllers/CodeGenerateController";
-import { PipelineCredential } from "../lib/PipelineCredential";
+import { PipelineCredential } from "../lib/pipeline/PipelineCredential";
 import { CompleteCodeGenerationTask } from "../lib/CompleteCodeGenerationTask";
 import { CodegenAppLogger } from "../lib/CodegenAppLogger";
 import { config } from "../config";

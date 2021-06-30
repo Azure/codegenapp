@@ -6,7 +6,7 @@ import {
   DepthDBCredentials,
 } from "../../src/lib/DBCredentials";
 import { ENVKEY, ResourceAndOperation } from "../../src/lib/Model";
-import { PipelineCredential } from "../../src/lib/PipelineCredential";
+import { PipelineCredential } from "../../src/lib/pipeline/PipelineCredential";
 import { setup } from "../setup/setup";
 
 var assert = require("assert");

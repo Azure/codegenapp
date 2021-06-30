@@ -1,5 +1,6 @@
 import fs = require("fs");
 import csv = require("csv-parser");
+import { RepoInfo } from "./CodeGenerationModel";
 var parse = require("csv-parse/lib/sync");
 export enum REPO {
   SWAGGER_REPO = "azure-rest-api-specs",
@@ -18,6 +19,8 @@ export enum SDK {
   TF_SDK = "terraform",
   CLI_CORE_SDK = "clicore",
   CLI_EXTENSTION_SDK = "cliextension",
+  GO_SDK = "go",
+  DOTNET_SDK = "dotnet",
 }
 
 export enum README {
@@ -25,9 +28,18 @@ export enum README {
   CLI_README_FILE = "readme.az.md",
 }
 
+export enum CodeGenerationType {
+  DEPTH_COVERAGE = "depth",
+  CI = "CI",
+  ADHOC = "ad-hoc",
+  RELEASE = "release",
+  DEV_ONBOARD = "dev",
+}
 export enum OnboardType {
   DEPTH_COVERAGE = "depth",
-  ADHOC_ONBOARD = "onboard",
+  CI = "CI",
+  ADHOC = "ad-hoc",
+  RELEASE = "release",
   DEV_ONBOARD = "dev",
 }
 
@@ -35,6 +47,11 @@ export enum AutorestSDK {
   AUTOREST_SDK_TF = "terraform",
   AUTOREST_SDK_CLI_CORE = "clicore",
   AUTOREST_SDK_CLI_EXTENSION = "cliextension",
+}
+
+export enum RepoType {
+  GITHUB = "github",
+  DEVOPS = "devops"
 }
 
 export enum SQLStr {
@@ -51,6 +68,17 @@ export enum SQLStr {
   SQLSTR_UPDATE_CODEGENERATION_VALUE = "UPDATE %s SET %s=@%s where resourceProvider=@resourceProvider and type=@type and sdk=@sdk",
   SQLSTR_LIST_CODEGENERATION = "SELECT * FROM %s where type=@type",
   SQLSTR_LIST_CODEGENERATION_BY_STATUS = "SELECT * FROM %s where status=@status",
+
+  /* access sdk code generation table. */
+  SQLSTR_INSERT_SDKCODEGENERATION = "INSERT INTO %s (name, resourceProvider, serviceType, resourcesToGenerate, tag, sdk, swaggerRepo, sdkRepo, codegenRepo, owner, type, lastPipelineBuildID, status) values (@name, @resourceProvider, @serviceType, @resourcesToGenerate, @tag, @sdk, @swaggerRepo, @sdkRepo, @codegenRepo, @owner, @type, @lastPipelineBuildID, @status)",
+  SQLSTR_UPDATE_SDKCODEGENERATION = "UPDATE %s SET resourcesToGenerate=@resourcesToGenerate, tag=@tag, swaggerPR=@swaggerPR, codePR=@codePR, ignoreFailure=@ignoreFailure, excludeStages=@excludeStages, pipelineBuildID=@pipelineBuildID, status=@status where resourceProvider=@resourceProvider and type=@type and sdk=@sdk",
+  SQLSTR_DELETE_SDKCODEGENERATION = "DELETE FROM %s where resourceProvider=@resourceProvider and type=@type and sdk=@sdk",
+  SQLSTR_SELECT_SDKCODEGENERATION = "SELECT * FROM %s where resourceProvider=@resourceProvider and type=@type and sdk=@sdk",
+  SQLSTR_SELECT_SDKCODEGENERATION_By_Name = "SELECT * FROM %s where name=@name",
+  SQLSTR_UPDATE_SDKCODEGENERATION_VALUE = "UPDATE %s SET %s=@%s where name=@name",
+  SQLSTR_UPDATE_SDKCODEGENERATION_VALUES = "UPDATE %s SET %s where name=@name",
+  SQLSTR_LIST_SDKCODEGENERATION = "SELECT * FROM %s where type=@type",
+  SQLSTR_LIST_SDKCODEGENERATION_BY_STATUS = "SELECT * FROM %s where status=@status",
 }
 
 export function readCVS(filepath: string): any[] {

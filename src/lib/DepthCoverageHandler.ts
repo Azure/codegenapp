@@ -32,7 +32,7 @@ import {
 import { CodegenDBCredentials } from "./DBCredentials";
 import { CodeGeneration } from "./CodeGenerationModel";
 import CodeGenerateHandler from "./CodeGenerateHandler";
-import { PipelineCredential } from "./PipelineCredential";
+import { PipelineCredential } from "./pipeline/PipelineCredential";
 
 export class DepthCoverageHandler {
   public async RetriveResourceToGenerate(
