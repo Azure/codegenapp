@@ -1,4 +1,4 @@
-import { ENVKEY } from "./Model";
+import { ENVKEY } from "../Model";
 
 export interface DBCredential {
   server: string;

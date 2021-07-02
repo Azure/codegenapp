@@ -54,7 +54,7 @@ export class CodeGeneration {
 
 export enum CodeGenerationStatus {
   CODE_GENERATION_STATUS_SUBMIT = "submit",
-  CODE_GENERATION_STATUS_IN_PROGRESS = "inprogress",
+  CODE_GENERATION_STATUS_IN_PROGRESS = "in_progress",
   CODE_GENERATION_STATUS_CUSTOMIZING = "customizing",
   CODE_GENERATION_STATUS_FAILED = "failed",
   CODE_GENERATION_STATUS_CANCELED = "cancelled",
@@ -139,6 +139,7 @@ export class SDKCodeGeneration {
 
   public toString() {
     return (
+      this.name +
       "(resourceProvider:" +
       this.resourceProvider +
       ", sdk: " +
@@ -151,7 +152,7 @@ export class SDKCodeGeneration {
 }
 
 export interface RepoInfo {
-  type: string,
+  type: string;
   path: string;
   branch: string;
 }

@@ -2,7 +2,7 @@ import { readCVSSync } from "../../src/lib/common";
 import {
   CodegenDBCredentials,
   DepthDBCredentials,
-} from "../../src/lib/DBCredentials";
+} from "../../src/lib/sqldb/DBCredentials";
 import { ENVKEY } from "../../src/lib/Model";
 import { PipelineCredential } from "../../src/lib/pipeline/PipelineCredential";
 

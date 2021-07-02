@@ -47,8 +47,37 @@ export let sdk_repos: Map<string, RepoInfo> = new Map<string, RepoInfo>();
 sdk_repos[SDK.TF_SDK] = default_terraform_repo;
 sdk_repos[SDK.CLI_CORE_SDK] = default_cli_repo;
 
+export const default_dev_codegen_repo: RepoInfo = {
+  type: RepoType.GITHUB,
+  path: "https://github.com/Azure/depth-coverage-pipeline",
+  branch: "dev",
+};
+
+export const default_dev_swagger_repo: RepoInfo = {
+  type: RepoType.GITHUB,
+  path: "https://github.com/chunyu3/azure-rest-api-specs",
+  branch: "master",
+};
+
+export const default_dev_cli_repo: RepoInfo = {
+  type: RepoType.GITHUB,
+  path: "https://github.com/chunyu3/azure-cli",
+  branch: "dev",
+};
+
+export const default_dev_terraform_repo: RepoInfo = {
+  type: RepoType.GITHUB,
+  path: "https://github.com/chunyu3/terraform-provider-azurerm",
+  branch: "pipeline",
+};
+
+export let sdk_dev_repos: Map<string, RepoInfo> = new Map<string, RepoInfo>();
+sdk_dev_repos[SDK.TF_SDK] = default_dev_terraform_repo;
+sdk_dev_repos[SDK.CLI_CORE_SDK] = default_dev_cli_repo;
+
 export const getGitRepoInfo: IRepoInfo = (repoInfo) => {
-  if (repoInfo === undefined || repoInfo === null) return { org: undefined, repo: undefined };
+  if (repoInfo === undefined || repoInfo === null)
+    return { org: undefined, repo: undefined };
   const parts: string[] = repoInfo.path.split("/");
   const len = parts.length;
   if (len <= 2) return { org: undefined, repo: undefined };

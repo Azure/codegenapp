@@ -5,7 +5,10 @@ import * as bodyParser from "body-parser";
 import { ManagedIdentityCredential } from "@azure/identity";
 import { SecretClient } from "@azure/keyvault-secrets";
 import { ENVKEY } from "../lib/Model";
-import { DepthDBCredentials, CodegenDBCredentials } from "../lib/DBCredentials";
+import {
+  DepthDBCredentials,
+  CodegenDBCredentials,
+} from "../lib/sqldb/DBCredentials";
 
 import "../controllers/DepthConverageController";
 import "../controllers/CodeGenerateController";

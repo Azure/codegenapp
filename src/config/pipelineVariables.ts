@@ -4,7 +4,7 @@ import * as yaml from "node-yaml";
  */
 export interface PipelineVariablesInterface {
   variables: {
-    CodeGenerationName: string,
+    CodeGenerationName: string;
     SDK: string;
     stages: string;
     // stages: string[];

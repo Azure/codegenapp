@@ -39,12 +39,16 @@ export async function ReadCustomizeFiles(
   const headbranch = prdata.head.ref;
   // const content = await getBlobContent(octo, org, repo, headbranch, RESOUCEMAPFile);
   const fs = require("fs");
+  let retrievedFileLst: string[] = [];
   for (let file of fileList) {
     const content = await getBlobContent(octo, org, repo, headbranch, file);
-    fs.writeFileSync(file, content);
+    if (content.length > 0) {
+      retrievedFileLst.push(file);
+      fs.writeFileSync(file, content);
+    }
   }
 
-  return fileList.join(";");
+  return retrievedFileLst.join(";");
 }
 
 export async function ReadFileFromPR(
@@ -105,7 +109,7 @@ export async function SubmitPullRequest(
   let prlink = "";
   let err = undefined;
   try {
-    await createPullRequest(octo, org, repo, basebranch, branchName, title);
+    prlink = await createPullRequest(octo, org, repo, basebranch, branchName, title);
   } catch (e) {
     console.log(e);
     err = e;

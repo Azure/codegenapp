@@ -51,7 +51,7 @@ export enum AutorestSDK {
 
 export enum RepoType {
   GITHUB = "github",
-  DEVOPS = "devops"
+  DEVOPS = "devops",
 }
 
 export enum SQLStr {
@@ -60,19 +60,19 @@ export enum SQLStr {
   SQLSTR_CLEAR_CANDIDATE = "DElETE from %s",
   SQLSTR_DELETE = "DELETE from %s where resourceProvider='%s' and fullResourceType='%s'",
 
-  /*access code generation status table. */
-  SQLSTR_INSERT_CODEGENERATION = "INSERT INTO %s (resourceProvider, resourcesToGenerate, tag, swaggerPR, codePR, sdk, type, ignoreFailure, excludeStages, pipelineBuildID, status) values (@resourceProvider, @resourcesToGenerate, @tag, @swaggerPR, @codePR, @sdk, @type, @ignoreFailure, @excludeStages, @pipelineBuildID, @status)",
-  SQLSTR_UPDATE_CODEGENERATION = "UPDATE %s SET resourcesToGenerate=@resourcesToGenerate, tag=@tag, swaggerPR=@swaggerPR, codePR=@codePR, ignoreFailure=@ignoreFailure, excludeStages=@excludeStages, pipelineBuildID=@pipelineBuildID, status=@status where resourceProvider=@resourceProvider and type=@type and sdk=@sdk",
-  SQLSTR_DELETE_CODEGENERATION = "DELETE FROM %s where resourceProvider=@resourceProvider and type=@type and sdk=@sdk",
-  SQLSTR_SELECT_CODEGENERATION = "SELECT * FROM %s where resourceProvider=@resourceProvider and type=@type and sdk=@sdk",
-  SQLSTR_UPDATE_CODEGENERATION_VALUE = "UPDATE %s SET %s=@%s where resourceProvider=@resourceProvider and type=@type and sdk=@sdk",
-  SQLSTR_LIST_CODEGENERATION = "SELECT * FROM %s where type=@type",
-  SQLSTR_LIST_CODEGENERATION_BY_STATUS = "SELECT * FROM %s where status=@status",
+  // /*access code generation status table. */
+  // SQLSTR_INSERT_CODEGENERATION = "INSERT INTO %s (resourceProvider, resourcesToGenerate, tag, swaggerPR, codePR, sdk, type, ignoreFailure, excludeStages, pipelineBuildID, status) values (@resourceProvider, @resourcesToGenerate, @tag, @swaggerPR, @codePR, @sdk, @type, @ignoreFailure, @excludeStages, @pipelineBuildID, @status)",
+  // SQLSTR_UPDATE_CODEGENERATION = "UPDATE %s SET resourcesToGenerate=@resourcesToGenerate, tag=@tag, swaggerPR=@swaggerPR, codePR=@codePR, ignoreFailure=@ignoreFailure, excludeStages=@excludeStages, pipelineBuildID=@pipelineBuildID, status=@status where resourceProvider=@resourceProvider and type=@type and sdk=@sdk",
+  // SQLSTR_DELETE_CODEGENERATION = "DELETE FROM %s where resourceProvider=@resourceProvider and type=@type and sdk=@sdk",
+  // SQLSTR_SELECT_CODEGENERATION = "SELECT * FROM %s where resourceProvider=@resourceProvider and type=@type and sdk=@sdk",
+  // SQLSTR_UPDATE_CODEGENERATION_VALUE = "UPDATE %s SET %s=@%s where resourceProvider=@resourceProvider and type=@type and sdk=@sdk",
+  // SQLSTR_LIST_CODEGENERATION = "SELECT * FROM %s where type=@type",
+  // SQLSTR_LIST_CODEGENERATION_BY_STATUS = "SELECT * FROM %s where status=@status",
 
   /* access sdk code generation table. */
   SQLSTR_INSERT_SDKCODEGENERATION = "INSERT INTO %s (name, resourceProvider, serviceType, resourcesToGenerate, tag, sdk, swaggerRepo, sdkRepo, codegenRepo, owner, type, lastPipelineBuildID, status) values (@name, @resourceProvider, @serviceType, @resourcesToGenerate, @tag, @sdk, @swaggerRepo, @sdkRepo, @codegenRepo, @owner, @type, @lastPipelineBuildID, @status)",
   SQLSTR_UPDATE_SDKCODEGENERATION = "UPDATE %s SET resourcesToGenerate=@resourcesToGenerate, tag=@tag, swaggerPR=@swaggerPR, codePR=@codePR, ignoreFailure=@ignoreFailure, excludeStages=@excludeStages, pipelineBuildID=@pipelineBuildID, status=@status where resourceProvider=@resourceProvider and type=@type and sdk=@sdk",
-  SQLSTR_DELETE_SDKCODEGENERATION = "DELETE FROM %s where resourceProvider=@resourceProvider and type=@type and sdk=@sdk",
+  SQLSTR_DELETE_SDKCODEGENERATION = "DELETE FROM %s where name=@name",
   SQLSTR_SELECT_SDKCODEGENERATION = "SELECT * FROM %s where resourceProvider=@resourceProvider and type=@type and sdk=@sdk",
   SQLSTR_SELECT_SDKCODEGENERATION_By_Name = "SELECT * FROM %s where name=@name",
   SQLSTR_UPDATE_SDKCODEGENERATION_VALUE = "UPDATE %s SET %s=@%s where name=@name",

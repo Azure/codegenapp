@@ -3,9 +3,8 @@ import {
   default_swagger_repo,
   sdk_repos,
 } from "../config";
-import { Resource } from "../depthcoverage/QueryDepthCoverageReport";
 import { RepoInfo } from "./CodeGenerationModel";
-import { OnboardType, SDK } from "./common";
+import { OnboardType } from "./common";
 
 export const RESOUCEMAPFile = "ToGenerate.json";
 
@@ -40,7 +39,8 @@ export class ResourceAndOperation {
     type: string = OnboardType.DEPTH_COVERAGE,
     stype?: string,
     swagger?: RepoInfo,
-    codegen_repo?: RepoInfo
+    codegen_repo?: RepoInfo,
+    sdk_repo?: RepoInfo
   ) {
     this.RPName = RPName;
     this.readmeFile = readme;
@@ -50,7 +50,7 @@ export class ResourceAndOperation {
     if (stype !== undefined) {
       this.serviceType = stype;
     }
-    this.sdkRepo = sdk_repos[target];
+    // this.sdkRepo = sdk_repos[target];
 
     if (swagger !== undefined) {
       this.swaggerRepo = swagger;
@@ -58,6 +58,12 @@ export class ResourceAndOperation {
 
     if (codegen_repo !== undefined) {
       this.codegenRepo = codegen_repo;
+    }
+
+    if (sdk_repo !== undefined) {
+      this.sdkRepo = sdk_repo;
+    } else {
+      this.sdkRepo = sdk_repos[target];
     }
   }
   public name: string;
