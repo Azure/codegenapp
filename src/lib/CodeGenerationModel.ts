@@ -1,5 +1,3 @@
-import { Interface } from "readline";
-
 export class CodeGeneration {
   public constructor(
     rs: string,

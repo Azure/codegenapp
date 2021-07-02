@@ -15,7 +15,6 @@ import { BaseController } from "./BaseController";
 import { InjectableTypes } from "../lib/injectableTypes";
 import { inject } from "inversify";
 import { Logger } from "../lib/Logger";
-import { OnboardType } from "../lib/common";
 import {
   CodeGenerationStatus,
   RepoInfo,
@@ -32,6 +31,7 @@ import {
   sdk_repos,
 } from "../config";
 import CodeGenerationTable from "../lib/sqldb/CodeGenerationTable";
+import { CodeGenerationType } from "../lib/common";
 // import { Logger } from "winston";
 
 @controller("/codegenerations")
@@ -131,7 +131,7 @@ export class CodeGenerateController extends BaseController {
 
     let type = request.body.type;
     if (type === undefined) {
-      type = OnboardType.ADHOC;
+      type = CodeGenerationType.ADHOC;
     }
 
     let {
@@ -349,7 +349,7 @@ export class CodeGenerateController extends BaseController {
   ): Promise<JsonResult> {
     let onbaordtype = request.body.onboardtype;
     if (onbaordtype === undefined) {
-      onbaordtype = OnboardType.ADHOC;
+      onbaordtype = CodeGenerationType.ADHOC;
     }
     const codegens: SDKCodeGeneration[] = await CodeGenerationTable.ListSDKCodeGenerations(
       CodegenDBCredentials,

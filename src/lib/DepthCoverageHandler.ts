@@ -10,18 +10,16 @@ import {
   ResourceAndOperation,
   OnboardOperation,
   OnboardResource,
-  ENVKEY,
-  RESOUCEMAPFile,
   JsonOperationMap,
 } from "./Model";
 import { CandidateResource } from "./ResourceCandiateModel";
-import { AutorestSDK } from "./common";
 import CodeGenerateHandler from "./CodeGenerateHandler";
 import { PipelineCredential } from "./pipeline/PipelineCredential";
 import { CodegenDBCredentials, DBCredential } from "./sqldb/DBCredentials";
 import { CodeGenerationStatus, RepoInfo } from "./CodeGenerationModel";
 import { getGitRepoInfo } from "../config";
 import CodeGenerationTable from "./sqldb/CodeGenerationTable";
+import { SDK } from "./common";
 
 export class DepthCoverageHandler {
   public async RetriveResourceToGenerate(
@@ -45,9 +43,9 @@ export class DepthCoverageHandler {
       depthcoverageType ===
         DepthCoverageType.DEPTH_COVERAGE_TYPE_CLI_NOT_SUPPOT_RESOURCE
     ) {
-      sdk = AutorestSDK.AUTOREST_SDK_CLI_CORE;
+      sdk = SDK.CLI_CORE_SDK;
     } else {
-      sdk = AutorestSDK.AUTOREST_SDK_TF;
+      sdk = SDK.TF_SDK;
     }
     if (
       depthcoverageType ===
@@ -161,19 +159,19 @@ export class DepthCoverageHandler {
       switch (depthcoverageType) {
         case DepthCoverageType.DEPTH_COVERAGE_TYPE_TF_NOT_SUPPORT_RESOURCE:
           queryStr = SQLQueryStr.SQLQUERY_TF_NOT_SUPPORT_RESOURCE;
-          sdk = AutorestSDK.AUTOREST_SDK_TF;
+          sdk = SDK.TF_SDK;
           break;
         case DepthCoverageType.DEPTH_COVERAGE_TYPE_TF_NOT_SUPPORT_OPERATION:
           queryStr = SQLQueryStr.SQLQUERY_TF_NOT_SUPPORT_OPERATION;
-          sdk = AutorestSDK.AUTOREST_SDK_TF;
+          sdk = SDK.TF_SDK;
           break;
         case DepthCoverageType.DEPTH_COVERAGE_TYPE_CLI_NOT_SUPPOT_RESOURCE:
           queryStr = SQLQueryStr.SQLQUERY_CLI_NOT_SUPPOT_RESOURCE;
-          sdk = AutorestSDK.AUTOREST_SDK_CLI_CORE;
+          sdk = SDK.CLI_CORE_SDK;
           break;
         case DepthCoverageType.DEPTH_COVERAGE_TYPE_CLI_NOT_SUPPORT_OPERATION:
           queryStr = SQLQueryStr.SQLQUERY_CLI_NOT_SUPPORT_OPERATION;
-          sdk = AutorestSDK.AUTOREST_SDK_CLI_CORE;
+          sdk = SDK.CLI_CORE_SDK;
           break;
         default:
       }

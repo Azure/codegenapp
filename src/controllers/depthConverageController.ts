@@ -9,7 +9,6 @@ import { Request } from "express";
 import { JsonResult } from "inversify-express-utils/dts/results";
 import DepthCoverageHandler from "../lib/DepthCoverageHandler";
 import { DepthDBCredentials } from "../lib/sqldb/DBCredentials";
-import { ENVKEY } from "../lib/Model";
 import { RepoInfo } from "../lib/CodeGenerationModel";
 import { PipelineCredential } from "../lib/pipeline/PipelineCredential";
 import { BaseController } from "./BaseController";

@@ -19,7 +19,6 @@ import {
 } from "../gitutil/GitAPI";
 import { ResourceAndOperation, RESOUCEMAPFile, ENVKEY } from "./Model";
 import {
-  CodeGeneration,
   CodeGenerationDBColumn,
   CodeGenerationStatus,
   RepoInfo,
@@ -650,12 +649,16 @@ export class CodeGenerateHandler {
       readfile = README.TF_README_FILE;
     }
 
-    let tfSchemafile = "azurerm/internal/services/" + rp + "schema.json";
+    let tfSchemafile = "azurerm/internal/services/" + rp + "/schema.json";
+    let tfSchemaDir = "azurerm/internal/services/" + rp;
     const { org: sdkorg, repo: sdkreponame } = getGitRepoInfo(sdkrepo);
     const prNumber = codePR.split("/").pop();
     const filelist: string[] = [readfile];
     if (sdk === SDK.TF_SDK) {
       filelist.push(tfSchemafile);
+      if (!fs.existsSync(tfSchemaDir)) {
+        fs.mkdirSync(tfSchemaDir, { recursive: true });
+      }
     }
     const readedFiles: string = await ReadCustomizeFiles(token, sdkorg, sdkreponame, +prNumber, filelist);
 
@@ -687,7 +690,7 @@ export class CodeGenerateHandler {
       const schemapath = "schema.json";
       const swaggerSchemaPath =
         "specification/" + rp + "/resource-manager/" + schemapath;
-      fs.copyFile(schemapath, swaggerSchemaPath, (err) => {
+      fs.copyFile(tfSchemafile, swaggerSchemaPath, (err) => {
         if (err) {
           console.log("Error Found:", err);
         } else {

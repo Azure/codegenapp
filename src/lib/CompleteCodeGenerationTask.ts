@@ -1,14 +1,12 @@
 import { CodegenDBCredentials } from "./sqldb/DBCredentials";
 import CodeGenerationTable from "./sqldb/CodeGenerationTable";
 import {
-  CodeGeneration,
   CodeGenerationStatus,
   SDKCodeGeneration,
 } from "./CodeGenerationModel";
 import { PipelineCredential } from "./pipeline/PipelineCredential";
-import { GetPullRequest, IsMergedPullRequest } from "./CodeRepoGit";
+import { IsMergedPullRequest } from "./CodeRepoGit";
 import CodeGenerateHandler from "./CodeGenerateHandler";
-import { ORG, SDK } from "./common";
 
 export async function CompleteCodeGenerationTask() {
   /* Get all code generations which under pipeline completed status. */

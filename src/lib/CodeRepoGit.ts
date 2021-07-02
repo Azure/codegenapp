@@ -34,7 +34,6 @@ export async function ReadCustomizeFiles(
   fileList: string[]
 ): Promise<string> {
   const octo = NewOctoKit(token);
-  const RESOUCEMAPFile = "ToGenerate.json";
   const prdata = await getPullRequest(octo, org, repo, prNumber);
   const headbranch = prdata.head.ref;
   // const content = await getBlobContent(octo, org, repo, headbranch, RESOUCEMAPFile);
