@@ -4,7 +4,7 @@ import {
   sdk_repos,
 } from "../config";
 import { RepoInfo } from "./CodeGenerationModel";
-import { OnboardType } from "./common";
+import { CodeGenerationType } from "./common";
 
 export const RESOUCEMAPFile = "ToGenerate.json";
 
@@ -36,7 +36,7 @@ export class ResourceAndOperation {
     readme: string,
     resources: OnboardResource[],
     target: string,
-    type: string = OnboardType.DEPTH_COVERAGE,
+    type: string = CodeGenerationType.DEPTH_COVERAGE,
     stype?: string,
     swagger?: RepoInfo,
     codegen_repo?: RepoInfo,
@@ -76,7 +76,7 @@ export class ResourceAndOperation {
   public excludeStages: string;
   public tag: string;
   public resourcelist: string = "";
-  public onboardType: string = OnboardType.DEPTH_COVERAGE;
+  public onboardType: string = CodeGenerationType.DEPTH_COVERAGE;
   public swaggerRepo: RepoInfo = default_swagger_repo;
   public sdkRepo: RepoInfo = undefined;
   public codegenRepo: RepoInfo = default_codegen_repo;

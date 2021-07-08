@@ -1,3 +1,5 @@
+import { CodegenPipelineTaskResult } from "../Logger/PipelineTask";
+
 export class CodeGeneration {
   public constructor(
     rs: string,
@@ -157,4 +159,45 @@ export interface RepoInfo {
 
 export interface IRepoInfo {
   (repoInfo: RepoInfo): { org: string; repo: string };
+}
+
+export class SDKCodeGenerationDetailInfo extends SDKCodeGeneration {
+  public constructor(
+    name: string,
+    rs: string,
+    stype: string,
+    resourcesToGenerate: string,
+    tag: string,
+    sdk: string,
+    swagger: RepoInfo,
+    sdk_repo: RepoInfo,
+    codegen_repo: RepoInfo,
+    owner: string,
+    type: string = "depth",
+    swaggerPR: string = "",
+    codePR: string = "",
+    pipelineBuildID: string = "",
+    status: string = "submit",
+    results: CodegenPipelineTaskResult[] = []
+  ) {
+    super(
+      name,
+      rs,
+      stype,
+      resourcesToGenerate,
+      tag,
+      sdk,
+      swagger,
+      sdk_repo,
+      codegen_repo,
+      owner,
+      type,
+      swaggerPR,
+      codePR,
+      pipelineBuildID,
+      status
+    );
+    this.taskResults = results;
+  }
+  public taskResults: CodegenPipelineTaskResult[] = [];
 }

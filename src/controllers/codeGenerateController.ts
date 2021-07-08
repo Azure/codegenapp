@@ -19,6 +19,7 @@ import {
   CodeGenerationStatus,
   RepoInfo,
   SDKCodeGeneration,
+  SDKCodeGenerationDetailInfo,
 } from "../lib/CodeGenerationModel";
 import { CodegenDBCredentials } from "../lib/sqldb/DBCredentials";
 import {
@@ -32,12 +33,19 @@ import {
 } from "../config";
 import CodeGenerationTable from "../lib/sqldb/CodeGenerationTable";
 import { CodeGenerationType } from "../lib/common";
+import { CodegenPipelineBuildResultsCollection } from "../Logger/mongo/CodegenPipelineBuildResultsCollection";
+import { CodegenPipelineTaskResult } from "../Logger/PipelineTask";
+import { pipeline } from "node:stream";
 // import { Logger } from "winston";
 
 @controller("/codegenerations")
 // export class CodeGenerateController extends BaseHttpController {
 export class CodeGenerateController extends BaseController {
-  constructor(@inject(InjectableTypes.Logger) protected logger: Logger) {
+  constructor(
+    @inject(InjectableTypes.Logger) protected logger: Logger,
+    @inject(InjectableTypes.PipelineResultCol)
+    protected pipelineResultCol: CodegenPipelineBuildResultsCollection
+  ) {
     super(logger);
   }
   /* generate an pull request. */
@@ -338,8 +346,30 @@ export class CodeGenerateController extends BaseController {
       return this.json("Not Exist.", 400);
     }
 
-    const status = cg.status;
-    // if (cg.status === )
+    const pipelineid: string = cg.lastPipelineBuildID;
+    const taskResults: CodegenPipelineTaskResult[] = await this.pipelineResultCol.getFromBuild(
+      pipelineid
+    );
+    let cginfo: SDKCodeGenerationDetailInfo = new SDKCodeGenerationDetailInfo(
+      cg.name,
+      cg.resourceProvider,
+      cg.serviceType,
+      cg.resourcesToGenerate,
+      cg.tag,
+      cg.sdk,
+      cg.swaggerRepo,
+      cg.sdkRepo,
+      cg.codegenRepo,
+      cg.owner,
+      cg.type,
+      cg.swaggerPR,
+      cg.codePR,
+      cg.lastPipelineBuildID,
+      cg.status,
+      taskResults
+    );
+
+    return this.json(cginfo, 200);
   }
 
   /* list sdk code generations. */
@@ -347,14 +377,19 @@ export class CodeGenerateController extends BaseController {
   public async ListALLSDKCodeGenerationsPOST(
     request: Request
   ): Promise<JsonResult> {
-    let onbaordtype = request.body.onboardtype;
+    let onbaordtype = request.params.onboardtype;
     if (onbaordtype === undefined) {
       onbaordtype = CodeGenerationType.ADHOC;
+    }
+
+    let owner = request.params.owner;
+    if (owner === undefined) {
+      owner = "";
     }
     const codegens: SDKCodeGeneration[] = await CodeGenerationTable.ListSDKCodeGenerations(
       CodegenDBCredentials,
       onbaordtype,
-      true
+      false
     );
 
     return this.json(codegens, 200);
@@ -785,5 +820,16 @@ export class CodeGenerateController extends BaseController {
   @httpPost("/codeSnipper")
   public async GenerateSDKCodeSnipper(request: Request) {
     return this.json("Not Implemented", 200);
+  }
+
+  /* submit pipeline result to cosmosdb. */
+  @httpPost("/:codegenname/taskResult")
+  public async PublishPipelineResult(request: Request): Promise<JsonResult> {
+    const name = request.params.codegenname;
+    const buildId: string = request.body.pipelineBuildId;
+    const result: CodegenPipelineTaskResult = request.body.taskResult;
+    await this.pipelineResultCol.put(buildId, result);
+
+    return undefined;
   }
 }

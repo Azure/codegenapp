@@ -21,12 +21,16 @@ import { Config } from "../config/Config";
 import { Logger } from "../lib/Logger";
 import { serializeError } from "serialize-error";
 import { default as _ } from "lodash";
+import { CodegenPipelineBuildResultsCollection } from "../Logger/mongo/CodegenPipelineBuildResultsCollection";
+import { DbConnection } from "../Logger/mongo/DbConnection";
 
 class CodegenApp {
   private port = this.normalizePort(process.env.PORT || "3000");
   private container: Container;
   private logger: Logger;
+  private pipelineResultCol: CodegenPipelineBuildResultsCollection | undefined;
   public async start(): Promise<void> {
+    this.buildMongoDBCollection();
     this.buildLogger();
     await this.init();
     this.buildContainer();
@@ -68,6 +72,12 @@ class CodegenApp {
     PipelineCredential.token = process.env[ENVKEY.ENV_REPO_ACCESS_TOKEN];
   }
 
+  private buildMongoDBCollection(): void {
+    this.pipelineResultCol = new CodegenPipelineBuildResultsCollection(
+      new DbConnection(config.database)
+    );
+  }
+
   private buildLogger(): void {
     this.logger = new CodegenAppLogger(config);
   }
@@ -77,6 +87,11 @@ class CodegenApp {
     this.container
       .bind<Logger>(InjectableTypes.Logger)
       .toConstantValue(this.logger);
+    this.container
+      .bind<CodegenPipelineBuildResultsCollection>(
+        InjectableTypes.PipelineResultCol
+      )
+      .toConstantValue(this.pipelineResultCol);
   }
 
   private buildExpress(): void {

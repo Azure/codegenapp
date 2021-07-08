@@ -1,14 +1,16 @@
-import { GenerateCodeGeneratePipelineTaskResult } from "./sdk-pipeline-task-result";
+import { GenerateCodeGeneratePipelineTaskResultFile } from "./sdk-pipeline-task-result";
 
 const main = () => {
   const args = parseArgs(process.argv);
+  const pipeline_buildId = args["pipelineBuildId"];
   const task = args["task"];
   const status = args["status"];
   const pipelineresult = args["result"];
   const logfile = args["logfile"];
   const pipeline_log = args["pipelineLog"];
 
-  GenerateCodeGeneratePipelineTaskResult(
+  return GenerateCodeGeneratePipelineTaskResultFile(
+    pipeline_buildId,
     task,
     status,
     pipelineresult,
@@ -35,4 +37,4 @@ export const parseArgs = (argv: string[]) => {
   return result;
 };
 
-const ret = main();
+main();

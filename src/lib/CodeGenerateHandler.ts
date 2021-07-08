@@ -29,8 +29,12 @@ import { CodegenDBCredentials } from "./sqldb/DBCredentials";
 import * as yaml from "node-yaml";
 import { PipelineVariablesInterface } from "../config/pipelineVariables";
 import { getGitRepoInfo } from "../config";
+import { inject } from "inversify";
+import { InjectableTypes } from "./injectableTypes";
+import { Logger } from "winston";
 
 export class CodeGenerateHandler {
+  constructor() {}
   ListSDKCodeGenerationsByStatus(
     token: string,
     resourceProvider: string,
@@ -42,7 +46,7 @@ export class CodeGenerateHandler {
   ) {
     throw new Error("Method not implemented.");
   }
-  public constructor() {}
+  // public constructor() {}
 
   /************** SDK Code Generation Operation ****************/
   public async CreateSDKCodeGeneration(
@@ -493,11 +497,15 @@ export class CodeGenerateHandler {
 
       /* update the code generation status. */
       const values = {
-        "swaggerPR": swaggerPR,
-        "codePR": codePR,
-        "status": CodeGenerationStatus.CODE_GENERATION_STATUS_COMPLETED
+        swaggerPR: swaggerPR,
+        codePR: codePR,
+        status: CodeGenerationStatus.CODE_GENERATION_STATUS_COMPLETED,
       };
-      const uperr = await CodeGenerationTable.UpdateSDKCodeGenerationValues(CodegenDBCredentials, name, values);
+      const uperr = await CodeGenerationTable.UpdateSDKCodeGenerationValues(
+        CodegenDBCredentials,
+        name,
+        values
+      );
 
       if (uperr !== undefined) {
         console.log(uperr);
@@ -511,7 +519,9 @@ export class CodeGenerateHandler {
   }
 
   /*Get basic information of an code generation. */
-  public async GetSDKCodeGeneration(name: string): Promise<{codegen:SDKCodeGeneration, err: any}> {
+  public async GetSDKCodeGeneration(
+    name: string
+  ): Promise<{ codegen: SDKCodeGeneration; err: any }> {
     let {
       codegen: cg,
       err: getErr,
@@ -522,8 +532,8 @@ export class CodeGenerateHandler {
 
     return {
       codegen: cg,
-      err: getErr
-    }
+      err: getErr,
+    };
   }
 
   /*Get detail information of an code generation. */
@@ -660,7 +670,13 @@ export class CodeGenerateHandler {
         fs.mkdirSync(tfSchemaDir, { recursive: true });
       }
     }
-    const readedFiles: string = await ReadCustomizeFiles(token, sdkorg, sdkreponame, +prNumber, filelist);
+    const readedFiles: string = await ReadCustomizeFiles(
+      token,
+      sdkorg,
+      sdkreponame,
+      +prNumber,
+      filelist
+    );
 
     /* copy configuration to swagger repo */
 

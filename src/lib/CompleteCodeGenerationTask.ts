@@ -1,9 +1,6 @@
 import { CodegenDBCredentials } from "./sqldb/DBCredentials";
 import CodeGenerationTable from "./sqldb/CodeGenerationTable";
-import {
-  CodeGenerationStatus,
-  SDKCodeGeneration,
-} from "./CodeGenerationModel";
+import { CodeGenerationStatus, SDKCodeGeneration } from "./CodeGenerationModel";
 import { PipelineCredential } from "./pipeline/PipelineCredential";
 import { IsMergedPullRequest } from "./CodeRepoGit";
 import CodeGenerateHandler from "./CodeGenerateHandler";

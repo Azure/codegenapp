@@ -9,13 +9,12 @@ import * as yaml from "node-yaml";
 import { PipelineRunningResult } from "../lib/CodeGenerationModel";
 
 export function GenerateCodeGeneratePipelineTaskResult(
+  pipelineBuildId: string,
   task: string,
   status: string,
   pipelineresult: string,
-  logfile: string,
-  pipelineResultLog: string
-) {
-  const fs = require("fs");
+  logfile: string
+): CodegenPipelineTaskResult {
   const lineReader = require("line-reader");
   let errorNum: number = 0;
   let warnNum: number = 0;
@@ -44,27 +43,10 @@ export function GenerateCodeGeneratePipelineTaskResult(
       warnNum++;
     }
   });
-  // let result: CodegenPipelineTaskResult = {
-  //     name: "GenerateCode",
-  //     status: "completed",
-  //     result: "success",
-  //     errorCount?: number;
-  //     warningCount?: number;
-  //     checkRunId: number;
-  //     checkRunUrl: string;
-  //     checkState?: string;
-  //     azurePipelineUrl?: string;
-  //     pipelineJobId?: string;
-  //     pipelineTaskId?: string;
-  //     queuedAt: Date;
-  //     inProgressAt?: Date;
-  //     completedAt?: Date;
-  //     labels?: string[];
-  //     messages?: MessageRecord[];
-  // }
+
   let result: CodegenPipelineTaskResult = {
     name: task,
-    pipelineId: "3333",
+    pipelineId: pipelineBuildId,
     status: status as PipelineStatus,
     result: pipelineresult as PipelineResult,
     errorCount: errorNum,
@@ -77,5 +59,29 @@ export function GenerateCodeGeneratePipelineTaskResult(
     result.messages = messages;
   }
 
-  fs.writeFileSync(pipelineResultLog, yaml.dump(result));
+  return result;
+}
+
+export function GenerateCodeGeneratePipelineTaskResultFile(
+  pipelineBuildId: string,
+  task: string,
+  status: string,
+  pipelineresult: string,
+  logfile: string,
+  pipelineResultLog: string
+): CodegenPipelineTaskResult {
+  const result: CodegenPipelineTaskResult = GenerateCodeGeneratePipelineTaskResult(
+    pipelineBuildId,
+    task,
+    status,
+    pipelineresult,
+    logfile
+  );
+
+  if (pipelineResultLog !== undefined) {
+    const fs = require("fs");
+    fs.writeFileSync(pipelineResultLog, JSON.stringify(result, null, 2));
+  }
+
+  return result;
 }

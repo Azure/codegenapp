@@ -1,4 +1,5 @@
 import { RepoInfo } from "../lib/CodeGenerationModel";
+import { RequiredConfiguration } from "../Logger/mongo/DbConnection";
 
 /**
  * code gen service configuration properties.
@@ -14,4 +15,5 @@ export interface Config {
   statsdPort: number;
   namespaceName: string;
   defaultSwaggerRepo: RepoInfo;
+  database: RequiredConfiguration;
 }

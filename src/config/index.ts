@@ -17,6 +17,11 @@ export const config: Config = {
     path: "https://github.com/Azure/azure-rest-api-specs",
     branch: "master",
   },
+  database: {
+    mongoConnectionString:
+      "mongodb://sdkcodegen:g2MhYaEUT4CMDdw18BGbduTkjFUFXB69tX6xpCHFEzgkp8mZBuTFY8OdzvDJctBdpOQiSctmjmOyKahnkr2ZeA==@sdkcodegen.mongo.cosmos.azure.com:10255/?ssl=true&retrywrites=false&maxIdleTimeMS=120000&appName=@sdkcodegen@",
+    mongoDbName: "openapiPlatform",
+  },
 };
 
 export const default_codegen_repo: RepoInfo = {
