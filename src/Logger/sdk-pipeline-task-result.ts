@@ -24,25 +24,28 @@ export function GenerateCodeGeneratePipelineTaskResult(
   //     if (line.toLowerCase().indexOf("error") !== -1) errorNum++;
   //     else if (line.toLowerCase().indexOf("warning") !== -1) warnNum++;
   // });
-  var lines = require("fs")
-    .readFileSync(logfile, "utf-8")
-    .split("\n")
-    .filter(Boolean);
-  lines.forEach((line) => {
-    console.log(line);
-    if (line.toLowerCase().indexOf("error") !== -1) {
-      errorNum++;
-      let message: RawMessageRecord = {
-        level: "Error",
-        message: line,
-        time: new Date(),
-        type: "Raw",
-      };
-      messages.push(message);
-    } else if (line.toLowerCase().indexOf("warning") !== -1) {
-      warnNum++;
-    }
-  });
+  const fs = require("fs");
+  if (fs.existsSync(logfile)) {
+    var lines = require("fs")
+      .readFileSync(logfile, "utf-8")
+      .split("\n")
+      .filter(Boolean);
+    lines.forEach((line) => {
+      console.log(line);
+      if (line.toLowerCase().indexOf("error") !== -1 || line.toLowerCase().indexOf("FAIL") !== -1) {
+        errorNum++;
+        let message: RawMessageRecord = {
+          level: "Error",
+          message: line,
+          time: new Date(),
+          type: "Raw",
+        };
+        messages.push(message);
+      } else if (line.toLowerCase().indexOf("warning") !== -1) {
+        warnNum++;
+      }
+    });
+  }
 
   let result: CodegenPipelineTaskResult = {
     name: task,
@@ -54,10 +57,11 @@ export function GenerateCodeGeneratePipelineTaskResult(
     checkRunId: 0,
     checkRunUrl: "",
     queuedAt: new Date(),
+    messages: messages,
   };
-  if (messages.length > 0) {
-    result.messages = messages;
-  }
+  // if (messages.length > 0) {
+  //   result.messages = messages;
+  // }
 
   return result;
 }
