@@ -2,6 +2,7 @@ import { GenerateCodeGeneratePipelineTaskResultFile } from "./sdk-pipeline-task-
 
 const main = () => {
   const args = parseArgs(process.argv);
+  const codegenname = args["codegen"];
   const pipeline_buildId = args["pipelineBuildId"];
   const task = args["task"];
   const status = args["status"];
@@ -10,6 +11,7 @@ const main = () => {
   const pipeline_log = args["pipelineLog"];
 
   return GenerateCodeGeneratePipelineTaskResultFile(
+    codegenname,
     pipeline_buildId,
     task,
     status,

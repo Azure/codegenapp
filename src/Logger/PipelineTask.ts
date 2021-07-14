@@ -70,7 +70,7 @@ export type CodegenPipelineTask = {
   taskResult: CodegenPipelineTaskResult;
 };
 
-export type CodegenPipelineTaskResult = {
+export type CodegenPipelineTaskResultCommon = {
   name: string;
   pipelineId: string;
   subTaskKey?: string;
@@ -92,5 +92,12 @@ export type CodegenPipelineTaskResult = {
   inProgressAt?: Date;
   completedAt?: Date;
   labels?: string[];
+  logurl?: string;
   messages?: MessageRecord[];
 };
+
+export type CodegenCodeGenerateTaskResult = CodegenPipelineTaskResultCommon & {
+  codeUrl?: string;
+}
+
+export type CodegenPipelineTaskResult = CodegenPipelineTaskResultCommon | CodegenCodeGenerateTaskResult;

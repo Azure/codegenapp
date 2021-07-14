@@ -23,19 +23,15 @@ import {
 } from "../lib/CodeGenerationModel";
 import { CodegenDBCredentials } from "../lib/sqldb/DBCredentials";
 import {
-  default_codegen_repo,
-  default_dev_codegen_repo,
-  default_dev_swagger_repo,
-  default_swagger_repo,
-  getGitRepoInfo,
-  sdk_dev_repos,
-  sdk_repos,
+  config,
+  getGitRepoInfo
 } from "../config";
 import CodeGenerationTable from "../lib/sqldb/CodeGenerationTable";
 import { CodeGenerationType } from "../lib/common";
 import { CodegenPipelineBuildResultsCollection } from "../Logger/mongo/CodegenPipelineBuildResultsCollection";
 import { CodegenPipelineTaskResult } from "../Logger/PipelineTask";
 import { pipeline } from "node:stream";
+import { environmentConfigDev } from "../config/dev";
 // import { Logger } from "winston";
 
 @controller("/codegenerations")
@@ -109,9 +105,9 @@ export class CodeGenerateController extends BaseController {
       codegenRepo = request.body.codegenRepo as RepoInfo;
     } else {
       if (platform !== undefined && platform.toLowerCase() === "dev") {
-        codegenRepo = default_dev_codegen_repo;
+        codegenRepo = environmentConfigDev.defaultCodegenRepo;
       } else {
-        codegenRepo = default_codegen_repo;
+        codegenRepo = config.defaultCodegenRepo
       }
     }
 
@@ -120,9 +116,9 @@ export class CodeGenerateController extends BaseController {
       swaggerRepo = request.body.swaggerRepo as RepoInfo;
     } else {
       if (platform !== undefined && platform.toLowerCase() === "dev") {
-        swaggerRepo = default_dev_swagger_repo;
+        swaggerRepo = environmentConfigDev.defaultSwaggerRepo;
       } else {
-        swaggerRepo = default_swagger_repo;
+        swaggerRepo = config.defaultSwaggerRepo;
       }
     }
 
@@ -131,9 +127,9 @@ export class CodeGenerateController extends BaseController {
       sdkRepo = request.body.sdkRepo as RepoInfo;
     } else {
       if (platform !== undefined && platform.toLowerCase() === "dev") {
-        sdkRepo = sdk_dev_repos[sdk];
+        sdkRepo = environmentConfigDev.defaultSDKRepos[sdk];
       } else {
-        sdkRepo = sdk_repos[sdk];
+        sdkRepo = config.defaultSDKRepos[sdk];
       }
     }
 
@@ -165,7 +161,7 @@ export class CodeGenerateController extends BaseController {
           cg.status +
           " Already. Ignore this trigger."
       );
-      return this.json("Aleady Exists.", 400);
+      return this.json({error: "Aleady Exists.", message: "Already Exists"}, 400);
     }
 
     // const err = await CodeGenerateHandler.TriggerCodeGeneration(PipelineCredential.token, codegenorg, repo, branch, rp, sdk, type);
@@ -201,7 +197,7 @@ export class CodeGenerateController extends BaseController {
     let statusCode = 200;
     if (err !== undefined) {
       statusCode = 400;
-      content = { error: err };
+      content = { error: err, message: "" };
       this.logger.error(
         "Failed to trigger code generation for " + rp + " sdk:" + sdk,
         err
@@ -491,6 +487,81 @@ export class CodeGenerateController extends BaseController {
     return this.json(content, statusCode);
   }
 
+  /*run one code generation. */
+  @httpPost("/:codegenname/run")
+  public async RunCodeGeneration (
+    request: Request
+  ): Promise<JsonResult> {
+    const name = request.params.codegenname;
+    let {
+      codegen: cg,
+      err: getErr,
+    } = await CodeGenerationTable.getSDKCodeGenerationByName(
+      CodegenDBCredentials,
+      name
+    );
+
+    if (getErr !== undefined || cg === undefined) {
+      this.logger.info(
+        "code generation " + name + " does not exist. No run triggered."
+      );
+      return this.json(
+        "Not Exist.",
+        400
+      );
+    } else if (
+      cg.status === CodeGenerationStatus.CODE_GENERATION_STATUS_IN_PROGRESS ||
+      cg.status === CodeGenerationStatus.CODE_GENERATION_STATUS_CANCELED
+    ) {
+      this.logger.info(
+        "The code generation " +
+          name +
+          "(" +
+          cg.resourceProvider +
+          "," +
+          cg.sdk +
+          ") is under " +
+          cg.status +
+          ". No avaialbe to run now."
+      );
+      return this.json("No available to run now", 400);
+    }
+
+    const err = await CodeGenerateHandler.RunSDKCodeGeneration(
+      PipelineCredential.token,
+      name
+    );
+
+    if (err !== undefined) {
+      this.logger.error(
+        "Failed to run code generation '" +
+          name +
+          "'( " +
+          cg.resourceProvider +
+          ", " +
+          cg.sdk +
+          ").",
+          err
+      );
+      return this.json({ error: err }, 400);
+    } else {
+      this.logger.info(
+        "Succeeded to run code generation '" +
+          name +
+          "'( " +
+          cg.resourceProvider +
+          ", " +
+          cg.sdk +
+          ")."
+      );
+      return this.json(
+        "OK",
+        200
+      );
+    }
+
+  }
+
   /* customize the code generation. */
   @httpPost("/:codegenname/customize")
   public async CustomizeSDKCodeGeneration(
@@ -592,7 +663,7 @@ export class CodeGenerateController extends BaseController {
       return this.json(
         "customize. pipeline: https://devdiv.visualstudio.com/DevDiv/_build?definitionId=" +
           cg.lastPipelineBuildID,
-        201
+        200
       );
     }
   }

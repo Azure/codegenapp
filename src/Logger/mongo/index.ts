@@ -4,13 +4,23 @@ import { DbConnection, RequiredConfiguration } from "./DbConnection";
 import { Db, MongoClient } from "mongodb";
 import { exit } from "process";
 
+let database: RequiredConfiguration = {
+  mongoConnectionString:
+    "mongodb://sdkcodegen:g2MhYaEUT4CMDdw18BGbduTkjFUFXB69tX6xpCHFEzgkp8mZBuTFY8OdzvDJctBdpOQiSctmjmOyKahnkr2ZeA==@sdkcodegen.mongo.cosmos.azure.com:10255/?ssl=true&retrywrites=false&maxIdleTimeMS=120000&appName=@sdkcodegen@",
+  mongoDbName: "openapiPlatform",
+};
+
+const pipelineResultsCol = new CodegenPipelineBuildResultsCollection(
+  new DbConnection(database)
+);
+
 export const getResults = async (
   database: RequiredConfiguration,
   buildId: string
 ) => {
-  const pipelineResultsCol = new CodegenPipelineBuildResultsCollection(
-    new DbConnection(database)
-  );
+  // const pipelineResultsCol = new CodegenPipelineBuildResultsCollection(
+  //   new DbConnection(database)
+  // );
   const results = await pipelineResultsCol.getFromBuild(buildId);
   for (let res of results) {
     console.log(res.name + "," + res.pipelineId);
@@ -30,16 +40,10 @@ export async function putResults(
   //   await dbcon.close();
 }
 
-let database: RequiredConfiguration = {
-  mongoConnectionString:
-    "mongodb://sdkcodegen:g2MhYaEUT4CMDdw18BGbduTkjFUFXB69tX6xpCHFEzgkp8mZBuTFY8OdzvDJctBdpOQiSctmjmOyKahnkr2ZeA==@sdkcodegen.mongo.cosmos.azure.com:10255/?ssl=true&retrywrites=false&maxIdleTimeMS=120000&appName=@sdkcodegen@",
-  mongoDbName: "openapiPlatform",
-};
-
-let buildId: string = "3456790";
+let buildId: string = "4956910";
 
 let result: CodegenPipelineTaskResult = {
-  name: "build",
+  name: "GenerateJob",
   pipelineId: buildId,
   status: "completed",
   result: "failure",
@@ -48,22 +52,23 @@ let result: CodegenPipelineTaskResult = {
   checkRunId: 1,
   checkRunUrl: "",
   queuedAt: new Date(),
-  messages: [
-    {
-      type: "Raw",
-      level: "Error",
-      message: "No property",
-      time: new Date(),
-    },
-    {
-      type: "Raw",
-      level: "Error",
-      message: "type mismatch",
-      time: new Date(),
-    },
-  ],
+  messages: [],
+  // messages: [
+  //   {
+  //     type: "Raw",
+  //     level: "Error",
+  //     message: "No property",
+  //     time: new Date(),
+  //   },
+  //   {
+  //     type: "Raw",
+  //     level: "Error",
+  //     message: "type mismatch",
+  //     time: new Date(),
+  //   },
+  // ],
 };
 putResults(database, buildId, result);
-console.log("close");
+// console.log("close");
 getResults(database, buildId);
 // exit(0);

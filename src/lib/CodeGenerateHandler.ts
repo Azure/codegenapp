@@ -32,6 +32,7 @@ import { getGitRepoInfo } from "../config";
 import { inject } from "inversify";
 import { InjectableTypes } from "./injectableTypes";
 import { Logger } from "winston";
+import { stringify } from "node:querystring";
 
 export class CodeGenerateHandler {
   constructor() {}
@@ -113,6 +114,12 @@ export class CodeGenerateHandler {
           CodeGenerationName: name,
           SDK: rpToGen.target,
           stages: st.join(";"),
+          SPEC_REPO_TYPE: rpToGen.swaggerRepo.type,
+          SPEC_REPO_URL: rpToGen.swaggerRepo.path.replace("https://", "").replace("http://", ""),
+          SPEC_REPO_BASE_BRANCH: rpToGen.swaggerRepo.branch,
+          SDK_REPO_TYPE: rpToGen.sdkRepo.type,
+          SDK_REPO_URL: rpToGen.sdkRepo.path.replace("https://", "").replace("http://", ""),
+          SDK_REPO_BASE_BRANCH: rpToGen.sdkRepo.branch
         },
       };
       fs.writeFileSync("Variables.yml", yaml.dump(v));
@@ -553,7 +560,83 @@ export class CodeGenerateHandler {
     const pipelineId: string = cg.lastPipelineBuildID;
   }
 
-  /*customize an code generation. */
+  /* run a code generation. */
+
+  /*customize a code generation. */
+  public async RunSDKCodeGeneration(
+    token: string,
+    name: string
+  ) {
+    const octo = NewOctoKit(token);
+    let {
+      codegen: cg,
+      err: getErr,
+    } = await CodeGenerationTable.getSDKCodeGenerationByName(
+      CodegenDBCredentials,
+      name
+    );
+
+    if (
+      getErr === undefined &&
+      cg === undefined &&
+      cg.status != CodeGenerationStatus.CODE_GENERATION_STATUS_COMPLETED &&
+      cg.status != CodeGenerationStatus.CODE_GENERATION_STATUS_CANCELED
+    ) {
+      return getErr;
+    }
+
+    const rp = cg.resourceProvider;
+    const sdk = cg.sdk;
+    const type = cg.type;
+
+    const codegenrepo = cg.codegenRepo;
+    const swaggerrepo = cg.swaggerRepo;
+    const sdkrepo = cg.sdkRepo;
+    /* generate PR in swagger repo. */
+    let branch = name;
+    // let branch = onboardtype + "-" + sdk + "-" + rp;
+
+    const { org: cgorg, repo: cgreponame } = getGitRepoInfo(codegenrepo);
+
+    const jsonMapFile: string = "ToGenerate.json";
+    const fs = require("fs");
+    let filepaths: string[] = [];
+
+    let content = await ReadFileFromRepo(
+      token,
+      cgorg !== undefined ? cgorg : ORG.AZURE,
+      cgreponame !== undefined ? cgreponame : REPO.DEPTH_COVERAGE_REPO,
+      branch,
+      jsonMapFile
+    );
+
+    if (content !== undefined && content.length > 0) {
+      let resource: ResourceAndOperation = JSON.parse(content);
+      const fs = require("fs");
+      fs.writeFileSync(jsonMapFile, JSON.stringify(resource, null, 2));
+        filepaths.push(jsonMapFile);
+    }
+
+    try {
+      /* update depth-coverage-pipeline trigger pull request. */
+      await uploadToRepo(
+        octo,
+        filepaths,
+        cgorg !== undefined ? cgorg : ORG.AZURE,
+        cgreponame !== undefined ? cgreponame : REPO.DEPTH_COVERAGE_REPO,
+        branch
+      );
+      const uperr = await CodeGenerationTable.UpdateSDKCodeGenerationValue(
+        CodegenDBCredentials,
+        name,
+        CodeGenerationDBColumn.CODE_GENERATION_COLUMN_STATUS,
+        CodeGenerationStatus.CODE_GENERATION_STATUS_SUBMIT
+      );
+    } catch (e) {
+      console.log(e);
+      return e;
+    }
+  }
   /**
    *
    * @param token The github access token

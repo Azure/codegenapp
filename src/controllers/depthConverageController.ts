@@ -15,8 +15,9 @@ import { BaseController } from "./BaseController";
 import { InjectableTypes } from "../lib/injectableTypes";
 import { inject } from "inversify";
 import { Logger } from "../lib/Logger";
-import { default_codegen_repo } from "../config";
 import DepthCandidateTable from "../lib/sqldb/DepthCandidateTable";
+import { environmentConfigDev } from "../config/dev";
+import { config } from "../config";
 // import { JsonResult } from "inversify-express-utils/dts/results/index"
 
 @controller("/depthCoverage")
@@ -73,9 +74,9 @@ export class DepthCoverageController extends BaseController {
     if (codegenRepo === undefined) {
       const platform = req.body.platform;
       if (platform !== undefined && platform.toLowerCase() === "dev") {
-        codegenRepo = default_codegen_repo;
+        codegenRepo = environmentConfigDev.defaultCodegenRepo;
       } else {
-        codegenRepo = default_codegen_repo;
+        codegenRepo = config.defaultCodegenRepo;
       }
     }
     const repo = req.body.repo;

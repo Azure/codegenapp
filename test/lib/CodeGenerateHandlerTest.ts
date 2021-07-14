@@ -4,13 +4,11 @@ import { ResourceAndOperation, SERVICE_TYPE } from "../../src/lib/Model";
 import { PipelineCredential } from "../../src/lib/pipeline/PipelineCredential";
 import { setup } from "../setup/setup";
 import {
-  default_dev_codegen_repo,
-  default_dev_swagger_repo,
-  default_dev_terraform_repo,
   getGitRepoInfo,
 } from "../../src/config";
 import { CodeGenerationStatus } from "../../src/lib/CodeGenerationModel";
 import { CodeGenerationType } from "../../src/lib/common";
+import { environmentConfigDev } from "../../src/config/dev";
 
 var assert = require("assert");
 describe("code generate handler test", () => {
@@ -24,21 +22,21 @@ describe("code generate handler test", () => {
       "terraform",
       CodeGenerationType.ADHOC,
       SERVICE_TYPE.RESOURCE_MANAGE,
-      default_dev_swagger_repo,
-      default_dev_codegen_repo,
-      default_dev_terraform_repo
+      environmentConfigDev.defaultSwaggerRepo,
+      environmentConfigDev.defaultCodegenRepo,
+      environmentConfigDev.defaultSDKRepos["terraform"]
     );
 
     rs.generateResourceList();
     const { org: codegenorg, repo: codegenreponame } = getGitRepoInfo(
-      default_dev_codegen_repo
+      environmentConfigDev.defaultCodegenRepo
     );
     const createRet = await CodeGenerateHandler.CreateSDKCodeGeneration(
       "uitestcg",
       PipelineCredential.token,
       codegenorg,
       codegenreponame,
-      default_dev_codegen_repo.branch,
+      environmentConfigDev.defaultCodegenRepo.branch,
       rs,
       "UITester"
     );

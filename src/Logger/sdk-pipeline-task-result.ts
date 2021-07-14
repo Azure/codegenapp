@@ -4,11 +4,12 @@ import {
   PipelineStatus,
   RawMessageRecord,
 } from "@azure/swagger-validation-common";
-import { CodegenPipelineTaskResult } from "./PipelineTask";
+import { CodegenCodeGenerateTaskResult, CodegenPipelineTaskResult } from "./PipelineTask";
 import * as yaml from "node-yaml";
 import { PipelineRunningResult } from "../lib/CodeGenerationModel";
 
 export function GenerateCodeGeneratePipelineTaskResult(
+  codegenname: string,
   pipelineBuildId: string,
   task: string,
   status: string,
@@ -63,10 +64,14 @@ export function GenerateCodeGeneratePipelineTaskResult(
   //   result.messages = messages;
   // }
 
+  if (task === "GenerateCode") {
+    (result as CodegenCodeGenerateTaskResult).codeUrl = FormatCodeUrl(codegenname, pipelineBuildId); 
+  }
   return result;
 }
 
 export function GenerateCodeGeneratePipelineTaskResultFile(
+  codegenname: string,
   pipelineBuildId: string,
   task: string,
   status: string,
@@ -75,6 +80,7 @@ export function GenerateCodeGeneratePipelineTaskResultFile(
   pipelineResultLog: string
 ): CodegenPipelineTaskResult {
   const result: CodegenPipelineTaskResult = GenerateCodeGeneratePipelineTaskResult(
+    codegenname,
     pipelineBuildId,
     task,
     status,
@@ -88,4 +94,12 @@ export function GenerateCodeGeneratePipelineTaskResultFile(
   }
 
   return result;
+}
+
+export function FormatCodeUrl(codegenname: string, pipelineBuildID: string): string {
+  return "https://depthcoverage.blob.core.windows.net/depthcoverage/" +
+        codegenname +
+        "-" +
+        pipelineBuildID +
+        "-generated.tar.gz";
 }

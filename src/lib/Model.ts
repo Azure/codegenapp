@@ -1,8 +1,4 @@
-import {
-  default_codegen_repo,
-  default_swagger_repo,
-  sdk_repos,
-} from "../config";
+import { config } from "../config";
 import { RepoInfo } from "./CodeGenerationModel";
 import { CodeGenerationType } from "./common";
 
@@ -63,7 +59,7 @@ export class ResourceAndOperation {
     if (sdk_repo !== undefined) {
       this.sdkRepo = sdk_repo;
     } else {
-      this.sdkRepo = sdk_repos[target];
+      this.sdkRepo = config.defaultSDKRepos[target];
     }
   }
   public name: string;
@@ -77,9 +73,9 @@ export class ResourceAndOperation {
   public tag: string;
   public resourcelist: string = "";
   public onboardType: string = CodeGenerationType.DEPTH_COVERAGE;
-  public swaggerRepo: RepoInfo = default_swagger_repo;
+  public swaggerRepo: RepoInfo = config.defaultSwaggerRepo;
   public sdkRepo: RepoInfo = undefined;
-  public codegenRepo: RepoInfo = default_codegen_repo;
+  public codegenRepo: RepoInfo = config.defaultCodegenRepo;
 
   // public jsonFilelist: string[] = [];
   public jsonFileList: JsonOperationMap[] = [];
