@@ -109,10 +109,15 @@ export class CodeGenerateHandler {
         rpToGen.onboardType,
         rpToGen.target
       );
+      let sdk: string = rpToGen.target;
+      /* wrapped clicore and cliextension to cli. */
+      if (sdk === SDK.CLI_CORE_SDK || sdk === SDK.CLI_EXTENSTION_SDK) {
+        sdk = SDK.CLI;
+      }
       const v: PipelineVariablesInterface = {
         variables: {
           CodeGenerationName: name,
-          SDK: rpToGen.target,
+          SDK: sdk,
           stages: st.join(";"),
           SPEC_REPO_TYPE: rpToGen.swaggerRepo.type,
           SPEC_REPO_URL: rpToGen.swaggerRepo.path.replace("https://", "").replace("http://", ""),

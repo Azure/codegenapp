@@ -17,6 +17,7 @@ export enum ORG {
 
 export enum SDK {
   TF_SDK = "terraform",
+  CLI = "cli",
   CLI_CORE_SDK = "clicore",
   CLI_EXTENSTION_SDK = "cliextension",
   GO_SDK = "go",
