@@ -23,6 +23,12 @@ import { serializeError } from "serialize-error";
 import { default as _ } from "lodash";
 import { CodegenPipelineBuildResultsCollection } from "../Logger/mongo/CodegenPipelineBuildResultsCollection";
 import { DbConnection } from "../Logger/mongo/DbConnection";
+import {
+  CustomersThumbprints,
+  getCustomersThumbprints,
+  ensureAuth,
+} from "../lib/auth";
+import { getHttpServer, getHttpsServer } from "../webserver/httpServer";
 
 class CodegenApp {
   private port = this.normalizePort(process.env.PORT || "3000");
@@ -34,7 +40,7 @@ class CodegenApp {
     this.buildLogger();
     await this.init();
     this.buildContainer();
-    this.buildExpress();
+    await this.buildExpress();
     this.buildSchedulerTask();
   }
 
@@ -94,7 +100,7 @@ class CodegenApp {
       .toConstantValue(this.pipelineResultCol);
   }
 
-  private buildExpress(): void {
+  private async buildExpress(): Promise<void> {
     const errorHandler: express.ErrorRequestHandler = (err, req, res, next) => {
       this.logger.error("Exception was thrown during request", {
         err: serializeError(err),
@@ -107,32 +113,93 @@ class CodegenApp {
       // this.logger.error("Exception was thrown during request");
     };
 
-    const server = new InversifyExpressServer(this.container);
+    const customerThumbprints: CustomersThumbprints = await getCustomersThumbprints(
+      config.customers
+    );
 
-    server.setConfig((app) => {
-      app.use(
-        express.urlencoded({
-          extended: true,
-        })
-      );
-      app.use(
-        bodyParser.urlencoded({
-          extended: true,
-        })
-      );
-      app.use(bodyParser.json());
-      app.use(express.json());
+    if (!config.enableHttps) {
+      const server = new InversifyExpressServer(this.container);
 
-      app.use(errorHandler);
-    });
-    const serverInstance = server.build();
-    serverInstance.get("/", function (req, res) {
-      res.send("welcome to codegen app service.");
-    });
+      server.setConfig((app) => {
+        app.use(
+          express.urlencoded({
+            extended: true,
+          })
+        );
+        app.use(
+          bodyParser.urlencoded({
+            extended: true,
+          })
+        );
+        app.use(bodyParser.json());
+        app.use(express.json());
 
-    var port = this.normalizePort(process.env.PORT || "3000");
-    serverInstance.listen(port);
-    this.logger.info("codegen app server started, listen on " + port);
+        app.use(errorHandler);
+      });
+      const serverInstance = server.build();
+      serverInstance.get("/", function (req, res) {
+        res.send("welcome to codegen app service.");
+      });
+
+      const httpServer = getHttpServer(serverInstance);
+      httpServer.listen(config.httpPort, () => {
+        this.logger.info(`Listening http on port: ${config.httpPort}`);
+      });
+    } else {
+      const httpsserver = new InversifyExpressServer(this.container);
+      httpsserver.setConfig((app) => {
+        app.use(
+          express.urlencoded({
+            extended: true,
+          })
+        );
+        app.use(
+          bodyParser.urlencoded({
+            extended: true,
+          })
+        );
+        app.use(bodyParser.json());
+        app.use(express.json());
+
+        app.use(errorHandler);
+
+        if (config.clientAuthEnabled) {
+          app.use((req, res, next) =>
+            ensureAuth(req, res, next, customerThumbprints)
+          );
+          setInterval(async () => {
+            try {
+              const latestCustomerThumbprints: CustomersThumbprints = await getCustomersThumbprints(
+                config.customers
+              );
+              for (const [key, value] of Object.entries(
+                latestCustomerThumbprints
+              )) {
+                if (customerThumbprints[key]) {
+                  customerThumbprints[key] = value;
+                }
+              }
+              this.logger.info(`Refresh client certificate successfully.`);
+            } catch (e) {
+              this.logger.error(
+                `Refresh client certificate failed. message:${e.message}`
+              );
+            }
+          }, config.refreshClientCertificateIntervalSeconds * 1000);
+        }
+      });
+      const httpsserverInstance = httpsserver.build();
+      httpsserverInstance.get("/", function (req, res) {
+        res.send("welcome to codegen app service.");
+      });
+      const httpsServer = getHttpsServer(httpsserverInstance);
+      var port = this.normalizePort(config.httpsPort || "8443");
+      httpsServer.listen(port, () => {
+        this.logger.info(`Listening https on port: ${config.httpsPort}`);
+      });
+    }
+
+    console.log(__dirname);
   }
 
   private buildSchedulerTask() {

@@ -3,9 +3,7 @@ import CodeGenerateHandler from "../../src/lib/CodeGenerateHandler";
 import { ResourceAndOperation, SERVICE_TYPE } from "../../src/lib/Model";
 import { PipelineCredential } from "../../src/lib/pipeline/PipelineCredential";
 import { setup } from "../setup/setup";
-import {
-  getGitRepoInfo,
-} from "../../src/config";
+import { getGitRepoInfo } from "../../src/config";
 import { CodeGenerationStatus } from "../../src/lib/CodeGenerationModel";
 import { CodeGenerationType } from "../../src/lib/common";
 import { environmentConfigDev } from "../../src/config/dev";

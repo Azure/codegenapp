@@ -22,10 +22,7 @@ export class CodegenAppLogger implements Logger {
       level: config.loggingConsoleLevel,
     };
 
-    if (
-      config.env === Env.Development ||
-      config.env === Env.Local
-    ) {
+    if (config.env === Env.Development || config.env === Env.Local) {
       consoleTransportOptions.format = winston.format.combine(
         winston.format.colorize(),
         winston.format.simple()

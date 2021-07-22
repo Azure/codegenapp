@@ -98,6 +98,14 @@ export type CodegenPipelineTaskResultCommon = {
 
 export type CodegenCodeGenerateTaskResult = CodegenPipelineTaskResultCommon & {
   codeUrl?: string;
-}
+};
 
-export type CodegenPipelineTaskResult = CodegenPipelineTaskResultCommon | CodegenCodeGenerateTaskResult;
+export type TestTaskResult = CodegenPipelineTaskResultCommon & {
+  apiCoverage?: number;
+  codeCoverage?: number;
+};
+
+export type CodegenPipelineTaskResult =
+  | CodegenPipelineTaskResultCommon
+  | CodegenCodeGenerateTaskResult
+  | TestTaskResult;

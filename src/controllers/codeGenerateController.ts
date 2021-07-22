@@ -22,15 +22,11 @@ import {
   SDKCodeGenerationDetailInfo,
 } from "../lib/CodeGenerationModel";
 import { CodegenDBCredentials } from "../lib/sqldb/DBCredentials";
-import {
-  config,
-  getGitRepoInfo
-} from "../config";
+import { config, getGitRepoInfo } from "../config";
 import CodeGenerationTable from "../lib/sqldb/CodeGenerationTable";
 import { CodeGenerationType } from "../lib/common";
 import { CodegenPipelineBuildResultsCollection } from "../Logger/mongo/CodegenPipelineBuildResultsCollection";
 import { CodegenPipelineTaskResult } from "../Logger/PipelineTask";
-import { pipeline } from "node:stream";
 import { environmentConfigDev } from "../config/dev";
 // import { Logger } from "winston";
 
@@ -107,7 +103,7 @@ export class CodeGenerateController extends BaseController {
       if (platform !== undefined && platform.toLowerCase() === "dev") {
         codegenRepo = environmentConfigDev.defaultCodegenRepo;
       } else {
-        codegenRepo = config.defaultCodegenRepo
+        codegenRepo = config.defaultCodegenRepo;
       }
     }
 
@@ -161,7 +157,10 @@ export class CodeGenerateController extends BaseController {
           cg.status +
           " Already. Ignore this trigger."
       );
-      return this.json({error: "Aleady Exists.", message: "Already Exists"}, 400);
+      return this.json(
+        { error: "Aleady Exists.", message: "Already Exists" },
+        400
+      );
     }
 
     // const err = await CodeGenerateHandler.TriggerCodeGeneration(PipelineCredential.token, codegenorg, repo, branch, rp, sdk, type);
@@ -489,9 +488,7 @@ export class CodeGenerateController extends BaseController {
 
   /*run one code generation. */
   @httpPost("/:codegenname/run")
-  public async RunCodeGeneration (
-    request: Request
-  ): Promise<JsonResult> {
+  public async RunCodeGeneration(request: Request): Promise<JsonResult> {
     const name = request.params.codegenname;
     let {
       codegen: cg,
@@ -505,10 +502,7 @@ export class CodeGenerateController extends BaseController {
       this.logger.info(
         "code generation " + name + " does not exist. No run triggered."
       );
-      return this.json(
-        "Not Exist.",
-        400
-      );
+      return this.json("Not Exist.", 400);
     } else if (
       cg.status === CodeGenerationStatus.CODE_GENERATION_STATUS_IN_PROGRESS ||
       cg.status === CodeGenerationStatus.CODE_GENERATION_STATUS_CANCELED
@@ -541,7 +535,7 @@ export class CodeGenerateController extends BaseController {
           ", " +
           cg.sdk +
           ").",
-          err
+        err
       );
       return this.json({ error: err }, 400);
     } else {
@@ -554,12 +548,8 @@ export class CodeGenerateController extends BaseController {
           cg.sdk +
           ")."
       );
-      return this.json(
-        "OK",
-        200
-      );
+      return this.json("OK", 200);
     }
-
   }
 
   /* customize the code generation. */
