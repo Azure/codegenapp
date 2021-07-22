@@ -4,7 +4,10 @@ import {
   PipelineStatus,
   RawMessageRecord,
 } from "@azure/swagger-validation-common";
-import { CodegenCodeGenerateTaskResult, CodegenPipelineTaskResult } from "./PipelineTask";
+import {
+  CodegenCodeGenerateTaskResult,
+  CodegenPipelineTaskResult,
+} from "./PipelineTask";
 import * as yaml from "node-yaml";
 import { PipelineRunningResult } from "../lib/CodeGenerationModel";
 
@@ -33,7 +36,10 @@ export function GenerateCodeGeneratePipelineTaskResult(
       .filter(Boolean);
     lines.forEach((line) => {
       console.log(line);
-      if (line.toLowerCase().indexOf("error") !== -1 || line.toLowerCase().indexOf("FAIL") !== -1) {
+      if (
+        line.toLowerCase().indexOf("error") !== -1 ||
+        line.toLowerCase().indexOf("FAIL") !== -1
+      ) {
         errorNum++;
         let message: RawMessageRecord = {
           level: "Error",
@@ -65,7 +71,10 @@ export function GenerateCodeGeneratePipelineTaskResult(
   // }
 
   if (task === "GenerateCode") {
-    (result as CodegenCodeGenerateTaskResult).codeUrl = FormatCodeUrl(codegenname, pipelineBuildId); 
+    (result as CodegenCodeGenerateTaskResult).codeUrl = FormatCodeUrl(
+      codegenname,
+      pipelineBuildId
+    );
   }
   return result;
 }
@@ -96,10 +105,15 @@ export function GenerateCodeGeneratePipelineTaskResultFile(
   return result;
 }
 
-export function FormatCodeUrl(codegenname: string, pipelineBuildID: string): string {
-  return "https://depthcoverage.blob.core.windows.net/depthcoverage/" +
-        codegenname +
-        "-" +
-        pipelineBuildID +
-        "-generated.tar.gz";
+export function FormatCodeUrl(
+  codegenname: string,
+  pipelineBuildID: string
+): string {
+  return (
+    "https://depthcoverage.blob.core.windows.net/depthcoverage/" +
+    codegenname +
+    "-" +
+    pipelineBuildID +
+    "-generated.tar.gz"
+  );
 }

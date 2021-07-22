@@ -114,17 +114,32 @@ export class CodeGenerateHandler {
       if (sdk === SDK.CLI_CORE_SDK || sdk === SDK.CLI_EXTENSTION_SDK) {
         sdk = SDK.CLI;
       }
+      const { org: swaggerorg, repo: swaggerreponame } = getGitRepoInfo(
+        rpToGen.swaggerRepo
+      );
+
+      const { org: sdkorg, repo: sdkreponame } = getGitRepoInfo(
+        rpToGen.sdkRepo
+      );
       const v: PipelineVariablesInterface = {
         variables: {
           CodeGenerationName: name,
           SDK: sdk,
           stages: st.join(";"),
           SPEC_REPO_TYPE: rpToGen.swaggerRepo.type,
-          SPEC_REPO_URL: rpToGen.swaggerRepo.path.replace("https://", "").replace("http://", ""),
+          SPEC_REPO_URL: rpToGen.swaggerRepo.path
+            .replace("https://", "")
+            .replace("http://", ""),
           SPEC_REPO_BASE_BRANCH: rpToGen.swaggerRepo.branch,
+          SPEC_REPO_OWNER: swaggerorg,
+          SPEC_REPO_NAME: swaggerreponame,
           SDK_REPO_TYPE: rpToGen.sdkRepo.type,
-          SDK_REPO_URL: rpToGen.sdkRepo.path.replace("https://", "").replace("http://", ""),
-          SDK_REPO_BASE_BRANCH: rpToGen.sdkRepo.branch
+          SDK_REPO_URL: rpToGen.sdkRepo.path
+            .replace("https://", "")
+            .replace("http://", ""),
+          SDK_REPO_BASE_BRANCH: rpToGen.sdkRepo.branch,
+          SDK_REPO_OWNER: sdkorg,
+          SDK_REPO_NAME: sdkreponame,
         },
       };
       fs.writeFileSync("Variables.yml", yaml.dump(v));
@@ -568,10 +583,7 @@ export class CodeGenerateHandler {
   /* run a code generation. */
 
   /*customize a code generation. */
-  public async RunSDKCodeGeneration(
-    token: string,
-    name: string
-  ) {
+  public async RunSDKCodeGeneration(token: string, name: string) {
     const octo = NewOctoKit(token);
     let {
       codegen: cg,
@@ -619,7 +631,7 @@ export class CodeGenerateHandler {
       let resource: ResourceAndOperation = JSON.parse(content);
       const fs = require("fs");
       fs.writeFileSync(jsonMapFile, JSON.stringify(resource, null, 2));
-        filepaths.push(jsonMapFile);
+      filepaths.push(jsonMapFile);
     }
 
     try {

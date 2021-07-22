@@ -28,4 +28,4 @@ export const getGitRepoInfo: IRepoInfo = (repoInfo) => {
   return { org: parts[len - 2], repo: parts[len - 1] };
 };
 
-export const config:Config = configSchema.getProperties();
+export const config: Config = configSchema.getProperties();

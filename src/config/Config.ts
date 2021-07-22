@@ -8,6 +8,10 @@ import { Env } from "./environment";
 export interface Config {
   env: Env;
   httpPort: number;
+  httpsPort: number;
+  certKeyPath: string;
+  certPemPath: string;
+  ciphers: string;
   loggingConsoleLevel: string;
   loggingMaxFiles: number;
   loggingMaxFileSize: string;
@@ -20,6 +24,19 @@ export interface Config {
   defaultSwaggerRepo: RepoInfo;
   defaultSDKRepos: {
     [key: string]: RepoInfo;
-  }
+  };
   database: RequiredConfiguration;
+  armEndpoint: string;
+  clientAuthEnabled: boolean;
+  customers: Customer[];
+  refreshClientCertificateIntervalSeconds: number;
+  retries: number;
+  healthProbeEndpoint: string;
+}
+
+export interface Customer {
+  id: string;
+  name: string;
+  thumbprints: string[];
+  authMetadataEndpoints: string[];
 }
