@@ -334,7 +334,7 @@ export class CodeGenerateHandler {
     try {
       const octo = NewOctoKit(token);
       /* generate PR in swagger repo. */
-      let basebranch = "master";
+      let basebranch = "main";
       sdk = sdk.toLowerCase();
       let branch = onboardtype + "-" + sdk + "-" + rp;
 
