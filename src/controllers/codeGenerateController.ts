@@ -249,7 +249,7 @@ export class CodeGenerateController extends BaseController {
 
     if (getErr !== undefined || cg === undefined) {
       this.logger.info("The code generation (" + name + ") does not exist.");
-      return this.json("Not Exist.", 400);
+      return this.json({ error: "Not Exist." }, 400);
     }
 
     const values = request.body.updateParameters;
@@ -309,7 +309,7 @@ export class CodeGenerateController extends BaseController {
 
     if (getErr !== undefined || cg === undefined) {
       this.logger.info("The code generation (" + name + ") does not exist.");
-      return this.json("Not Exist.", 400);
+      return this.json({ error: "Not Exist." }, 400);
     }
 
     const err = await CodeGenerateHandler.DeleteSDKCodeGeneration(
@@ -401,7 +401,7 @@ export class CodeGenerateController extends BaseController {
 
     if (getErr !== undefined || cg === undefined) {
       this.logger.info("The code generation (" + name + ") does not exist.");
-      return this.json("Not Exist.", 400);
+      return this.json({ error: "Not Exist." }, 400);
     }
 
     const err = await CodeGenerateHandler.CompleteSDKCodeGeneration(
@@ -513,7 +513,7 @@ export class CodeGenerateController extends BaseController {
           cg.status +
           ". No avaialbe to run now."
       );
-      return this.json("No available to run now", 400);
+      return this.json({ error: "Not available to run now" }, 400);
     }
 
     const err = await CodeGenerateHandler.RunSDKCodeGeneration(
@@ -574,7 +574,7 @@ export class CodeGenerateController extends BaseController {
         "code generation " + name + " does not exist. No customize triggered."
       );
       return this.json(
-        "No available code generation to trigger customize.",
+        { error: "No available code generation to trigger customize." },
         400
       );
     } else if (
@@ -591,9 +591,12 @@ export class CodeGenerateController extends BaseController {
           cg.sdk +
           ") is under " +
           cg.status +
-          ". No avaialbe to trigger customize now."
+          ". Not avaialbe to trigger customize now."
       );
-      return this.json("No available to trigger customize now", 400);
+      return this.json(
+        { error: "Not available to trigger customize now" },
+        400
+      );
     } else if (
       cg.status === CodeGenerationStatus.CODE_GENERATION_STATUS_CUSTOMIZING
     ) {
@@ -680,7 +683,7 @@ export class CodeGenerateController extends BaseController {
         "code generation " + name + " does not exist. No customize triggered."
       );
       return this.json(
-        "No available code generation to trigger customize.",
+        { error: "No available code generation to trigger customize." },
         400
       );
     } else if (
@@ -697,9 +700,12 @@ export class CodeGenerateController extends BaseController {
           cg.sdk +
           ") is under " +
           cg.status +
-          ". No avaialbe to trigger customize now."
+          ". Not avaialbe to trigger customize now."
       );
-      return this.json("No available to trigger customize now", 400);
+      return this.json(
+        { error: "Not available to trigger customize now" },
+        400
+      );
     } else if (
       cg.status === CodeGenerationStatus.CODE_GENERATION_STATUS_CUSTOMIZING
     ) {
@@ -776,7 +782,10 @@ export class CodeGenerateController extends BaseController {
       this.logger.info(
         "code generation " + name + " does not exist. No onboard triggered."
       );
-      return this.json("No available code generation to onboard.", 400);
+      return this.json(
+        { error: "No available code generation to onboard." },
+        400
+      );
     }
 
     const err = await CodeGenerateHandler.SubmitGeneratedSDKCode(
@@ -834,7 +843,10 @@ export class CodeGenerateController extends BaseController {
       this.logger.info(
         "code generation " + name + " does not exist. No onboard triggered."
       );
-      return this.json("No available code generation to onboard.", 400);
+      return this.json(
+        { error: "No available code generation to onboard." },
+        400
+      );
     }
 
     const err = await CodeGenerateHandler.SubmitGeneratedSDKCode(
