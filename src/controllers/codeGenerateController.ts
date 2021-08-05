@@ -99,6 +99,7 @@ export class CodeGenerateController extends BaseController {
     let codegenRepo: RepoInfo = undefined;
     if (request.body.codegenRepo !== undefined) {
       codegenRepo = request.body.codegenRepo as RepoInfo;
+      codegenRepo.path = codegenRepo.path.replace(".git", "");
     } else {
       if (platform !== undefined && platform.toLowerCase() === "dev") {
         codegenRepo = environmentConfigDev.defaultCodegenRepo;
@@ -110,6 +111,7 @@ export class CodeGenerateController extends BaseController {
     let swaggerRepo: RepoInfo = undefined;
     if (request.body.swaggerRepo !== undefined) {
       swaggerRepo = request.body.swaggerRepo as RepoInfo;
+      swaggerRepo.path = swaggerRepo.path.replace(".git", "");
     } else {
       if (platform !== undefined && platform.toLowerCase() === "dev") {
         swaggerRepo = environmentConfigDev.defaultSwaggerRepo;
@@ -121,6 +123,7 @@ export class CodeGenerateController extends BaseController {
     let sdkRepo: RepoInfo = undefined;
     if (request.body.sdkRepo !== undefined) {
       sdkRepo = request.body.sdkRepo as RepoInfo;
+      sdkRepo.path = sdkRepo.path.replace(".git", "");
     } else {
       if (platform !== undefined && platform.toLowerCase() === "dev") {
         sdkRepo = environmentConfigDev.defaultSDKRepos[sdk];
@@ -369,21 +372,13 @@ export class CodeGenerateController extends BaseController {
 
   /* list sdk code generations. */
   @httpGet("/")
-  public async ListALLSDKCodeGenerationsPOST(
+  public async ListALLSDKCodeGenerations(
     request: Request
   ): Promise<JsonResult> {
-    let onbaordtype = request.params.onboardtype;
-    if (onbaordtype === undefined) {
-      onbaordtype = CodeGenerationType.ADHOC;
-    }
-
-    let owner = request.params.owner;
-    if (owner === undefined) {
-      owner = "";
-    }
+    let filters = request.query;
     const codegens: SDKCodeGeneration[] = await CodeGenerationTable.ListSDKCodeGenerations(
       CodegenDBCredentials,
-      onbaordtype,
+      filters,
       false
     );
 

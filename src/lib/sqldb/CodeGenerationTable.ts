@@ -483,7 +483,7 @@ export class CodeGenerationTable {
   /*Get all code generations of an special onboard type. */
   public async ListSDKCodeGenerations(
     credential: DBCredential,
-    type: string,
+    filters: {} = undefined,
     filterCompleted: boolean = false
   ): Promise<SDKCodeGeneration[]> {
     let codegens: SDKCodeGeneration[] = [];
@@ -505,10 +505,21 @@ export class CodeGenerationTable {
         SQLStr.SQLSTR_LIST_SDKCODEGENERATION,
         table
       );
-
       const request = conn.request();
-      // request.input("table", sql.VarChar, table);
-      request.input("type", sql.VarChar, type);
+      if (filters !== undefined && Object.keys(filters).length > 0) {
+        querystr = querystr + " where %s";
+        let keys = Object.keys(filters);
+        let sql_value_set_parameters: string[] = [];
+        for (const key of keys) {
+          sql_value_set_parameters.push(key + "=@" + key);
+          request.input(key, sql.VarChar, filters[key]);
+        }
+        console.log("sql statememnt: " + sql_value_set_parameters.join(","));
+        querystr = require("util").format(
+          querystr,
+          sql_value_set_parameters.join(",")
+        );
+      }
 
       let result = await request.query(querystr);
 

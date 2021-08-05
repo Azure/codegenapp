@@ -7,7 +7,7 @@ export const environmentConfigDev: Partial<Config> = {
   env: Env.Test,
   httpPort: 3000,
   httpsPort: 8443,
-  enableHttps: true,
+  enableHttps: false,
   certKeyPath: ".ssh/dev/server.key",
   certPemPath: ".ssh/dev/server.crt",
   loggingConsoleLevel: LoggerLevel.INFO,
@@ -56,6 +56,6 @@ export const environmentConfigDev: Partial<Config> = {
     mongoDbName: "openapiPlatform",
   },
   armEndpoint: "https://management.azure.com",
-  clientAuthEnabled: true,
+  clientAuthEnabled: false,
   retries: 2,
 };
