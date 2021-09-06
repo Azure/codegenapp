@@ -1,13 +1,4 @@
-import {
-  NewOctoKit,
-  listBranchs,
-  getCurrentCommit,
-  getBranch,
-  createBranch,
-  uploadToRepo,
-  createPullRequest,
-  getBlobContent,
-} from "../gitutil/GitAPI";
+import { NewOctoKit, listBranchs } from "../gitutil/GitAPI";
 import { DeleteBranch } from "./CodeRepoGit";
 import {
   DepthCoverageType,
@@ -19,34 +10,25 @@ import {
   ResourceAndOperation,
   OnboardOperation,
   OnboardResource,
-  ENVKEY,
-  RESOUCEMAPFile,
+  JsonOperationMap,
 } from "./Model";
 import { CandidateResource } from "./ResourceCandiateModel";
-import { AutorestSDK } from "./common";
-import {
-  IsValidCodeGenerationExist,
-  InsertCodeGeneration,
-} from "./CodeGeneration";
-import { CodegenDBCredentials } from "./DBCredentials";
-import { CodeGeneration } from "./CodeGenerationModel";
 import CodeGenerateHandler from "./CodeGenerateHandler";
-import { PipelineCredential } from "./PipelineCredential";
+import { PipelineCredential } from "./pipeline/PipelineCredential";
+import { CodegenDBCredentials, DBCredential } from "./sqldb/DBCredentials";
+import { CodeGenerationStatus, RepoInfo } from "./CodeGenerationModel";
+import { getGitRepoInfo } from "../config";
+import CodeGenerationTable from "./sqldb/CodeGenerationTable";
+import { SDK } from "./common";
 
 export class DepthCoverageHandler {
   public async RetriveResourceToGenerate(
-    server: string,
-    db: string,
-    user: string,
-    pw: string,
+    credential: DBCredential,
     depthcoverageType: string,
     supportedResources: CandidateResource[] = undefined
   ): Promise<ResourceAndOperation[]> {
     const opOrresources: any[] = await this.QueryDepthCoverageReport(
-      server,
-      db,
-      user,
-      pw,
+      credential,
       depthcoverageType
     );
     //const supportedResource:Set<string> = new Set(["Microsoft.Security/devices", "Microsoft.Consumption/marketplaces", "Microsoft.CertificateRegistration/certificateOrders"]);
@@ -61,9 +43,9 @@ export class DepthCoverageHandler {
       depthcoverageType ===
         DepthCoverageType.DEPTH_COVERAGE_TYPE_CLI_NOT_SUPPOT_RESOURCE
     ) {
-      sdk = AutorestSDK.AUTOREST_SDK_CLI_CORE;
+      sdk = SDK.CLI_CORE_SDK;
     } else {
-      sdk = AutorestSDK.AUTOREST_SDK_TF;
+      sdk = SDK.TF_SDK;
     }
     if (
       depthcoverageType ===
@@ -102,19 +84,16 @@ export class DepthCoverageHandler {
   }
 
   public async QueryCandidateResources(
-    server: string,
-    database: string,
-    user: string,
-    password: string,
+    credential: DBCredential,
     depthcoverageType: string
   ): Promise<CandidateResource[]> {
     let candidates: CandidateResource[] = [];
     var sql = require("mssql");
     var config = {
-      user: user,
-      password: password,
-      server: server,
-      database: database,
+      user: credential.user,
+      password: credential.pw,
+      server: credential.server,
+      database: credential.db,
     };
 
     let conn = undefined;
@@ -159,19 +138,16 @@ export class DepthCoverageHandler {
   }
 
   public async QueryDepthCoverageReport(
-    server: string,
-    database: string,
-    user: string,
-    password: string,
+    credential: DBCredential,
     depthcoverageType: string
   ): Promise<any[]> {
     let missing: any[] = [];
     var sql = require("mssql");
     var config = {
-      user: user,
-      password: password,
-      server: server,
-      database: database,
+      user: credential.user,
+      password: credential.pw,
+      server: credential.server,
+      database: credential.db,
     };
 
     let conn = undefined;
@@ -183,19 +159,19 @@ export class DepthCoverageHandler {
       switch (depthcoverageType) {
         case DepthCoverageType.DEPTH_COVERAGE_TYPE_TF_NOT_SUPPORT_RESOURCE:
           queryStr = SQLQueryStr.SQLQUERY_TF_NOT_SUPPORT_RESOURCE;
-          sdk = AutorestSDK.AUTOREST_SDK_TF;
+          sdk = SDK.TF_SDK;
           break;
         case DepthCoverageType.DEPTH_COVERAGE_TYPE_TF_NOT_SUPPORT_OPERATION:
           queryStr = SQLQueryStr.SQLQUERY_TF_NOT_SUPPORT_OPERATION;
-          sdk = AutorestSDK.AUTOREST_SDK_TF;
+          sdk = SDK.TF_SDK;
           break;
         case DepthCoverageType.DEPTH_COVERAGE_TYPE_CLI_NOT_SUPPOT_RESOURCE:
           queryStr = SQLQueryStr.SQLQUERY_CLI_NOT_SUPPOT_RESOURCE;
-          sdk = AutorestSDK.AUTOREST_SDK_CLI_CORE;
+          sdk = SDK.CLI_CORE_SDK;
           break;
         case DepthCoverageType.DEPTH_COVERAGE_TYPE_CLI_NOT_SUPPORT_OPERATION:
           queryStr = SQLQueryStr.SQLQUERY_CLI_NOT_SUPPORT_OPERATION;
-          sdk = AutorestSDK.AUTOREST_SDK_CLI_CORE;
+          sdk = SDK.CLI_CORE_SDK;
           break;
         default:
       }
@@ -368,8 +344,27 @@ export class DepthCoverageHandler {
         rp.resources.push(rs);
       }
       if (tag !== undefined) rs.tag = tag;
-      if (!this.Contains(rp.jsonFilelist, op.fileName))
-        rp.jsonFilelist.push(op.fileName);
+
+      let joMap: JsonOperationMap = this.GetJsonFileOperationMap(
+        rp.jsonFileList,
+        op.fileName
+      );
+      if (joMap === undefined) {
+        joMap = {
+          jsonfile: op.fileName,
+          ops: op.operationId,
+        };
+        rp.jsonFileList.push(joMap);
+      } else {
+        let ops = joMap.ops;
+        if (ops === undefined || ops.length === 0) {
+          ops = op.operationId;
+        } else {
+          ops = ops + "," + op.operationId;
+        }
+
+        joMap.ops = ops;
+      }
     }
 
     return result;
@@ -449,8 +444,18 @@ export class DepthCoverageHandler {
       if (rs === undefined) {
         rs = new OnboardResource(crs.fullResourceType, apiVersion);
         rp.resources.push(rs);
-        if (!this.Contains(rp.jsonFilelist, crs.fileName))
-          rp.jsonFilelist.push(crs.fileName);
+
+        let joMap: JsonOperationMap = this.GetJsonFileOperationMap(
+          rp.jsonFileList,
+          crs.fileName
+        );
+        if (joMap === undefined) {
+          joMap = {
+            jsonfile: crs.fileName,
+            ops: "",
+          };
+          rp.jsonFileList.push(joMap);
+        }
       }
       if (tag !== undefined) rs.tag = tag;
     }
@@ -459,23 +464,14 @@ export class DepthCoverageHandler {
   }
 
   public async TriggerOnboard(
-    dbserver: string,
-    db: string,
-    dbuser: string,
-    dbpw: string,
+    credential: DBCredential,
     token: string,
-    org: string,
-    repo: string,
-    basebranch: string = "main",
-    supported: string[] = undefined,
-    type: string = "depth"
+    codegenRepo: RepoInfo,
+    supported: string[] = undefined
   ): Promise<any> {
     let tfsupportedResource: CandidateResource[] = undefined;
     const tfcandidates = await this.QueryCandidateResources(
-      dbserver,
-      db,
-      dbuser,
-      dbpw,
+      credential,
       DepthCoverageType.DEPTH_COVERAGE_TYPE_TF_NOT_SUPPORT_RESOURCE
     );
     if (
@@ -495,20 +491,14 @@ export class DepthCoverageHandler {
       }
     }
     const tfresources = await this.RetriveResourceToGenerate(
-      dbserver,
-      db,
-      dbuser,
-      dbpw,
+      credential,
       DepthCoverageType.DEPTH_COVERAGE_TYPE_TF_NOT_SUPPORT_RESOURCE,
       tfsupportedResource
     );
 
     let clisupportedResource: CandidateResource[] = undefined;
     const clicandidates = await this.QueryCandidateResources(
-      dbserver,
-      db,
-      dbuser,
-      dbpw,
+      credential,
       DepthCoverageType.DEPTH_COVERAGE_TYPE_CLI_NOT_SUPPORT_OPERATION
     );
     if (
@@ -529,10 +519,7 @@ export class DepthCoverageHandler {
     }
 
     const cliresources = await this.RetriveResourceToGenerate(
-      dbserver,
-      db,
-      dbuser,
-      dbpw,
+      credential,
       DepthCoverageType.DEPTH_COVERAGE_TYPE_CLI_NOT_SUPPORT_OPERATION,
       clisupportedResource
     );
@@ -547,17 +534,71 @@ export class DepthCoverageHandler {
     for (let rs of resources) {
       try {
         rs.generateResourceList();
-        const err = await CodeGenerateHandler.TriggerCodeGeneration(
+        const name: string =
+          rs.onboardType + "-" + rs.target.toLowerCase() + "-" + rs.RPName;
+        let {
+          codegen: cg,
+          err: getErr,
+        } = await CodeGenerationTable.getSDKCodeGenerationByName(
+          CodegenDBCredentials,
+          name
+        );
+
+        if (
+          getErr === undefined &&
+          cg !== undefined &&
+          cg.status != CodeGenerationStatus.CODE_GENERATION_STATUS_COMPLETED &&
+          cg.status != CodeGenerationStatus.CODE_GENERATION_STATUS_CANCELED
+        ) {
+          console.log(
+            "The code generation pipeline(" +
+              rs.RPName +
+              "," +
+              rs.target +
+              ") is under " +
+              cg.status +
+              " Already. Ignore this trigger."
+          );
+          continue;
+        }
+
+        const { org: codegenorg, repo: codegenreponame } = getGitRepoInfo(
+          codegenRepo
+        );
+        const branch = name;
+        const err = await CodeGenerateHandler.CreateSDKCodeGeneration(
+          name,
           PipelineCredential.token,
-          org,
-          repo,
-          basebranch,
+          codegenorg,
+          codegenreponame,
+          branch,
           rs
         );
+
+        if (err !== undefined) {
+          console.log(
+            "Failed to trigger code generation for (" +
+              rs.RPName +
+              ", " +
+              rs.target +
+              ")."
+          );
+        }
       } catch (err) {
         console.log(err);
         return err;
       }
+    }
+
+    return undefined;
+  }
+
+  public GetJsonFileOperationMap(
+    list: JsonOperationMap[],
+    target: string
+  ): JsonOperationMap {
+    for (let m of list) {
+      if (m.jsonfile === target) return m;
     }
 
     return undefined;

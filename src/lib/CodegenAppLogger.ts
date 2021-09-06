@@ -1,18 +1,18 @@
 import * as winston from "winston";
 import { Config } from "../config/Config";
-import { Environment } from "../config/environment";
 // import { default as winstonDailyFile } from "winston-daily-rotate-file";
 import { Logger } from "./Logger";
 // require('winston-daily-rotate-file')
 // import {WinstonDailyRotate}  from 'winston-daily-rotate-file'
 import WinstonDailyRotate = require("winston-daily-rotate-file");
+import { Env } from "../config/environment";
 
 export class CodegenAppLogger implements Logger {
   logger: winston.Logger;
 
   public constructor(config: Config) {
     const addMeta = winston.format((info) => {
-      info.Env = config.serviceEnvironment;
+      info.Env = config.env;
       info.Service = config.serviceName;
       return info;
     });
@@ -22,10 +22,7 @@ export class CodegenAppLogger implements Logger {
       level: config.loggingConsoleLevel,
     };
 
-    if (
-      config.serviceEnvironment === Environment.Development ||
-      config.serviceEnvironment === Environment.Local
-    ) {
+    if (config.env === Env.Development || config.env === Env.Local) {
       consoleTransportOptions.format = winston.format.combine(
         winston.format.colorize(),
         winston.format.simple()

@@ -30,3 +30,5 @@ export enum CandidateTable {
   TF_CANDIDATE_RESOURCE_TABLE = "AMEClientTools_Coverage_TFCandidateResources",
 }
 export const CodegenStatusTable = "AMEClientTools_Resource_Generate_Status";
+
+export const sdkCodegenTable = "AMEClientTools_SDK_Code_Generation";

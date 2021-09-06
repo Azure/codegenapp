@@ -5,11 +5,9 @@ import {
   listOpenPullRequest,
   SubmitPullRequest,
 } from "./CodeRepoGit";
-import {
-  IsValidCodeGenerationExist,
-  InsertCodeGeneration,
-  UpdateCodeGenerationValue,
-} from "./CodeGeneration";
+import CodeGenerationTable, {
+  CollectPipelineStages,
+} from "./sqldb/CodeGenerationTable";
 import {
   createBranch,
   uploadToRepo,
@@ -21,42 +19,51 @@ import {
 } from "../gitutil/GitAPI";
 import { ResourceAndOperation, RESOUCEMAPFile, ENVKEY } from "./Model";
 import {
-  CodeGeneration,
   CodeGenerationDBColumn,
   CodeGenerationStatus,
+  RepoInfo,
+  SDKCodeGeneration,
 } from "./CodeGenerationModel";
 import { SDK, REPO, ORG, README } from "./common";
-import { CodegenDBCredentials } from "./DBCredentials";
-import { PipelineVariables } from "./PipelineVariableModel";
+import { CodegenDBCredentials } from "./sqldb/DBCredentials";
 import * as yaml from "node-yaml";
 import { PipelineVariablesInterface } from "../config/pipelineVariables";
+import { getGitRepoInfo } from "../config";
+import { inject } from "inversify";
+import { InjectableTypes } from "./injectableTypes";
+import { Logger } from "winston";
+import { stringify } from "node:querystring";
 
 export class CodeGenerateHandler {
-  public constructor() {}
-  /**
-   *
-   * @param token the pipeline access token
-   * @param codegenorg the codegen pipeline org
-   * @param codegenrepo the codegen pipeline repo
-   * @param basebranch the basebranch
-   * @param rpToGen the resources to generation.
-   */
-  public async TriggerCodeGeneration(
+  constructor() {}
+  ListSDKCodeGenerationsByStatus(
+    token: string,
+    resourceProvider: string,
+    sdk: string,
+    type: string,
+    codegenorg: string,
+    sdkorg: string,
+    swaggerorg: string
+  ) {
+    throw new Error("Method not implemented.");
+  }
+  // public constructor() {}
+
+  /************** SDK Code Generation Operation ****************/
+  public async CreateSDKCodeGeneration(
+    name: string,
     token: string,
     codegenorg: string,
     codegenrepo: string,
-    basebranch: string,
-    rpToGen: ResourceAndOperation
+    codegenBasebranch: string,
+    rpToGen: ResourceAndOperation,
+    owner?: string
   ): Promise<any> {
     // const RESOUCEMAPFile = "ToGenerate.json";
     const octo = NewOctoKit(token);
-    let alreadyOnboard: boolean = await IsValidCodeGenerationExist(
-      CodegenDBCredentials.server,
-      CodegenDBCredentials.db,
-      CodegenDBCredentials.user,
-      CodegenDBCredentials.pw,
-      rpToGen.RPName,
-      rpToGen.target,
+    let alreadyOnboard: boolean = await CodeGenerationTable.ExistValidSDKCodeGeneration(
+      CodegenDBCredentials,
+      name,
       rpToGen.onboardType
     );
 
@@ -68,13 +75,14 @@ export class CodeGenerateHandler {
     }
 
     try {
-      const branchName =
-        rpToGen.onboardType + "-" + rpToGen.target + "-" + rpToGen.RPName;
+      // const branchName =
+      //   rpToGen.onboardType + "-" + rpToGen.target + "-" + rpToGen.RPName;
+      const branchName = name;
       const baseCommit = await getCurrentCommit(
         octo,
         codegenorg,
         codegenrepo,
-        basebranch
+        codegenBasebranch
       );
       const targetBranch = await getBranch(
         octo,
@@ -97,9 +105,41 @@ export class CodeGenerateHandler {
       fs.writeFileSync(RESOUCEMAPFile, JSON.stringify(rpToGen, null, 2));
 
       /* generate variable yml file */
+      let st: string[] = CollectPipelineStages(
+        rpToGen.onboardType,
+        rpToGen.target
+      );
+      let sdk: string = rpToGen.target;
+      /* wrapped clicore and cliextension to cli. */
+      if (sdk === SDK.CLI_CORE_SDK || sdk === SDK.CLI_EXTENSTION_SDK) {
+        sdk = SDK.CLI;
+      }
+      const { org: swaggerorg, repo: swaggerreponame } = getGitRepoInfo(
+        rpToGen.swaggerRepo
+      );
+
+      const { org: sdkorg, repo: sdkreponame } = getGitRepoInfo(
+        rpToGen.sdkRepo
+      );
       const v: PipelineVariablesInterface = {
         variables: {
-          SDK: rpToGen.target,
+          CodeGenerationName: name,
+          SDK: sdk,
+          stages: st.join(";"),
+          SPEC_REPO_TYPE: rpToGen.swaggerRepo.type,
+          SPEC_REPO_URL: rpToGen.swaggerRepo.path
+            .replace("https://", "")
+            .replace("http://", ""),
+          SPEC_REPO_BASE_BRANCH: rpToGen.swaggerRepo.branch,
+          SPEC_REPO_OWNER: swaggerorg,
+          SPEC_REPO_NAME: swaggerreponame,
+          SDK_REPO_TYPE: rpToGen.sdkRepo.type,
+          SDK_REPO_URL: rpToGen.sdkRepo.path
+            .replace("https://", "")
+            .replace("http://", ""),
+          SDK_REPO_BASE_BRANCH: rpToGen.sdkRepo.branch,
+          SDK_REPO_OWNER: sdkorg,
+          SDK_REPO_NAME: sdkreponame,
         },
       };
       fs.writeFileSync("Variables.yml", yaml.dump(v));
@@ -116,7 +156,7 @@ export class CodeGenerateHandler {
         octo,
         codegenorg,
         codegenrepo,
-        basebranch,
+        codegenBasebranch,
         branchName,
         "pull request from branch " + branchName
       );
@@ -130,20 +170,24 @@ export class CodeGenerateHandler {
       );
       console.log(content);
 
-      /* insert code generation status table. */
-      let cg: CodeGeneration = new CodeGeneration(
+      let cg: SDKCodeGeneration = new SDKCodeGeneration(
+        name,
         rpToGen.RPName,
+        rpToGen.serviceType,
+        rpToGen.resourcelist,
+        rpToGen.tag,
         rpToGen.target,
-        rpToGen.onboardType,
-        rpToGen.resourcelist
+        rpToGen.swaggerRepo,
+        rpToGen.sdkRepo,
+        rpToGen.codegenRepo,
+        owner === undefined ? "" : owner,
+        rpToGen.onboardType
       );
-      let e = await InsertCodeGeneration(
-        CodegenDBCredentials.server,
-        CodegenDBCredentials.db,
-        CodegenDBCredentials.user,
-        CodegenDBCredentials.pw,
+      let e = await CodeGenerationTable.SubmitSDKCodeGeneration(
+        CodegenDBCredentials,
         cg
       );
+
       if (e !== undefined) {
         console.log(e);
       }
@@ -166,33 +210,51 @@ export class CodeGenerateHandler {
    * @param swaggerorg the swagger org
    * @returns
    */
-  public async CompleteCodeGeneration(
+  public async CompleteSDKCodeGeneration(
     token: string,
-    rp: string,
-    sdk: string,
-    onbaordtype: string,
-    codegenorg: string,
-    sdkorg: string,
-    swaggerorg: string
+    name: string
   ): Promise<any> {
-    const err = await this.ClearCodeGenerationWorkSpace(
+    let {
+      codegen: cg,
+      err: getErr,
+    } = await CodeGenerationTable.getSDKCodeGenerationByName(
+      CodegenDBCredentials,
+      name
+    );
+
+    if (
+      getErr === undefined &&
+      cg === undefined &&
+      cg.status != CodeGenerationStatus.CODE_GENERATION_STATUS_COMPLETED &&
+      cg.status != CodeGenerationStatus.CODE_GENERATION_STATUS_CANCELED
+    ) {
+      return getErr;
+    }
+
+    const rp = cg.resourceProvider;
+    const sdk = cg.sdk;
+    const type = cg.type;
+
+    const codegenrepo = cg.codegenRepo;
+    const swagger_repo = cg.swaggerRepo;
+    const sdk_repo = cg.sdkRepo;
+
+    const branch = name;
+
+    const err = await this.ClearSDKCodeGenerationWorkSpace(
       token,
       rp,
       sdk,
-      onbaordtype,
-      codegenorg,
-      sdkorg,
-      swaggerorg
+      type,
+      codegenrepo,
+      sdk_repo,
+      swagger_repo,
+      branch
     );
     /* update code generation status table. */
-    const uperr = await UpdateCodeGenerationValue(
-      CodegenDBCredentials.server,
-      CodegenDBCredentials.db,
-      CodegenDBCredentials.user,
-      CodegenDBCredentials.pw,
-      rp,
-      sdk,
-      onbaordtype,
+    const uperr = await CodeGenerationTable.UpdateSDKCodeGenerationValue(
+      CodegenDBCredentials,
+      name,
       CodeGenerationDBColumn.CODE_GENERATION_COLUMN_STATUS,
       CodeGenerationStatus.CODE_GENERATION_STATUS_COMPLETED
     );
@@ -215,33 +277,51 @@ export class CodeGenerateHandler {
    * @param swaggerorg The swagger org
    * @returns
    */
-  public async CancelCodeGeneration(
+  public async CancelSDKCodeGeneration(
     token: string,
-    rp: string,
-    sdk: string,
-    onbaordtype: string,
-    codegenorg: string,
-    sdkorg: string,
-    swaggerorg: string
+    name: string
   ): Promise<any> {
-    const err = await this.ClearCodeGenerationWorkSpace(
+    let {
+      codegen: cg,
+      err: getErr,
+    } = await CodeGenerationTable.getSDKCodeGenerationByName(
+      CodegenDBCredentials,
+      name
+    );
+
+    if (
+      getErr === undefined &&
+      cg === undefined &&
+      cg.status != CodeGenerationStatus.CODE_GENERATION_STATUS_COMPLETED &&
+      cg.status != CodeGenerationStatus.CODE_GENERATION_STATUS_CANCELED
+    ) {
+      return getErr;
+    }
+
+    const rp = cg.resourceProvider;
+    const sdk = cg.sdk;
+    const type = cg.type;
+
+    const codegenrepo: RepoInfo = cg.codegenRepo;
+    const swagger_repo: RepoInfo = cg.swaggerRepo;
+    const sdk_repo: RepoInfo = cg.sdkRepo;
+
+    const branch = name;
+
+    const err = await this.ClearSDKCodeGenerationWorkSpace(
       token,
       rp,
       sdk,
-      onbaordtype,
-      codegenorg,
-      sdkorg,
-      swaggerorg
+      type,
+      codegenrepo,
+      sdk_repo,
+      swagger_repo,
+      branch
     );
     /* update code generation status table. */
-    const uperr = await UpdateCodeGenerationValue(
-      CodegenDBCredentials.server,
-      CodegenDBCredentials.db,
-      CodegenDBCredentials.user,
-      CodegenDBCredentials.pw,
-      rp,
-      sdk,
-      onbaordtype,
+    const uperr = await CodeGenerationTable.UpdateSDKCodeGenerationValue(
+      CodegenDBCredentials,
+      name,
       CodeGenerationDBColumn.CODE_GENERATION_COLUMN_STATUS,
       CodeGenerationStatus.CODE_GENERATION_STATUS_CANCELED
     );
@@ -253,6 +333,60 @@ export class CodeGenerateHandler {
     return err;
   }
 
+  public async DeleteSDKCodeGeneration(
+    token: string,
+    name: string
+  ): Promise<any> {
+    let {
+      codegen: cg,
+      err: getErr,
+    } = await CodeGenerationTable.getSDKCodeGenerationByName(
+      CodegenDBCredentials,
+      name
+    );
+
+    if (
+      getErr === undefined &&
+      cg === undefined &&
+      cg.status != CodeGenerationStatus.CODE_GENERATION_STATUS_COMPLETED &&
+      cg.status != CodeGenerationStatus.CODE_GENERATION_STATUS_CANCELED
+    ) {
+      return getErr;
+    }
+
+    const rp = cg.resourceProvider;
+    const sdk = cg.sdk;
+    const type = cg.type;
+
+    const codegenrepo = cg.codegenRepo;
+    const swagger_repo = cg.swaggerRepo;
+    const sdk_repo = cg.sdkRepo;
+
+    const branch = name;
+
+    /* clear work space. */
+    const err = await this.ClearSDKCodeGenerationWorkSpace(
+      token,
+      rp,
+      sdk,
+      type,
+      codegenrepo,
+      sdk_repo,
+      swagger_repo,
+      branch
+    );
+    /* delete code generation from table. */
+    const uperr = await CodeGenerationTable.DeleteSDKCodeGeneration(
+      CodegenDBCredentials,
+      name
+    );
+
+    if (uperr !== undefined) {
+      console.log(uperr);
+    }
+
+    return err;
+  }
   /**
    *
    * @param token The github access token
@@ -264,46 +398,48 @@ export class CodeGenerateHandler {
    * @param swaggerorg The swagger org
    * @returns
    */
-  public async ClearCodeGenerationWorkSpace(
+  public async ClearSDKCodeGenerationWorkSpace(
     token: string,
     rp: string,
     sdk: string,
     onbaordtype: string,
-    codegenorg: string,
-    sdkorg: string,
-    swaggerorg: string
+    codegenrepo: RepoInfo,
+    sdkrepo: RepoInfo,
+    swaggerrepo: RepoInfo,
+    branch?: string
   ): Promise<any> {
-    const branch = onbaordtype + "-" + sdk.toLowerCase() + "-" + rp;
+    // const branch = onbaordtype + "-" + sdk.toLowerCase() + "-" + rp;
+    if (branch === undefined) {
+      branch = onbaordtype + "-" + sdk.toLowerCase() + "-" + rp;
+    }
     /* delete depth-coverage rp branch */
-    let err = await DeleteBranch(
-      token,
-      codegenorg,
-      REPO.DEPTH_COVERAGE_REPO,
-      branch
-    );
+    const { org: cgorg, repo: cgreop } = getGitRepoInfo(codegenrepo);
+    let err = await DeleteBranch(token, cgorg, cgreop, branch);
 
     /* delete sdk rp branch. */
-    let sdkrepo = "";
-    if (sdk === SDK.TF_SDK) {
-      sdkrepo = REPO.TF_PROVIDER_REPO;
-    } else if (sdk === SDK.CLI_CORE_SDK) {
-      sdkrepo = REPO.CLI_REPO;
-    } else if (sdk === SDK.CLI_EXTENSTION_SDK) {
-      sdkrepo = REPO.CLI_EXTENSION_REPO;
-    }
+    // let sdkrepo = "";
+    // if (sdk === SDK.TF_SDK) {
+    //   sdkrepo = REPO.TF_PROVIDER_REPO;
+    // } else if (sdk === SDK.CLI_CORE_SDK) {
+    //   sdkrepo = REPO.CLI_REPO;
+    // } else if (sdk === SDK.CLI_EXTENSTION_SDK) {
+    //   sdkrepo = REPO.CLI_EXTENSION_REPO;
+    // }
 
+    const { org: sdkorg, repo: sdkreponame } = getGitRepoInfo(sdkrepo);
     try {
-      await DeleteBranch(token, sdkorg, sdkrepo, branch);
-      let codebranch = onbaordtype + "-code-" + sdk.toLowerCase() + "-" + rp;
-      await DeleteBranch(token, sdkorg, sdkrepo, codebranch);
+      await DeleteBranch(token, sdkorg, sdkreponame, branch);
+      let codebranch = branch + "-code";
+      await DeleteBranch(token, sdkorg, sdkreponame, codebranch);
     } catch (e) {
       console.log("Failed to delete sdk branch: " + branch);
       console.log(e);
     }
 
     /*delete swagger rp branch */
+    const { org: swaggerorg, repo: swagger_repo } = getGitRepoInfo(swaggerrepo);
     try {
-      await DeleteBranch(token, swaggerorg, REPO.SWAGGER_REPO, branch);
+      await DeleteBranch(token, swaggerorg, swagger_repo, branch);
     } catch (e) {
       console.log("Failed to delete swagger branch: " + branch);
       console.log(e);
@@ -323,72 +459,79 @@ export class CodeGenerateHandler {
    * @param onboardtype The onboard type, depth, ad-hoc or others
    * @returns err if failure
    */
-  public async SubmitGeneratedCode(
-    rp: string,
-    sdk: string,
+  public async SubmitGeneratedSDKCode(
     token: string,
-    swaggerorg: string = undefined,
-    sdkorg: string = undefined,
-    onboardtype: string = "depth"
+    name: string
   ): Promise<any> {
     try {
+      let {
+        codegen: cg,
+        err: getErr,
+      } = await CodeGenerationTable.getSDKCodeGenerationByName(
+        CodegenDBCredentials,
+        name
+      );
+
+      if (
+        getErr === undefined &&
+        cg === undefined &&
+        cg.status != CodeGenerationStatus.CODE_GENERATION_STATUS_COMPLETED &&
+        cg.status != CodeGenerationStatus.CODE_GENERATION_STATUS_CANCELED
+      ) {
+        return getErr;
+      }
+
+      const rp = cg.resourceProvider;
+      const sdk = cg.sdk;
+      const type = cg.type;
+
+      const swaggerrepo = cg.swaggerRepo;
+      const sdkrepo = cg.sdkRepo;
+
       const octo = NewOctoKit(token);
       /* generate PR in swagger repo. */
-      let basebranch = "main";
-      sdk = sdk.toLowerCase();
-      let branch = onboardtype + "-" + sdk + "-" + rp;
+      let branch = name;
+      // let branch = onboardtype + "-" + sdk + "-" + rp;
 
-      await createPullRequest(
+      const { org: swaggerorg, repo: swaggerreponame } = getGitRepoInfo(
+        swaggerrepo
+      );
+      const swaggerPR = await createPullRequest(
         octo,
         swaggerorg !== undefined ? swaggerorg : ORG.AZURE,
-        REPO.SWAGGER_REPO,
-        basebranch,
+        swaggerreponame !== undefined ? swaggerreponame : REPO.SWAGGER_REPO,
+        swaggerrepo.branch,
         branch,
-        "[Depth Coverage, " + rp + "]pull request from pipeline " + branch
+        "[" + type + ", " + rp + "]pull request from pipeline " + branch
       );
 
       /* generate PR in sdk code repo. */
-      let sdkrepo = "";
-      let sdkbasebranch = "master";
-      // let sdkorg = sdkorg;
-      if (sdkorg === undefined) {
-        if (sdk === SDK.TF_SDK) {
-          sdkrepo = REPO.TF_PROVIDER_REPO;
-          sdkorg = ORG.MS;
-        } else if (sdk === SDK.CLI_CORE_SDK) {
-          sdkrepo = REPO.CLI_REPO;
-          sdkbasebranch = "dev";
-        } else if (sdk === SDK.CLI_EXTENSTION_SDK) {
-          sdkrepo = REPO.CLI_REPO;
-          sdkbasebranch = "master";
-        }
-      }
 
-      await createPullRequest(
+      const { org: sdkorg, repo: sdkreponame } = getGitRepoInfo(sdkrepo);
+      const codePR = await createPullRequest(
         octo,
         sdkorg,
-        sdkrepo,
-        sdkbasebranch,
+        sdkreponame,
+        sdkrepo.branch,
         branch,
-        "[Depth Coverage, " + rp + "]pull request from pipeline " + branch
+        "[" + type + ", " + rp + "]pull request from pipeline " + branch
       );
 
       /* close work sdk branch. */
-      let workbranch = onboardtype + "-code-" + sdk + "-" + rp;
-      await DeleteBranch(token, sdkorg, sdkrepo, workbranch);
+      // let workbranch = onboardtype + "-code-" + sdk + "-" + rp;
+      let workbranch = name + "-code";
+      await DeleteBranch(token, sdkorg, sdkreponame, workbranch);
 
       /* update the code generation status. */
-      /* update code generation status table. */
-      const uperr = await UpdateCodeGenerationValue(
-        CodegenDBCredentials.server,
-        CodegenDBCredentials.db,
-        CodegenDBCredentials.user,
-        CodegenDBCredentials.pw,
-        rp,
-        sdk,
-        onboardtype,
-        CodeGenerationDBColumn.CODE_GENERATION_COLUMN_STATUS,
-        CodeGenerationStatus.CODE_GENERATION_STATUS_PIPELINE_COMPLETED
+      const values = {
+        swaggerPR: swaggerPR,
+        codePR: codePR,
+        status: CodeGenerationStatus.CODE_GENERATION_STATUS_COMPLETED,
+      };
+      const uperr = await CodeGenerationTable.UpdateSDKCodeGenerationValues(
+        CodegenDBCredentials,
+        name,
+        values
       );
 
       if (uperr !== undefined) {
@@ -402,7 +545,115 @@ export class CodeGenerateHandler {
     return undefined;
   }
 
-  /*customize an code generation. */
+  /*Get basic information of an code generation. */
+  public async GetSDKCodeGeneration(
+    name: string
+  ): Promise<{ codegen: SDKCodeGeneration; err: any }> {
+    let {
+      codegen: cg,
+      err: getErr,
+    } = await CodeGenerationTable.getSDKCodeGenerationByName(
+      CodegenDBCredentials,
+      name
+    );
+
+    return {
+      codegen: cg,
+      err: getErr,
+    };
+  }
+
+  /*Get detail information of an code generation. */
+  public async GetSDKCodeGenerationDetailInfo(name: string): Promise<any> {
+    let {
+      codegen: cg,
+      err: getErr,
+    } = await CodeGenerationTable.getSDKCodeGenerationByName(
+      CodegenDBCredentials,
+      name
+    );
+
+    if (getErr !== undefined || cg === undefined) {
+      return getErr;
+    }
+
+    const pipelineId: string = cg.lastPipelineBuildID;
+  }
+
+  /* run a code generation. */
+
+  /*customize a code generation. */
+  public async RunSDKCodeGeneration(token: string, name: string) {
+    const octo = NewOctoKit(token);
+    let {
+      codegen: cg,
+      err: getErr,
+    } = await CodeGenerationTable.getSDKCodeGenerationByName(
+      CodegenDBCredentials,
+      name
+    );
+
+    if (
+      getErr === undefined &&
+      cg === undefined &&
+      cg.status != CodeGenerationStatus.CODE_GENERATION_STATUS_COMPLETED &&
+      cg.status != CodeGenerationStatus.CODE_GENERATION_STATUS_CANCELED
+    ) {
+      return getErr;
+    }
+
+    const rp = cg.resourceProvider;
+    const sdk = cg.sdk;
+    const type = cg.type;
+
+    const codegenrepo = cg.codegenRepo;
+    const swaggerrepo = cg.swaggerRepo;
+    const sdkrepo = cg.sdkRepo;
+    /* generate PR in swagger repo. */
+    let branch = name;
+    // let branch = onboardtype + "-" + sdk + "-" + rp;
+
+    const { org: cgorg, repo: cgreponame } = getGitRepoInfo(codegenrepo);
+
+    const jsonMapFile: string = "ToGenerate.json";
+    const fs = require("fs");
+    let filepaths: string[] = [];
+
+    let content = await ReadFileFromRepo(
+      token,
+      cgorg !== undefined ? cgorg : ORG.AZURE,
+      cgreponame !== undefined ? cgreponame : REPO.DEPTH_COVERAGE_REPO,
+      branch,
+      jsonMapFile
+    );
+
+    if (content !== undefined && content.length > 0) {
+      let resource: ResourceAndOperation = JSON.parse(content);
+      const fs = require("fs");
+      fs.writeFileSync(jsonMapFile, JSON.stringify(resource, null, 2));
+      filepaths.push(jsonMapFile);
+    }
+
+    try {
+      /* update depth-coverage-pipeline trigger pull request. */
+      await uploadToRepo(
+        octo,
+        filepaths,
+        cgorg !== undefined ? cgorg : ORG.AZURE,
+        cgreponame !== undefined ? cgreponame : REPO.DEPTH_COVERAGE_REPO,
+        branch
+      );
+      const uperr = await CodeGenerationTable.UpdateSDKCodeGenerationValue(
+        CodegenDBCredentials,
+        name,
+        CodeGenerationDBColumn.CODE_GENERATION_COLUMN_STATUS,
+        CodeGenerationStatus.CODE_GENERATION_STATUS_SUBMIT
+      );
+    } catch (e) {
+      console.log(e);
+      return e;
+    }
+  }
   /**
    *
    * @param token The github access token
@@ -415,39 +666,45 @@ export class CodeGenerateHandler {
    * @param excludeTest indicate if ignore to run mock-test, live-test during this round of customize
    * @returns err if failure
    */
-  public async CustomizeCodeGeneration(
+  public async CustomizeSDKCodeGeneration(
     token: string,
-    rp: string,
-    sdk: string,
-    onboardType: string,
+    name: string,
     triggerPR: string,
     codePR: string,
-    sdkorg: string = undefined,
     excludeTest: boolean = false
   ): Promise<any> {
     const octo = NewOctoKit(token);
     let custmizeerr: any = undefined;
-    // const org = ORG.AZURE;
-    // let sdkorg = ORG.AZURE;
-    if (sdkorg === undefined) {
-      sdkorg = ORG.AZURE;
-    }
-    sdk = sdk.toLowerCase();
-    if (sdk === SDK.TF_SDK) {
-      sdkorg = ORG.MS;
-      sdk = sdk.toLowerCase();
+
+    let {
+      codegen: cg,
+      err: getErr,
+    } = await CodeGenerationTable.getSDKCodeGenerationByName(
+      CodegenDBCredentials,
+      name
+    );
+
+    if (
+      getErr === undefined &&
+      cg === undefined &&
+      cg.status != CodeGenerationStatus.CODE_GENERATION_STATUS_COMPLETED &&
+      cg.status != CodeGenerationStatus.CODE_GENERATION_STATUS_CANCELED
+    ) {
+      return getErr;
     }
 
-    const branch = onboardType + "-" + sdk + "-" + rp;
+    const rp = cg.resourceProvider;
+    const sdk = cg.sdk;
+    const type = cg.type;
 
-    let sdkrepo = "";
-    let readfile = README.CLI_README_FILE;
-    if (sdk === SDK.TF_SDK) {
-      sdkrepo = REPO.TF_PROVIDER_REPO;
-      readfile = README.TF_README_FILE;
-    } else if (sdk === SDK.CLI_CORE_SDK) {
-      sdkrepo = REPO.CLI_REPO;
-    }
+    const codegenrepo = cg.codegenRepo;
+    const swaggerrepo = cg.swaggerRepo;
+    const sdkrepo = cg.sdkRepo;
+    /* generate PR in swagger repo. */
+    let branch = name;
+    // let branch = onboardtype + "-" + sdk + "-" + rp;
+
+    const { org: cgorg, repo: cgreponame } = getGitRepoInfo(codegenrepo);
 
     const jsonMapFile: string = "ToGenerate.json";
     const fs = require("fs");
@@ -455,8 +712,8 @@ export class CodeGenerateHandler {
 
     let content = await ReadFileFromRepo(
       token,
-      ORG.AZURE,
-      REPO.DEPTH_COVERAGE_REPO,
+      cgorg !== undefined ? cgorg : ORG.AZURE,
+      cgreponame !== undefined ? cgreponame : REPO.DEPTH_COVERAGE_REPO,
       branch,
       jsonMapFile
     );
@@ -497,9 +754,29 @@ export class CodeGenerateHandler {
       }
     }
 
+    let readfile = README.CLI_README_FILE;
+    if (sdk === SDK.TF_SDK) {
+      readfile = README.TF_README_FILE;
+    }
+
+    let tfSchemafile = "azurerm/internal/services/" + rp + "/schema.json";
+    let tfSchemaDir = "azurerm/internal/services/" + rp;
+    const { org: sdkorg, repo: sdkreponame } = getGitRepoInfo(sdkrepo);
     const prNumber = codePR.split("/").pop();
-    const filelist: string[] = [readfile, "schema.json"];
-    await ReadCustomizeFiles(token, sdkorg, sdkrepo, +prNumber, filelist);
+    const filelist: string[] = [readfile];
+    if (sdk === SDK.TF_SDK) {
+      filelist.push(tfSchemafile);
+      if (!fs.existsSync(tfSchemaDir)) {
+        fs.mkdirSync(tfSchemaDir, { recursive: true });
+      }
+    }
+    const readedFiles: string = await ReadCustomizeFiles(
+      token,
+      sdkorg,
+      sdkreponame,
+      +prNumber,
+      filelist
+    );
 
     /* copy configuration to swagger repo */
 
@@ -525,11 +802,11 @@ export class CodeGenerateHandler {
 
     filepaths.push(swaggerReadMePath);
 
-    if (sdk === SDK.TF_SDK) {
+    if (sdk === SDK.TF_SDK && readedFiles.indexOf(tfSchemafile) !== -1) {
       const schemapath = "schema.json";
       const swaggerSchemaPath =
         "specification/" + rp + "/resource-manager/" + schemapath;
-      fs.copyFile(schemapath, swaggerSchemaPath, (err) => {
+      fs.copyFile(tfSchemafile, swaggerSchemaPath, (err) => {
         if (err) {
           console.log("Error Found:", err);
         } else {
@@ -549,8 +826,8 @@ export class CodeGenerateHandler {
       await uploadToRepo(
         octo,
         filepaths,
-        ORG.AZURE,
-        REPO.DEPTH_COVERAGE_REPO,
+        cgorg !== undefined ? cgorg : ORG.AZURE,
+        cgreponame !== undefined ? cgreponame : REPO.DEPTH_COVERAGE_REPO,
         branch
       );
     } catch (e) {
@@ -560,14 +837,9 @@ export class CodeGenerateHandler {
 
     if (custmizeerr === undefined) {
       /* update the code generation status. */
-      const uperr = await UpdateCodeGenerationValue(
-        CodegenDBCredentials.server,
-        CodegenDBCredentials.db,
-        CodegenDBCredentials.user,
-        CodegenDBCredentials.pw,
-        rp,
-        sdk,
-        onboardType,
+      const uperr = await CodeGenerationTable.UpdateSDKCodeGenerationValue(
+        CodegenDBCredentials,
+        name,
         CodeGenerationDBColumn.CODE_GENERATION_COLUMN_STATUS,
         CodeGenerationStatus.CODE_GENERATION_STATUS_CUSTOMIZING
       );

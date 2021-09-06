@@ -1,31 +1,43 @@
 import {
-  BaseHttpController,
   controller,
+  httpDelete,
   httpGet,
+  httpPatch,
   httpPost,
+  httpPut,
 } from "inversify-express-utils";
 import { JsonResult } from "inversify-express-utils/dts/results";
-import { Request, Response, response } from "express";
-import {
-  getAvailableCodeGeneration,
-  getCodeGeneration,
-  UpdateCodeGenerationValue,
-} from "../lib/CodeGeneration";
+import { Request } from "express";
 import CodeGenerateHandler from "../lib/CodeGenerateHandler";
-import { PipelineCredential } from "../lib/PipelineCredential";
-import { ENVKEY, ResourceAndOperation } from "../lib/Model";
+import { PipelineCredential } from "../lib/pipeline/PipelineCredential";
+import { ResourceAndOperation } from "../lib/Model";
 import { BaseController } from "./BaseController";
 import { InjectableTypes } from "../lib/injectableTypes";
 import { inject } from "inversify";
 import { Logger } from "../lib/Logger";
-import { OnboardType, ORG, REPO, SDK } from "../lib/common";
-import { CodeGenerationStatus } from "../lib/CodeGenerationModel";
+import {
+  CodeGenerationStatus,
+  RepoInfo,
+  SDKCodeGeneration,
+  SDKCodeGenerationDetailInfo,
+} from "../lib/CodeGenerationModel";
+import { CodegenDBCredentials } from "../lib/sqldb/DBCredentials";
+import { config, getGitRepoInfo } from "../config";
+import CodeGenerationTable from "../lib/sqldb/CodeGenerationTable";
+import { CodeGenerationType } from "../lib/common";
+import { CodegenPipelineBuildResultsCollection } from "../Logger/mongo/CodegenPipelineBuildResultsCollection";
+import { CodegenPipelineTaskResult } from "../Logger/PipelineTask";
+import { environmentConfigDev } from "../config/dev";
 // import { Logger } from "winston";
 
-@controller("/codegenerate")
+@controller("/codegenerations")
 // export class CodeGenerateController extends BaseHttpController {
 export class CodeGenerateController extends BaseController {
-  constructor(@inject(InjectableTypes.Logger) protected logger: Logger) {
+  constructor(
+    @inject(InjectableTypes.Logger) protected logger: Logger,
+    @inject(InjectableTypes.PipelineResultCol)
+    protected pipelineResultCol: CodegenPipelineBuildResultsCollection
+  ) {
     super(logger);
   }
   /* generate an pull request. */
@@ -71,44 +83,66 @@ export class CodeGenerateController extends BaseController {
     return this.json(content, statusCode);
   }
 
+  /*******************SDK Code Generation Rest API **********************/
   /*generate source code. */
-  @httpPost("/resourceProvider/:rpname/sdk/:sdk/generate")
-  public async GenerateSDK(request: Request): Promise<JsonResult> {
-    // const token = process.env[ENVKEY.ENV_REPO_ACCESS_TOKEN];
-    const rp = request.params.rpname;
-    const sdk: string = request.params.sdk;
-    const resources: string = request.params.resources;
+  @httpPut("/:codegenname")
+  public async CreateSDKCodeGeneration(request: Request): Promise<JsonResult> {
+    const name = request.params.codegenname;
 
-    let codegenorg: string = request.body.codegenorg;
-    if (codegenorg === undefined) {
-      codegenorg = ORG.AZURE;
-    }
-
-    let codegenrepo: string = request.body.codegenrepo;
-    if (codegenrepo === undefined) {
-      codegenrepo = REPO.DEPTH_COVERAGE_REPO;
-    }
-
-    let onboardtype = request.body.onboardtype;
-    if (onboardtype === undefined) {
-      onboardtype = OnboardType.ADHOC_ONBOARD;
-    }
-
+    const rp = request.body.resourceProvider;
+    const sdk: string = request.body.sdk;
+    const resources: string = request.body.resources;
     const platform = request.body.platform;
-    let branch = "main";
-    if (platform !== undefined && platform.toLowerCase() === "dev") {
-      branch = "dev";
-      // onboardtype = "dev";
+    const stype = request.body.serviceType;
+    const tag = request.body.tag;
+
+    let codegenRepo: RepoInfo = undefined;
+    if (request.body.codegenRepo !== undefined) {
+      codegenRepo = request.body.codegenRepo as RepoInfo;
+      codegenRepo.path = codegenRepo.path.replace(".git", "");
+    } else {
+      if (platform !== undefined && platform.toLowerCase() === "dev") {
+        codegenRepo = environmentConfigDev.defaultCodegenRepo;
+      } else {
+        codegenRepo = config.defaultCodegenRepo;
+      }
     }
 
-    let { codegen: cg, err: getErr } = await getCodeGeneration(
-      process.env[ENVKEY.ENV_CODEGEN_DB_SERVER],
-      process.env[ENVKEY.ENV_CODEGEN_DATABASE],
-      process.env[ENVKEY.ENV_CODEGEN_DB_USER],
-      process.env[ENVKEY.ENV_CODEGEN_DB_PASSWORD],
-      rp,
-      sdk,
-      onboardtype
+    let swaggerRepo: RepoInfo = undefined;
+    if (request.body.swaggerRepo !== undefined) {
+      swaggerRepo = request.body.swaggerRepo as RepoInfo;
+      swaggerRepo.path = swaggerRepo.path.replace(".git", "");
+    } else {
+      if (platform !== undefined && platform.toLowerCase() === "dev") {
+        swaggerRepo = environmentConfigDev.defaultSwaggerRepo;
+      } else {
+        swaggerRepo = config.defaultSwaggerRepo;
+      }
+    }
+
+    let sdkRepo: RepoInfo = undefined;
+    if (request.body.sdkRepo !== undefined) {
+      sdkRepo = request.body.sdkRepo as RepoInfo;
+      sdkRepo.path = sdkRepo.path.replace(".git", "");
+    } else {
+      if (platform !== undefined && platform.toLowerCase() === "dev") {
+        sdkRepo = environmentConfigDev.defaultSDKRepos[sdk];
+      } else {
+        sdkRepo = config.defaultSDKRepos[sdk];
+      }
+    }
+
+    let type = request.body.type;
+    if (type === undefined) {
+      type = CodeGenerationType.ADHOC;
+    }
+
+    let {
+      codegen: cg,
+      err: getErr,
+    } = await CodeGenerationTable.getSDKCodeGenerationByName(
+      CodegenDBCredentials,
+      name
     );
 
     if (
@@ -124,9 +158,12 @@ export class CodeGenerateController extends BaseController {
           sdk +
           ") is under " +
           cg.status +
-          "Already. Ignore this trigger."
+          " Already. Ignore this trigger."
       );
-      return this.json("Aleady Exists.", 201);
+      return this.json(
+        { error: "Aleady Exists.", message: "Already Exists" },
+        400
+      );
     }
 
     // const err = await CodeGenerateHandler.TriggerCodeGeneration(PipelineCredential.token, codegenorg, repo, branch, rp, sdk, type);
@@ -137,76 +174,239 @@ export class CodeGenerateController extends BaseController {
       readmefile,
       [],
       sdk,
-      onboardtype
+      type,
+      stype,
+      swaggerRepo,
+      codegenRepo,
+      sdkRepo
     );
+    if (tag !== undefined) rs.tag = tag;
     rs.generateResourceList();
     if (resources !== undefined) rs.resourcelist = resources;
 
-    const err = await CodeGenerateHandler.TriggerCodeGeneration(
+    const { org: codegenorg, repo: codegenreponame } = getGitRepoInfo(
+      codegenRepo
+    );
+    const err = await CodeGenerateHandler.CreateSDKCodeGeneration(
+      name,
       PipelineCredential.token,
       codegenorg,
-      codegenrepo,
-      branch,
+      codegenreponame,
+      codegenRepo.branch,
       rs
     );
     let content = {};
     let statusCode = 200;
     if (err !== undefined) {
       statusCode = 400;
-      content = { error: err };
+      content = { error: err, message: "" };
       this.logger.error(
-        "Failed to trigger code generation for " + rp + "sdk:" + sdk,
+        "Failed to trigger code generation for " + rp + " sdk:" + sdk,
         err
       );
     } else {
       statusCode = 200;
-      content = "Trigger " + onboardtype + " for resource provider " + rp;
-      this.logger.info(
-        "Trigger " + onboardtype + " for resource provider " + rp
-      );
+      content = "Trigger " + type + " for resource provider " + rp;
+      this.logger.info("Trigger " + type + " for resource provider " + rp);
     }
 
     return this.json(content, statusCode);
   }
 
-  /*complete one code generation after all the code have been merged. */
-  @httpPost("/resourceProvider/:rpname/sdk/:sdk/complete")
-  public async CompleteCodeGenerationPOST(
+  /* get sdk code generation. */
+  @httpGet("/:codegenname")
+  public async GetSDKCodeGeneration(request: Request): Promise<JsonResult> {
+    const name = request.params.codegenname;
+
+    let {
+      codegen: cg,
+      err: getErr,
+    } = await CodeGenerationTable.getSDKCodeGenerationByName(
+      CodegenDBCredentials,
+      name
+    );
+
+    if (getErr !== undefined || cg === undefined) {
+      this.logger.info("The code generation (" + name + ") does not exist.");
+      return this.json("Not Exist.", 400);
+    }
+
+    return this.json(cg, 200);
+  }
+
+  /* update sdk code generation. */
+  @httpPatch("/:codegenname")
+  public async UpdateSDKCodeGeneration(request: Request): Promise<JsonResult> {
+    const name = request.params.codegenname;
+
+    let {
+      codegen: cg,
+      err: getErr,
+    } = await CodeGenerationTable.getSDKCodeGenerationByName(
+      CodegenDBCredentials,
+      name
+    );
+
+    if (getErr !== undefined || cg === undefined) {
+      this.logger.info("The code generation (" + name + ") does not exist.");
+      return this.json({ error: "Not Exist." }, 400);
+    }
+
+    const values = request.body.updateParameters;
+    const ret = await CodeGenerationTable.UpdateSDKCodeGenerationValues(
+      CodegenDBCredentials,
+      cg.name,
+      values
+    );
+
+    let content = {};
+    let statusCode = 200;
+    if (ret !== undefined) {
+      statusCode = 400;
+      content = { error: ret };
+      this.logger.error(
+        "Failed to update code generation " +
+          name +
+          " for " +
+          cg.resourceProvider +
+          " sdk:" +
+          cg.sdk,
+        ret
+      );
+    } else {
+      statusCode = 200;
+      content =
+        "Updated code generation " +
+        name +
+        " for " +
+        cg.resourceProvider +
+        " sdk:" +
+        cg.sdk;
+      this.logger.info(
+        "Updated code generation " +
+          name +
+          " for " +
+          cg.resourceProvider +
+          " sdk:" +
+          cg.sdk
+      );
+    }
+
+    return this.json(content, statusCode);
+  }
+  /* delete sdk code generation. */
+  @httpDelete("/:codegenname")
+  public async DeleteSDKCodeGeneration(request: Request): Promise<JsonResult> {
+    const name = request.params.codegenname;
+
+    let {
+      codegen: cg,
+      err: getErr,
+    } = await CodeGenerationTable.getSDKCodeGenerationByName(
+      CodegenDBCredentials,
+      name
+    );
+
+    if (getErr !== undefined || cg === undefined) {
+      this.logger.info("The code generation (" + name + ") does not exist.");
+      return this.json({ error: "Not Exist." }, 400);
+    }
+
+    const err = await CodeGenerateHandler.DeleteSDKCodeGeneration(
+      PipelineCredential.token,
+      name
+    );
+
+    return this.json("OK", 200);
+  }
+
+  // ClearSDKCodeGenerationWorkSpace(token: any, rp: any, sdk: any, type: any, codegenrepo: any, sdk_repo: any, swagger_repo: any, branch: any) {
+  //   throw new Error("Method not implemented.");
+  // }
+
+  /* get sdk code generation detail information. */
+  @httpGet("/:codegenname/detail")
+  public async GetSDKCodeGenerationDetailInfo(
     request: Request
   ): Promise<JsonResult> {
-    const rp = request.params.rpname;
-    const sdk: string = request.params.sdk;
+    const name = request.params.codegenname;
 
-    let onbaordtype = request.body.type;
-    if (onbaordtype === undefined) {
-      onbaordtype = OnboardType.ADHOC_ONBOARD;
+    let {
+      codegen: cg,
+      err: getErr,
+    } = await CodeGenerationTable.getSDKCodeGenerationByName(
+      CodegenDBCredentials,
+      name
+    );
+
+    if (getErr !== undefined || cg === undefined) {
+      this.logger.info("The code generation (" + name + ") does not exist.");
+      return this.json("Not Exist.", 400);
     }
 
-    let codegenorg: string = request.body.codegenorg;
-    if (codegenorg === undefined) {
-      codegenorg = ORG.AZURE;
+    const pipelineid: string = cg.lastPipelineBuildID;
+    const taskResults: CodegenPipelineTaskResult[] = await this.pipelineResultCol.getFromBuild(
+      pipelineid
+    );
+    let cginfo: SDKCodeGenerationDetailInfo = new SDKCodeGenerationDetailInfo(
+      cg.name,
+      cg.resourceProvider,
+      cg.serviceType,
+      cg.resourcesToGenerate,
+      cg.tag,
+      cg.sdk,
+      cg.swaggerRepo,
+      cg.sdkRepo,
+      cg.codegenRepo,
+      cg.owner,
+      cg.type,
+      cg.swaggerPR,
+      cg.codePR,
+      cg.lastPipelineBuildID,
+      cg.status,
+      taskResults
+    );
+
+    return this.json(cginfo, 200);
+  }
+
+  /* list sdk code generations. */
+  @httpGet("/")
+  public async ListALLSDKCodeGenerations(
+    request: Request
+  ): Promise<JsonResult> {
+    let filters = request.query;
+    const codegens: SDKCodeGeneration[] = await CodeGenerationTable.ListSDKCodeGenerations(
+      CodegenDBCredentials,
+      filters,
+      false
+    );
+
+    return this.json(codegens, 200);
+  }
+
+  /*complete one code generation after all the code have been merged. */
+  @httpPost("/:codegenname/complete")
+  public async CompleteSDKCodeGeneration(
+    request: Request
+  ): Promise<JsonResult> {
+    const name = request.params.codegenname;
+    let {
+      codegen: cg,
+      err: getErr,
+    } = await CodeGenerationTable.getSDKCodeGenerationByName(
+      CodegenDBCredentials,
+      name
+    );
+
+    if (getErr !== undefined || cg === undefined) {
+      this.logger.info("The code generation (" + name + ") does not exist.");
+      return this.json({ error: "Not Exist." }, 400);
     }
 
-    let sdkorg: string = request.body.org;
-    let swaggerorg: string = request.body.swaggerorg;
-    if (sdkorg === undefined) {
-      sdkorg = ORG.AZURE;
-      if (sdk.toLowerCase() === SDK.TF_SDK) {
-        sdkorg = ORG.MS;
-      }
-    }
-    if (swaggerorg === undefined) {
-      swaggerorg = ORG.AZURE;
-    }
-
-    const err = await CodeGenerateHandler.CompleteCodeGeneration(
+    const err = await CodeGenerateHandler.CompleteSDKCodeGeneration(
       PipelineCredential.token,
-      rp,
-      sdk,
-      onbaordtype,
-      codegenorg,
-      sdkorg,
-      swaggerorg
+      name
     );
     let content = {};
     let statusCode = 200;
@@ -214,14 +414,20 @@ export class CodeGenerateController extends BaseController {
       statusCode = 400;
       content = { error: err };
       this.logger.error(
-        "Failed to complete code generation for " + rp + "sdk:" + sdk,
+        "Failed to complete code generation " +
+          name +
+          " for " +
+          cg.resourceProvider +
+          "sdk:" +
+          cg.sdk,
         err
       );
     } else {
       statusCode = 200;
-      content = "Complete " + onbaordtype + " for resource provider " + rp;
+      content =
+        "Complete " + name + " for resource provider " + cg.resourceProvider;
       this.logger.info(
-        "Complete " + onbaordtype + " for resource provider " + rp
+        "Complete " + name + " for resource provider " + cg.resourceProvider
       );
     }
 
@@ -229,42 +435,25 @@ export class CodeGenerateController extends BaseController {
   }
 
   /*cancel one code generation. */
-  @httpPost("/resourceProvider/:rpname/sdk/:sdk/cancel")
-  public async CancelCodeGenerationPOST(request: Request): Promise<JsonResult> {
-    // const token = process.env[ENVKEY.ENV_REPO_ACCESS_TOKEN];
-    const rp = request.params.rpname;
-    const sdk: string = request.params.sdk;
+  @httpPost("/:codegenname/cancel")
+  public async CancelSDKCodeGeneration(request: Request): Promise<JsonResult> {
+    const name = request.params.codegenname;
+    let {
+      codegen: cg,
+      err: getErr,
+    } = await CodeGenerationTable.getSDKCodeGenerationByName(
+      CodegenDBCredentials,
+      name
+    );
 
-    let onbaordtype = request.body.type;
-    if (onbaordtype === undefined) {
-      onbaordtype = OnboardType.ADHOC_ONBOARD;
+    if (getErr !== undefined || cg === undefined) {
+      this.logger.info("The code generation (" + name + ") does not exist.");
+      return this.json("Not Exist.", 400);
     }
 
-    let codegenorg: string = request.body.codegenorg;
-    if (codegenorg === undefined) {
-      codegenorg = ORG.AZURE;
-    }
-
-    let sdkorg: string = request.body.sdkorg;
-    let swaggerorg: string = request.body.swaggerorg;
-    if (sdkorg === undefined) {
-      sdkorg = ORG.AZURE;
-      if (sdk.toLowerCase() === SDK.TF_SDK) {
-        sdkorg = ORG.MS;
-      }
-    }
-    if (swaggerorg === undefined) {
-      swaggerorg = ORG.AZURE;
-    }
-
-    const err = await CodeGenerateHandler.CancelCodeGeneration(
+    const err = await CodeGenerateHandler.CancelSDKCodeGeneration(
       PipelineCredential.token,
-      rp,
-      sdk,
-      onbaordtype,
-      codegenorg,
-      sdkorg,
-      swaggerorg
+      name
     );
     let content = {};
     let statusCode = 200;
@@ -272,316 +461,443 @@ export class CodeGenerateController extends BaseController {
       statusCode = 400;
       content = { error: err };
       this.logger.error(
-        "Failed to cancel code generation for " + rp + "sdk:" + sdk,
+        "Failed to cancel code generation " +
+          name +
+          " for " +
+          cg.resourceProvider +
+          ",sdk:" +
+          cg.sdk,
         err
       );
     } else {
       statusCode = 200;
-      content = "Cancel " + onbaordtype + " for resource provider " + rp;
+      content =
+        "Cancel " + name + " for resource provider " + cg.resourceProvider;
       this.logger.info(
-        "Cancel " + onbaordtype + " for resource provider " + rp
+        "Cancel " + name + " for resource provider " + cg.resourceProvider
       );
     }
 
     return this.json(content, statusCode);
   }
 
-  /*generate code snipper. */
-  @httpPost("/resourceProvider/:rpname/sdk/:sdk/codeSnipper")
-  public async GenerateCodeSnipperPOST(request: Request) {
-    return this.json("Not Implemented", 200);
-  }
-
-  /*onboard one codegeneration, submit generated code to sdk repo and readme to swagger repo. */
-  @httpPost("/resourceProvider/:rpname/sdk/:sdk/onboard")
-  public async OnboardCodeGenerationPOST(
-    request: Request
-  ): Promise<JsonResult> {
-    // const token = process.env[ENVKEY.ENV_REPO_ACCESS_TOKEN];
-    const rp = request.params.rpname;
-    const sdk: string = request.params.sdk;
-
-    let onbaordtype = request.body.type;
-    if (onbaordtype === undefined) {
-      onbaordtype = OnboardType.ADHOC_ONBOARD;
-    }
-
-    let codegenorg: string = request.body.codegenorg;
-    if (codegenorg === undefined) {
-      codegenorg = ORG.AZURE;
-    }
-
-    let sdkorg: string = request.body.org;
-    let swaggerorg: string = request.body.swaggerorg;
-    if (sdkorg === undefined) {
-      sdkorg = ORG.AZURE;
-      if (sdk.toLowerCase() === SDK.TF_SDK) {
-        sdkorg = ORG.MS;
-      }
-    }
-    if (swaggerorg === undefined) {
-      swaggerorg = ORG.AZURE;
-    }
-    const err = await CodeGenerateHandler.SubmitGeneratedCode(
-      rp,
-      sdk,
-      PipelineCredential.token,
-      swaggerorg,
-      sdkorg,
-      onbaordtype
+  /*run one code generation. */
+  @httpPost("/:codegenname/run")
+  public async RunCodeGeneration(request: Request): Promise<JsonResult> {
+    const name = request.params.codegenname;
+    let {
+      codegen: cg,
+      err: getErr,
+    } = await CodeGenerationTable.getSDKCodeGenerationByName(
+      CodegenDBCredentials,
+      name
     );
 
-    let content = {};
-    let statusCode = 200;
-    if (err !== undefined) {
-      statusCode = 400;
-      content = { error: err };
-      this.logger.error(
-        "Failed to onboard " + sdk + " for resource provider " + rp,
-        err
+    if (getErr !== undefined || cg === undefined) {
+      this.logger.info(
+        "code generation " + name + " does not exist. No run triggered."
       );
-    } else {
-      statusCode = 200;
-      content = "Onboard " + onbaordtype + " for resource provider " + rp;
-      this.logger.info("onboard " + sdk + " for resource provider " + rp);
+      return this.json("Not Exist.", 400);
+    } else if (
+      cg.status === CodeGenerationStatus.CODE_GENERATION_STATUS_IN_PROGRESS ||
+      cg.status === CodeGenerationStatus.CODE_GENERATION_STATUS_CANCELED
+    ) {
+      this.logger.info(
+        "The code generation " +
+          name +
+          "(" +
+          cg.resourceProvider +
+          "," +
+          cg.sdk +
+          ") is under " +
+          cg.status +
+          ". No avaialbe to run now."
+      );
+      return this.json({ error: "Not available to run now" }, 400);
     }
 
-    return this.json(content, statusCode);
+    const err = await CodeGenerateHandler.RunSDKCodeGeneration(
+      PipelineCredential.token,
+      name
+    );
+
+    if (err !== undefined) {
+      this.logger.error(
+        "Failed to run code generation '" +
+          name +
+          "'( " +
+          cg.resourceProvider +
+          ", " +
+          cg.sdk +
+          ").",
+        err
+      );
+      return this.json({ error: err }, 400);
+    } else {
+      this.logger.info(
+        "Succeeded to run code generation '" +
+          name +
+          "'( " +
+          cg.resourceProvider +
+          ", " +
+          cg.sdk +
+          ")."
+      );
+      return this.json("OK", 200);
+    }
   }
 
-  /*customize an code generation. */
-  @httpPost("/resourceProvider/:rpname/sdk/:sdk/customize")
-  public async CustomizeCodegenerationPOST(
+  /* customize the code generation. */
+  @httpPost("/:codegenname/customize")
+  public async CustomizeSDKCodeGeneration(
     request: Request
   ): Promise<JsonResult> {
-    // const token = process.env[ENVKEY.ENV_REPO_ACCESS_TOKEN];
-    const rp = request.params.rpname;
-    const sdk = request.params.sdk;
-    const org = request.body.org as string;
+    const name = request.params.codegenname;
     const triggerPR = request.body.triggerPR as string;
     const codePR = request.body.codePR as string;
-    let excludeTest: boolean = false;
-    if (request.query.excludeTest !== undefined) {
-      excludeTest = Boolean(request.body.excludeTest);
-    }
-    let onbaordtype = request.body.type;
-    if (onbaordtype === undefined) {
-      onbaordtype = OnboardType.ADHOC_ONBOARD;
-    }
 
-    let { codegen, err } = await getAvailableCodeGeneration(
-      process.env[ENVKEY.ENV_CODEGEN_DB_SERVER],
-      process.env[ENVKEY.ENV_CODEGEN_DATABASE],
-      process.env[ENVKEY.ENV_CODEGEN_DB_USER],
-      process.env[ENVKEY.ENV_CODEGEN_DB_PASSWORD],
-      rp,
-      sdk,
-      onbaordtype
-    );
-
-    if (err !== undefined || codegen === undefined) {
-      this.logger.info(
-        "No code generation pipeline for " +
-          sdk +
-          " of resource provider " +
-          rp +
-          ". No customize triggered."
-      );
-      return this.json(
-        "No available code generation to trigger customize.",
-        400
-      );
-    } else if (
-      codegen.status ===
-        CodeGenerationStatus.CODE_GENERATION_STATUS_COMPLETED ||
-      codegen.status === CodeGenerationStatus.CODE_GENERATION_STATUS_IN_PROGRESS
-    ) {
-      this.logger.info(
-        "The code generation pipeline(" +
-          rp +
-          "," +
-          sdk +
-          ") is under " +
-          codegen.status +
-          ". No avaialbe to trigger customize now."
-      );
-      return this.json("No available to trigger customize now", 400);
-    } else if (
-      codegen.status === CodeGenerationStatus.CODE_GENERATION_STATUS_CANCELED
-    ) {
-      this.logger.info(
-        "The code generation pipeline(" +
-          rp +
-          "," +
-          sdk +
-          ") is cancelled. No avaialbe to trigger customize now."
-      );
-      return this.json(
-        "The code generation pipeline is cancelled. Cannot customize.",
-        400
-      );
-    } else if (
-      codegen.status === CodeGenerationStatus.CODE_GENERATION_STATUS_CUSTOMIZING
-    ) {
-      this.logger.info(
-        "The code generation pipeline(" +
-          rp +
-          "," +
-          sdk +
-          ") is under " +
-          codegen.status +
-          "Already. Ignore this trigger."
-      );
-      return this.json(
-        "customize. pipeline: https://devdiv.visualstudio.com/DevDiv/_build?definitionId=" +
-          codegen.pipelineBuildID,
-        201
-      );
-    }
-    const custmizeerr = await CodeGenerateHandler.CustomizeCodeGeneration(
-      PipelineCredential.token,
-      rp,
-      sdk,
-      onbaordtype,
-      triggerPR,
-      codePR,
-      org,
-      excludeTest
-    );
-
-    if (custmizeerr !== undefined) {
-      this.logger.error(
-        "Failed to customize resource provider " + rp + ", sdk:" + sdk,
-        err
-      );
-      return this.json({ error: custmizeerr }, 400);
-    } else {
-      this.logger.info("Customize resource provider " + rp + ", sdk:" + sdk);
-      return this.json(
-        "customize. pipeline: https://devdiv.visualstudio.com/DevDiv/_build?definitionId=" +
-          codegen.pipelineBuildID,
-        201
-      );
-    }
-  }
-
-  /*customize an code generation. */
-  @httpGet("/resourceProvider/:rpname/sdk/:sdk/customize")
-  public async CustomizeCodegenerationGET(
-    request: Request
-  ): Promise<JsonResult> {
-    // const token = process.env[ENVKEY.ENV_REPO_ACCESS_TOKEN];
-    const rp = request.params.rpname;
-    const sdk = request.params.sdk;
-
-    const org = request.query.org as string;
-    // const token = process.env[ENVKEY.ENV_REPO_ACCESS_TOKEN];
-
-    const triggerPR = request.query.triggerPR as string;
-    const codePR = request.query.codePR as string;
     let excludeTest: boolean = false;
     if (request.query.excludeTest !== undefined) {
       excludeTest = Boolean(request.query.excludeTest);
     }
 
-    let onbaordtype = request.query.type as string;
-    if (onbaordtype === undefined) {
-      onbaordtype = OnboardType.DEV_ONBOARD;
-    }
-
-    let { codegen, err } = await getAvailableCodeGeneration(
-      process.env[ENVKEY.ENV_CODEGEN_DB_SERVER],
-      process.env[ENVKEY.ENV_CODEGEN_DATABASE],
-      process.env[ENVKEY.ENV_CODEGEN_DB_USER],
-      process.env[ENVKEY.ENV_CODEGEN_DB_PASSWORD],
-      rp,
-      sdk,
-      onbaordtype
+    let {
+      codegen: cg,
+      err: getErr,
+    } = await CodeGenerationTable.getSDKCodeGenerationByName(
+      CodegenDBCredentials,
+      name
     );
 
-    if (err !== undefined || codegen === undefined) {
+    if (getErr !== undefined || cg === undefined) {
       this.logger.info(
-        "No code generation pipeline for " +
-          sdk +
-          " of resource provider " +
-          rp +
-          ". No customize triggered."
+        "code generation " + name + " does not exist. No customize triggered."
       );
       return this.json(
-        "No available code generation to trigger customize.",
+        { error: "No available code generation to trigger customize." },
         400
       );
     } else if (
-      codegen.status ===
-        CodeGenerationStatus.CODE_GENERATION_STATUS_COMPLETED ||
-      codegen.status === CodeGenerationStatus.CODE_GENERATION_STATUS_IN_PROGRESS
+      // cg.status === CodeGenerationStatus.CODE_GENERATION_STATUS_COMPLETED ||
+      cg.status === CodeGenerationStatus.CODE_GENERATION_STATUS_IN_PROGRESS ||
+      cg.status === CodeGenerationStatus.CODE_GENERATION_STATUS_CANCELED
     ) {
       this.logger.info(
-        "The code generation pipeline(" +
-          rp +
+        "The code generation " +
+          name +
+          "(" +
+          cg.resourceProvider +
           "," +
-          sdk +
+          cg.sdk +
           ") is under " +
-          codegen.status +
-          ". No avaialbe to trigger customize now."
-      );
-      return this.json("No available to trigger customize now", 400);
-    } else if (
-      codegen.status === CodeGenerationStatus.CODE_GENERATION_STATUS_CANCELED
-    ) {
-      this.logger.info(
-        "The code generation pipeline(" +
-          rp +
-          "," +
-          sdk +
-          ") is cancelled. No avaialbe to trigger customize now."
+          cg.status +
+          ". Not avaialbe to trigger customize now."
       );
       return this.json(
-        "The code generation pipeline is cancelled. Cannot customize.",
+        { error: "Not available to trigger customize now" },
         400
       );
     } else if (
-      codegen.status === CodeGenerationStatus.CODE_GENERATION_STATUS_CUSTOMIZING
+      cg.status === CodeGenerationStatus.CODE_GENERATION_STATUS_CUSTOMIZING
     ) {
       this.logger.info(
-        "The code generation pipeline(" +
-          rp +
+        "The code generation " +
+          name +
+          "(" +
+          cg.resourceProvider +
           "," +
-          sdk +
+          cg.sdk +
           ") is under " +
-          codegen.status +
+          cg.status +
           "Already. Ignore this trigger."
       );
       return this.json(
         "customize. pipeline: https://devdiv.visualstudio.com/DevDiv/_build?definitionId=" +
-          codegen.pipelineBuildID,
+          cg.lastPipelineBuildID,
         201
       );
     }
-    const custmizeerr = await CodeGenerateHandler.CustomizeCodeGeneration(
+
+    const custmizeerr = await CodeGenerateHandler.CustomizeSDKCodeGeneration(
       PipelineCredential.token,
-      rp,
-      sdk,
-      onbaordtype,
+      name,
       triggerPR,
       codePR,
-      org,
       excludeTest
     );
 
     if (custmizeerr !== undefined) {
       this.logger.error(
-        "Failed to customize resource provider " + rp + ", sdk:" + sdk,
-        err
+        "Failed to customize code generation '" +
+          name +
+          "'( " +
+          cg.resourceProvider +
+          ", " +
+          cg.sdk +
+          ").",
+        custmizeerr
       );
       return this.json({ error: custmizeerr }, 400);
     } else {
-      this.logger.info("Customize resource provider " + rp + ", sdk:" + sdk);
+      this.logger.info(
+        "Succeeded to customize code generation '" +
+          name +
+          "'( " +
+          cg.resourceProvider +
+          ", " +
+          cg.sdk +
+          ")."
+      );
       return this.json(
         "customize. pipeline: https://devdiv.visualstudio.com/DevDiv/_build?definitionId=" +
-          codegen.pipelineBuildID,
+          cg.lastPipelineBuildID,
+        200
+      );
+    }
+  }
+
+  /* customize the code generation. */
+  @httpGet("/:codegenname/customize")
+  public async CustomizeSDKCodeGenerationGet(
+    request: Request
+  ): Promise<JsonResult> {
+    const name = request.params.codegenname;
+    const triggerPR = request.body.triggerPR as string;
+    const codePR = request.body.codePR as string;
+
+    let excludeTest: boolean = false;
+    if (request.query.excludeTest !== undefined) {
+      excludeTest = Boolean(request.query.excludeTest);
+    }
+
+    let {
+      codegen: cg,
+      err: getErr,
+    } = await CodeGenerationTable.getSDKCodeGenerationByName(
+      CodegenDBCredentials,
+      name
+    );
+
+    if (getErr !== undefined || cg === undefined) {
+      this.logger.info(
+        "code generation " + name + " does not exist. No customize triggered."
+      );
+      return this.json(
+        { error: "No available code generation to trigger customize." },
+        400
+      );
+    } else if (
+      cg.status === CodeGenerationStatus.CODE_GENERATION_STATUS_COMPLETED ||
+      cg.status === CodeGenerationStatus.CODE_GENERATION_STATUS_IN_PROGRESS ||
+      cg.status === CodeGenerationStatus.CODE_GENERATION_STATUS_CANCELED
+    ) {
+      this.logger.info(
+        "The code generation " +
+          name +
+          "(" +
+          cg.resourceProvider +
+          "," +
+          cg.sdk +
+          ") is under " +
+          cg.status +
+          ". Not avaialbe to trigger customize now."
+      );
+      return this.json(
+        { error: "Not available to trigger customize now" },
+        400
+      );
+    } else if (
+      cg.status === CodeGenerationStatus.CODE_GENERATION_STATUS_CUSTOMIZING
+    ) {
+      this.logger.info(
+        "The code generation " +
+          name +
+          "(" +
+          cg.resourceProvider +
+          "," +
+          cg.sdk +
+          ") is under " +
+          cg.status +
+          "Already. Ignore this trigger."
+      );
+      return this.json(
+        "customize. pipeline: https://devdiv.visualstudio.com/DevDiv/_build?definitionId=" +
+          cg.lastPipelineBuildID,
         201
       );
     }
+
+    const custmizeerr = await CodeGenerateHandler.CustomizeSDKCodeGeneration(
+      PipelineCredential.token,
+      name,
+      triggerPR,
+      codePR,
+      excludeTest
+    );
+
+    if (custmizeerr !== undefined) {
+      this.logger.error(
+        "Failed to customize code generation '" +
+          name +
+          "'( " +
+          cg.resourceProvider +
+          ", " +
+          cg.sdk +
+          ").",
+        custmizeerr
+      );
+      return this.json({ error: custmizeerr }, 400);
+    } else {
+      this.logger.info(
+        "Succeeded to customize code generation '" +
+          name +
+          "'( " +
+          cg.resourceProvider +
+          ", " +
+          cg.sdk +
+          ")."
+      );
+      return this.json(
+        "customize. pipeline: https://devdiv.visualstudio.com/DevDiv/_build?definitionId=" +
+          cg.lastPipelineBuildID,
+        201
+      );
+    }
+  }
+
+  /*onboard one codegeneration, submit generated code to sdk repo and readme to swagger repo. */
+  @httpPost("/:codegenname/onboard")
+  public async OnboardSDKCodeGeneration(request: Request): Promise<JsonResult> {
+    const name = request.params.codegenname;
+
+    let {
+      codegen: cg,
+      err: getErr,
+    } = await CodeGenerationTable.getSDKCodeGenerationByName(
+      CodegenDBCredentials,
+      name
+    );
+
+    if (getErr !== undefined || cg === undefined) {
+      this.logger.info(
+        "code generation " + name + " does not exist. No onboard triggered."
+      );
+      return this.json(
+        { error: "No available code generation to onboard." },
+        400
+      );
+    }
+
+    const err = await CodeGenerateHandler.SubmitGeneratedSDKCode(
+      PipelineCredential.token,
+      name
+    );
+
+    let content = {};
+    let statusCode = 200;
+    if (err !== undefined) {
+      statusCode = 400;
+      content = { error: err };
+      this.logger.error(
+        "Failed to onboard " +
+          name +
+          "(" +
+          cg.sdk +
+          ", " +
+          cg.resourceProvider +
+          ").",
+        err
+      );
+    } else {
+      statusCode = 200;
+      (content =
+        "Succeed to onboard " +
+        name +
+        "(" +
+        cg.sdk +
+        ", " +
+        cg.resourceProvider +
+        ")."),
+        this.logger.info(content);
+    }
+
+    return this.json(content, statusCode);
+  }
+
+  /*onboard one codegeneration, submit generated code to sdk repo and readme to swagger repo. */
+  @httpGet("/:codegenname/onboard")
+  public async OnboardSDKCodeGenerationGet(
+    request: Request
+  ): Promise<JsonResult> {
+    const name = request.params.codegenname;
+
+    let {
+      codegen: cg,
+      err: getErr,
+    } = await CodeGenerationTable.getSDKCodeGenerationByName(
+      CodegenDBCredentials,
+      name
+    );
+
+    if (getErr !== undefined || cg === undefined) {
+      this.logger.info(
+        "code generation " + name + " does not exist. No onboard triggered."
+      );
+      return this.json(
+        { error: "No available code generation to onboard." },
+        400
+      );
+    }
+
+    const err = await CodeGenerateHandler.SubmitGeneratedSDKCode(
+      PipelineCredential.token,
+      name
+    );
+
+    let content = {};
+    let statusCode = 200;
+    if (err !== undefined) {
+      statusCode = 400;
+      content = { error: err };
+      this.logger.error(
+        "Failed to onboard " +
+          name +
+          "(" +
+          cg.sdk +
+          ", " +
+          cg.resourceProvider +
+          ").",
+        err
+      );
+    } else {
+      statusCode = 200;
+      (content =
+        "Succeed to onboard " +
+        name +
+        "(" +
+        cg.sdk +
+        ", " +
+        cg.resourceProvider +
+        ")."),
+        this.logger.info(content);
+    }
+
+    return this.json(content, statusCode);
+  }
+  /*generate code snipper. */
+  @httpPost("/codeSnipper")
+  public async GenerateSDKCodeSnipper(request: Request) {
+    return this.json("Not Implemented", 200);
+  }
+
+  /* submit pipeline result to cosmosdb. */
+  @httpPost("/:codegenname/taskResult")
+  public async PublishPipelineResult(request: Request): Promise<JsonResult> {
+    const name = request.params.codegenname;
+    const buildId: string = request.body.pipelineBuildId;
+    const result: CodegenPipelineTaskResult = request.body.taskResult;
+    await this.pipelineResultCol.put(buildId, result);
+
+    return undefined;
   }
 }

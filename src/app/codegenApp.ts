@@ -5,11 +5,14 @@ import * as bodyParser from "body-parser";
 import { ManagedIdentityCredential } from "@azure/identity";
 import { SecretClient } from "@azure/keyvault-secrets";
 import { ENVKEY } from "../lib/Model";
-import { DepthDBCredentials, CodegenDBCredentials } from "../lib/DBCredentials";
+import {
+  DepthDBCredentials,
+  CodegenDBCredentials,
+} from "../lib/sqldb/DBCredentials";
 
 import "../controllers/DepthConverageController";
 import "../controllers/CodeGenerateController";
-import { PipelineCredential } from "../lib/PipelineCredential";
+import { PipelineCredential } from "../lib/pipeline/PipelineCredential";
 import { CompleteCodeGenerationTask } from "../lib/CompleteCodeGenerationTask";
 import { CodegenAppLogger } from "../lib/CodegenAppLogger";
 import { config } from "../config";
@@ -18,16 +21,26 @@ import { Config } from "../config/Config";
 import { Logger } from "../lib/Logger";
 import { serializeError } from "serialize-error";
 import { default as _ } from "lodash";
+import { CodegenPipelineBuildResultsCollection } from "../Logger/mongo/CodegenPipelineBuildResultsCollection";
+import { DbConnection } from "../Logger/mongo/DbConnection";
+import {
+  CustomersThumbprints,
+  getCustomersThumbprints,
+  ensureAuth,
+} from "../lib/auth";
+import { getHttpServer, getHttpsServer } from "../webserver/httpServer";
 
 class CodegenApp {
   private port = this.normalizePort(process.env.PORT || "3000");
   private container: Container;
   private logger: Logger;
+  private pipelineResultCol: CodegenPipelineBuildResultsCollection | undefined;
   public async start(): Promise<void> {
+    this.buildMongoDBCollection();
     this.buildLogger();
     await this.init();
     this.buildContainer();
-    this.buildExpress();
+    await this.buildExpress();
     this.buildSchedulerTask();
   }
 
@@ -65,6 +78,12 @@ class CodegenApp {
     PipelineCredential.token = process.env[ENVKEY.ENV_REPO_ACCESS_TOKEN];
   }
 
+  private buildMongoDBCollection(): void {
+    this.pipelineResultCol = new CodegenPipelineBuildResultsCollection(
+      new DbConnection(config.database)
+    );
+  }
+
   private buildLogger(): void {
     this.logger = new CodegenAppLogger(config);
   }
@@ -74,9 +93,14 @@ class CodegenApp {
     this.container
       .bind<Logger>(InjectableTypes.Logger)
       .toConstantValue(this.logger);
+    this.container
+      .bind<CodegenPipelineBuildResultsCollection>(
+        InjectableTypes.PipelineResultCol
+      )
+      .toConstantValue(this.pipelineResultCol);
   }
 
-  private buildExpress(): void {
+  private async buildExpress(): Promise<void> {
     const errorHandler: express.ErrorRequestHandler = (err, req, res, next) => {
       this.logger.error("Exception was thrown during request", {
         err: serializeError(err),
@@ -89,32 +113,93 @@ class CodegenApp {
       // this.logger.error("Exception was thrown during request");
     };
 
-    const server = new InversifyExpressServer(this.container);
+    const customerThumbprints: CustomersThumbprints = await getCustomersThumbprints(
+      config.customers
+    );
 
-    server.setConfig((app) => {
-      app.use(
-        express.urlencoded({
-          extended: true,
-        })
-      );
-      app.use(
-        bodyParser.urlencoded({
-          extended: true,
-        })
-      );
-      app.use(bodyParser.json());
-      app.use(express.json());
+    if (!config.enableHttps) {
+      const server = new InversifyExpressServer(this.container);
 
-      app.use(errorHandler);
-    });
-    const serverInstance = server.build();
-    serverInstance.get("/", function (req, res) {
-      res.send("welcome to codegen app service.");
-    });
+      server.setConfig((app) => {
+        app.use(
+          express.urlencoded({
+            extended: true,
+          })
+        );
+        app.use(
+          bodyParser.urlencoded({
+            extended: true,
+          })
+        );
+        app.use(bodyParser.json());
+        app.use(express.json());
 
-    var port = this.normalizePort(process.env.PORT || "3000");
-    serverInstance.listen(port);
-    this.logger.info("codegen app server started, listen on " + port);
+        app.use(errorHandler);
+      });
+      const serverInstance = server.build();
+      serverInstance.get("/", function (req, res) {
+        res.send("welcome to codegen app service.");
+      });
+
+      const httpServer = getHttpServer(serverInstance);
+      httpServer.listen(config.httpPort, () => {
+        this.logger.info(`Listening http on port: ${config.httpPort}`);
+      });
+    } else {
+      const httpsserver = new InversifyExpressServer(this.container);
+      httpsserver.setConfig((app) => {
+        app.use(
+          express.urlencoded({
+            extended: true,
+          })
+        );
+        app.use(
+          bodyParser.urlencoded({
+            extended: true,
+          })
+        );
+        app.use(bodyParser.json());
+        app.use(express.json());
+
+        app.use(errorHandler);
+
+        if (config.clientAuthEnabled) {
+          app.use((req, res, next) =>
+            ensureAuth(req, res, next, customerThumbprints)
+          );
+          setInterval(async () => {
+            try {
+              const latestCustomerThumbprints: CustomersThumbprints = await getCustomersThumbprints(
+                config.customers
+              );
+              for (const [key, value] of Object.entries(
+                latestCustomerThumbprints
+              )) {
+                if (customerThumbprints[key]) {
+                  customerThumbprints[key] = value;
+                }
+              }
+              this.logger.info(`Refresh client certificate successfully.`);
+            } catch (e) {
+              this.logger.error(
+                `Refresh client certificate failed. message:${e.message}`
+              );
+            }
+          }, config.refreshClientCertificateIntervalSeconds * 1000);
+        }
+      });
+      const httpsserverInstance = httpsserver.build();
+      httpsserverInstance.get("/", function (req, res) {
+        res.send("welcome to codegen app service.");
+      });
+      const httpsServer = getHttpsServer(httpsserverInstance);
+      var port = this.normalizePort(config.httpsPort || "8443");
+      httpsServer.listen(port, () => {
+        this.logger.info(`Listening https on port: ${config.httpsPort}`);
+      });
+    }
+
+    console.log(__dirname);
   }
 
   private buildSchedulerTask() {
