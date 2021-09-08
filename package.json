@@ -4,9 +4,9 @@
   "description": "Autorest Azure code generator",
   "main": "dist/src/app/index.js",
   "scripts": {
-    "start": "node dist/src/app/index.js",
-    "run": "node dist/src/app/index.js",
-    "debug": "node --max_old_space_size=4096 --inspect-brk dist/src/app/index.js",
+    "start": "node dist/src/codegenApp.js",
+    "run": "node dist/src/codegenApp.js",
+    "debug": "node --max_old_space_size=4096 --inspect-brk dist/src/codegenApp.js",
     "test": "jest --forceExit --coverage",
     "lint": " prettier --check \"**/*.ts\"",
     "eslint": "eslint --ext .ts test/",
@@ -21,6 +21,9 @@
     "clean": "ver > nul 2>&1 nul && npm run --silent clean-cmd || npm run --silent clean-bash",
     "clean-cmd": "if exist dist rmdir /s /q dist && exit 0 || exit 0 ",
     "clean-bash": "rm nul && rm -rf dist && exit 0 || exit 0"
+  },
+  "bin":{
+    "publish-codeen-pipeline-result": "./dist/src/tools/publishCodegenPipelineResult.js"
   },
   "jest": {
     "testEnvironment": "node"
@@ -67,6 +70,7 @@
     "csv-parser": "^3.0.0",
     "express": "^4.17.1",
     "express-validator": "^6.10.0",
+    "flatted": "^3.2.2",
     "fs-extra": "^9.1.0",
     "globby": "^11.0.2",
     "hashcode": "^1.0.3",
@@ -74,6 +78,7 @@
     "inversify-express-utils": "^6.3.2",
     "js-yaml": "^3.14.1",
     "lodash": "^4.17.21",
+    "memory-fs": "^0.5.0",
     "mongodb": "^3.6.10",
     "mssql": "^6.3.1",
     "net": "^1.0.2",
@@ -84,10 +89,12 @@
     "os": "^0.1.1",
     "path": "^0.12.7",
     "pluralize": "^8.0.0",
+    "properties-reader": "^2.2.0",
     "reflect-metadata": "^0.1.13",
     "serialize-error": "^8.1.0",
     "stack-typescript": "1.0.4",
     "ts-node": "^8.10.2",
+    "typeorm": "^0.2.37",
     "typescript": "^4.1.3",
     "utf-8-validate": "^5.0.4",
     "winston": "^3.3.3",
