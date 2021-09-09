@@ -42,6 +42,14 @@ export enum RepoType {
   DEVOPS = "devops",
 }
 
+export enum CodeGenerationPipelineTaskName {
+  SET_UP = "Setup",
+  GENERATE_CODE = "GenerateCode",
+  BUILD = "Build",
+  MOCK_TEST = "MockTest",
+  LIVE_TEST = "LiveTest",
+}
+
 export enum SQLStr {
   /*access depth coverage candidate table. */
   SQLSTR_INSERT_CANDIDATE = "INSERT INTO %s (resourceProvider, fullResourceType, fileName, apiVersion, tag, startDate, endDate) values (@resourceProvider, @fullResourceType, @fileName, @apiVersion, @tag, @startDate, @endDate)",
@@ -83,4 +91,13 @@ export function readCVSSync(filepath: string): any[] {
   const records = parse(fileContent, { columns: true });
   // console.log(records);
   return records;
+}
+
+export function GetBlobURL(commit: string, resourceProvider: string,  repoInfo: RepoInfo) {
+  if (repoInfo.type === RepoType.GITHUB) {
+    let githubpath: string = repoInfo.path.replace(".git", "");
+    return `${githubpath}/blob/${commit}/specification/${resourceProvider}/resource-manager/readme.md`
+  } else {
+    return ""; //ADO not implement.
+  }
 }

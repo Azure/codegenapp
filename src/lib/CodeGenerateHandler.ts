@@ -24,7 +24,7 @@ import {
   RepoInfo,
   SDKCodeGeneration,
 } from "./CodeGenerationModel";
-import { SDK, REPO, ORG, README } from "./common";
+import { SDK, REPO, ORG, README, GetBlobURL } from "./common";
 import { CodegenDBCredentials } from "./sqldb/DBCredentials";
 import * as yaml from "node-yaml";
 import { PipelineVariablesInterface } from "../config/pipelineVariables";
@@ -121,10 +121,24 @@ export class CodeGenerateHandler {
       const { org: sdkorg, repo: sdkreponame } = getGitRepoInfo(
         rpToGen.sdkRepo
       );
+
+      /*Get readme github url with commit. */
+      let readmeCommit = rpToGen.commit;
+      if (readmeCommit === undefined || readmeCommit.length === 0) {
+        const curCommit = await getCurrentCommit(
+          octo,
+          swaggerorg,
+          swaggerreponame,
+          rpToGen.swaggerRepo.branch
+        );
+        readmeCommit = curCommit.commitSha;
+      }
+      let readmeurl: string = GetBlobURL(readmeCommit, rpToGen.RPName, rpToGen.swaggerRepo);
       const v: PipelineVariablesInterface = {
         variables: {
           CodeGenerationName: name,
           SDK: sdk,
+          SERVICE_TYPE: rpToGen.serviceType,
           stages: st.join(";"),
           SPEC_REPO_TYPE: rpToGen.swaggerRepo.type,
           SPEC_REPO_URL: rpToGen.swaggerRepo.path
@@ -140,6 +154,7 @@ export class CodeGenerateHandler {
           SDK_REPO_BASE_BRANCH: rpToGen.sdkRepo.branch,
           SDK_REPO_OWNER: sdkorg,
           SDK_REPO_NAME: sdkreponame,
+          README_FILE_GITHUB_URL_WITH_COMMIT: readmeurl,
         },
       };
       fs.writeFileSync("Variables.yml", yaml.dump(v));
@@ -643,11 +658,21 @@ export class CodeGenerateHandler {
         cgreponame !== undefined ? cgreponame : REPO.DEPTH_COVERAGE_REPO,
         branch
       );
-      const uperr = await CodeGenerationTable.UpdateSDKCodeGenerationValue(
+      // const uperr = await CodeGenerationTable.UpdateSDKCodeGenerationValue(
+      //   CodegenDBCredentials,
+      //   name,
+      //   CodeGenerationDBColumn.CODE_GENERATION_COLUMN_STATUS,
+      //   CodeGenerationStatus.CODE_GENERATION_STATUS_SUBMIT
+      // );
+      /* update the code generation status and lastpipelineid. */
+      const values = {
+        [CodeGenerationDBColumn.CODE_GENERATION_COLUMN_PIPELINEBUILDID]: "",
+        [CodeGenerationDBColumn.CODE_GENERATION_COLUMN_STATUS]: CodeGenerationStatus.CODE_GENERATION_STATUS_SUBMIT,
+      };
+      const uperr = await CodeGenerationTable.UpdateSDKCodeGenerationValues(
         CodegenDBCredentials,
         name,
-        CodeGenerationDBColumn.CODE_GENERATION_COLUMN_STATUS,
-        CodeGenerationStatus.CODE_GENERATION_STATUS_SUBMIT
+        values
       );
     } catch (e) {
       console.log(e);
@@ -836,12 +861,22 @@ export class CodeGenerateHandler {
     }
 
     if (custmizeerr === undefined) {
-      /* update the code generation status. */
-      const uperr = await CodeGenerationTable.UpdateSDKCodeGenerationValue(
+      // /* update the code generation status. */
+      // const uperr = await CodeGenerationTable.UpdateSDKCodeGenerationValue(
+      //   CodegenDBCredentials,
+      //   name,
+      //   CodeGenerationDBColumn.CODE_GENERATION_COLUMN_STATUS,
+      //   CodeGenerationStatus.CODE_GENERATION_STATUS_CUSTOMIZING
+      // );
+      /* update the code generation status and lastpipelineid. */
+      const values = {
+        [CodeGenerationDBColumn.CODE_GENERATION_COLUMN_PIPELINEBUILDID]: "",
+        [CodeGenerationDBColumn.CODE_GENERATION_COLUMN_STATUS]: CodeGenerationStatus.CODE_GENERATION_STATUS_CUSTOMIZING,
+      };
+      const uperr = await CodeGenerationTable.UpdateSDKCodeGenerationValues(
         CodegenDBCredentials,
         name,
-        CodeGenerationDBColumn.CODE_GENERATION_COLUMN_STATUS,
-        CodeGenerationStatus.CODE_GENERATION_STATUS_CUSTOMIZING
+        values
       );
     }
     /* delete sdk rp branch. */

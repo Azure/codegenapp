@@ -49,6 +49,11 @@ export const environmentConfigDev: Partial<Config> = {
       path: "https://github.com/chunyu3/azure-cli-extensions",
       branch: "main",
     },
+    [SDK.DOTNET_SDK]: {
+      type: RepoType.GITHUB,
+      path: "https://github.com/chunyu3/azure-sdk-for-net",
+      branch: "main",
+    },
   },
   database: {
     mongoConnectionString:

@@ -95,6 +95,8 @@ export class CodeGenerateController extends BaseController {
     const platform = request.body.platform;
     const stype = request.body.serviceType;
     const tag = request.body.tag;
+    const commit = request.body.commit;
+    const owners = request.body.contactAliases;
 
     let codegenRepo: RepoInfo = undefined;
     if (request.body.codegenRepo !== undefined) {
@@ -178,7 +180,8 @@ export class CodeGenerateController extends BaseController {
       stype,
       swaggerRepo,
       codegenRepo,
-      sdkRepo
+      sdkRepo,
+      commit
     );
     if (tag !== undefined) rs.tag = tag;
     rs.generateResourceList();
@@ -193,7 +196,8 @@ export class CodeGenerateController extends BaseController {
       codegenorg,
       codegenreponame,
       codegenRepo.branch,
-      rs
+      rs,
+      owners !== undefined ? owners.join(";") : ""
     );
     let content = {};
     let statusCode = 200;
@@ -228,7 +232,7 @@ export class CodeGenerateController extends BaseController {
 
     if (getErr !== undefined || cg === undefined) {
       this.logger.info("The code generation (" + name + ") does not exist.");
-      return this.json("Not Exist.", 400);
+      return this.json({ error: "Not Exist."}, 400);
     }
 
     return this.json(cg, 200);
@@ -275,13 +279,20 @@ export class CodeGenerateController extends BaseController {
       );
     } else {
       statusCode = 200;
-      content =
-        "Updated code generation " +
-        name +
-        " for " +
-        cg.resourceProvider +
-        " sdk:" +
-        cg.sdk;
+      // content =
+      //   "Updated code generation " +
+      //   name +
+      //   " for " +
+      //   cg.resourceProvider +
+      //   " sdk:" +
+      //   cg.sdk;
+      let {
+        codegen: cg
+      } = await CodeGenerationTable.getSDKCodeGenerationByName(
+        CodegenDBCredentials,
+        name
+      );
+      content = cg;
       this.logger.info(
         "Updated code generation " +
           name +
@@ -341,7 +352,7 @@ export class CodeGenerateController extends BaseController {
 
     if (getErr !== undefined || cg === undefined) {
       this.logger.info("The code generation (" + name + ") does not exist.");
-      return this.json("Not Exist.", 400);
+      return this.json({ error: "Not Exist." }, 400);
     }
 
     const pipelineid: string = cg.lastPipelineBuildID;

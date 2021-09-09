@@ -7,9 +7,10 @@ import {
 import {
   CodegenCodeGenerateTaskResult,
   CodegenPipelineTaskResult,
+  TestTaskResult,
 } from "./PipelineTask";
 import * as yaml from "node-yaml";
-import { PipelineRunningResult } from "../lib/CodeGenerationModel";
+import { CodeGenerationPipelineTaskName } from "../lib/common";
 
 export function GenerateCodeGeneratePipelineTaskResult(
   codegenname: string,
@@ -22,6 +23,7 @@ export function GenerateCodeGeneratePipelineTaskResult(
   const lineReader = require("line-reader");
   let errorNum: number = 0;
   let warnNum: number = 0;
+  let codeCoverage: number = 0;
   let messages: MessageRecord[] = [];
   // lineReader.eachLine(logfile, (line) => {
   //     console.log(line);
@@ -38,7 +40,8 @@ export function GenerateCodeGeneratePipelineTaskResult(
       console.log(line);
       if (
         line.toLowerCase().indexOf("error") !== -1 ||
-        line.toLowerCase().indexOf("FAIL") !== -1
+        line.toLowerCase().indexOf("fail") !== -1 ||
+        line.toLowerCase().indexOf("fatal") !== -1
       ) {
         errorNum++;
         let message: RawMessageRecord = {
@@ -50,8 +53,22 @@ export function GenerateCodeGeneratePipelineTaskResult(
         messages.push(message);
       } else if (line.toLowerCase().indexOf("warning") !== -1) {
         warnNum++;
+      } else if (line.toLowerCase().indexOf("exception") !== -1) {
+        errorNum++;
+        let message: RawMessageRecord = {
+          level: "Error",
+          message: line,
+          time: new Date(),
+          type: "Raw",
+        };
+        messages.push(message);
+      } else if (line.toLowerCase().indexOf("coverage:") !== -1) {
+        let coverage: string = line.replace("coverage:", "").trim();
+        codeCoverage= parseFloat(coverage)/100;
       }
     });
+  } else {
+    console.log("logfile " + logfile + " does not exist.");
   }
 
   let result: CodegenPipelineTaskResult = {
@@ -70,11 +87,15 @@ export function GenerateCodeGeneratePipelineTaskResult(
   //   result.messages = messages;
   // }
 
-  if (task === "GenerateCode") {
+  
+  if (task === CodeGenerationPipelineTaskName.GENERATE_CODE) {
     (result as CodegenCodeGenerateTaskResult).codeUrl = FormatCodeUrl(
       codegenname,
       pipelineBuildId
     );
+  }
+  if (task === CodeGenerationPipelineTaskName.MOCK_TEST || task === CodeGenerationPipelineTaskName.LIVE_TEST) {
+    (result as TestTaskResult).codeCoverage = codeCoverage;
   }
   return result;
 }

@@ -565,13 +565,13 @@ export class DepthCoverageHandler {
         const { org: codegenorg, repo: codegenreponame } = getGitRepoInfo(
           codegenRepo
         );
-        const branch = name;
+        const basebranch = codegenRepo.branch;
         const err = await CodeGenerateHandler.CreateSDKCodeGeneration(
           name,
           PipelineCredential.token,
           codegenorg,
           codegenreponame,
-          branch,
+          basebranch,
           rs
         );
 

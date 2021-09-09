@@ -120,7 +120,7 @@ export const configSchema = convict<Config>({
       path: {
         doc: "The url path of terraform repository.",
         format: String,
-        default: "https://github.com/chunyu3/terraform-provider-azurerm",
+        default: "https://github.com/microsoft/terraform-provider-azurerm",
       },
       branch: {
         doc: "The main branch of terraform repository.",
@@ -137,7 +137,7 @@ export const configSchema = convict<Config>({
       path: {
         doc: "The url path of go repository.",
         format: String,
-        default: "https://github.com/chunyu3/azure-sdk-for-go",
+        default: "https://github.com/Azure/azure-sdk-for-go",
       },
       branch: {
         doc: "The main branch of go repository.",
@@ -154,7 +154,7 @@ export const configSchema = convict<Config>({
       path: {
         doc: "The url path of clicore repository.",
         format: String,
-        default: "https://github.com/chunyu3/azure-cli",
+        default: "https://github.com/Azure/azure-cli",
       },
       branch: {
         doc: "The main branch of clicore repository.",
@@ -171,7 +171,24 @@ export const configSchema = convict<Config>({
       path: {
         doc: "The url path of cliextension repository.",
         format: String,
-        default: "https://github.com/chunyu3/azure-cli-extensions",
+        default: "https://github.com/Azure/azure-cli-extensions",
+      },
+      branch: {
+        doc: "The main branch of cliextension repository.",
+        format: String,
+        default: "main",
+      },
+    },
+    [SDK.DOTNET_SDK]: {
+      type: {
+        doc: "The cliextension repository type.",
+        format: String,
+        default: RepoType.GITHUB,
+      },
+      path: {
+        doc: "The url path of cliextension repository.",
+        format: String,
+        default: "https://github.com/Azure/azure-sdk-for-net",
       },
       branch: {
         doc: "The main branch of cliextension repository.",
@@ -186,6 +203,7 @@ export const configSchema = convict<Config>({
       format: String,
       default:
         "mongodb://sdkcodegen:g2MhYaEUT4CMDdw18BGbduTkjFUFXB69tX6xpCHFEzgkp8mZBuTFY8OdzvDJctBdpOQiSctmjmOyKahnkr2ZeA==@sdkcodegen.mongo.cosmos.azure.com:10255/?ssl=true&retrywrites=false&maxIdleTimeMS=120000&appName=@sdkcodegen@",
+      env: "MongoStr",
     },
     mongoDbName: {
       doc: "The mongo database name.",

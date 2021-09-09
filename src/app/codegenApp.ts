@@ -29,6 +29,7 @@ import {
   ensureAuth,
 } from "../lib/auth";
 import { getHttpServer, getHttpsServer } from "../webserver/httpServer";
+import { CICodeGenerationTriggerTask } from "../lib/CICodeGenerationTriggerTask";
 
 class CodegenApp {
   private port = this.normalizePort(process.env.PORT || "3000");
@@ -208,6 +209,12 @@ class CodegenApp {
     cron.schedule("* * * * *", function () {
       this.logger.info("running auto-complete task every minute");
       CompleteCodeGenerationTask();
+    });
+
+    /* CI code generation schedule-trigger. */
+    cron.schedule("5 1 * * 0", function () {
+      this.logger.info("running CI task every week");
+      CICodeGenerationTriggerTask();
     });
 
     cron.schedule("* * * * *", function () {
