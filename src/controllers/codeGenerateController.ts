@@ -23,8 +23,8 @@ import {
     CodegenPipelineTaskResult,
     TaskResult,
 } from '../models/entity/taskResultMongodb/entity/TaskResult';
-import { CodeGenerationService } from '../services/codeGenerationService';
 import { CodeGeneration } from '../models/entity/codegenSqlServer/entity/CodeGeneration';
+import { CodeGenerationService } from '../service/codeGenerationService';
 
 @controller('/codegenerations')
 export class CodeGenerateController extends BaseController {

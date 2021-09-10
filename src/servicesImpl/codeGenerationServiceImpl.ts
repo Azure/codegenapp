@@ -1,6 +1,5 @@
 import { inject, injectable } from 'inversify';
 import { InjectableTypes } from '../injectableTypes/injectableTypes';
-import { CodeGenerationDao } from '../dao/codeGenerationDao';
 import {
     CodeGenerationDBColumn,
     CodeGenerationStatus,
@@ -15,22 +14,24 @@ import * as yaml from 'node-yaml';
 import { CodeGenerationType, ORG, README, REPO, SDK } from '../models/common';
 import { PipelineVariablesInterface } from '../models/pipelineVariables';
 import { CodeGeneration } from '../models/entity/codegenSqlServer/entity/CodeGeneration';
-import { GithubDao } from '../dao/githubDao';
-import { TaskResultDao } from '../dao/taskResultDao';
 import {
     CodegenPipelineTaskResult,
     TaskResult,
 } from '../models/entity/taskResultMongodb/entity/TaskResult';
 import { Logger } from '../utils/logger/Logger';
-import * as path from 'path';
+import { CodeGenerationService } from '../service/codeGenerationService';
+import { CodeGenerationDao } from '../dao/codeGenerationDao';
+import { GithubDao } from '../dao/githubDao';
+import { TaskResultDao } from '../dao/taskResultDao';
 const MemoryFileSystem = require('memory-fs');
 
 @injectable()
-export class CodeGenerationService {
+export class CodeGenerationServiceImpl implements CodeGenerationService {
     @inject(InjectableTypes.CodeGenerationDao)
     private codeGenerationDao: CodeGenerationDao;
     @inject(InjectableTypes.GithubDao) private githubDao: GithubDao;
-    @inject(InjectableTypes.TaskResultDao) private taskResultDao: TaskResultDao;
+    @inject(InjectableTypes.TaskResultDao)
+    private taskResultDao: TaskResultDao;
     @inject(InjectableTypes.Logger) private logger: Logger;
 
     public async updateCodeGenerationValuesByName(name: string, values: any) {

@@ -1,11 +1,11 @@
 import { TfCandidateResource } from '../models/entity/depthCoverageSqlServer/entity/tfCandidateResource';
 import { CliCandidateOperation } from '../models/entity/depthCoverageSqlServer/entity/cliCandidateOperation';
+import { RepoInfo } from '../models/CodeGenerationModel';
 
-export interface DepthCoverageDao {
+export interface DepthCoverageService {
     ingestCandidates(
         candidates: TfCandidateResource[] | CliCandidateOperation[],
         sdk: string
     );
-    queryCandidateResources(depthCoverageType: string);
-    queryDepthCoverageReport(depthCoverageType: string);
+    triggerOnboard(token: string, codegenRepo: RepoInfo, supported: string[]);
 }

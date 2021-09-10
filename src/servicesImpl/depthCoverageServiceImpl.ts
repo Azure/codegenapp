@@ -1,7 +1,6 @@
 import { inject, injectable } from 'inversify';
 import { InjectableTypes } from '../injectableTypes/injectableTypes';
-import { DepthCoverageDao } from '../dao/depthCoverageDao';
-import { CodeGenerationDao } from '../dao/codeGenerationDao';
+import { DepthCoverageDaoImpl } from '../daoImpl/depthCoverageDaoImpl';
 import { CandidateResource } from '../models/ResourceCandiateModel';
 import {
     JsonOperationMap,
@@ -18,15 +17,17 @@ import { SDK } from '../models/common';
 import { CodeGenerationStatus, RepoInfo } from '../models/CodeGenerationModel';
 import { TfCandidateResource } from '../models/entity/depthCoverageSqlServer/entity/tfCandidateResource';
 import { CliCandidateOperation } from '../models/entity/depthCoverageSqlServer/entity/cliCandidateOperation';
+import { DepthCoverageService } from '../service/depthCoverageService';
+import { CodeGenerationDao } from '../dao/codeGenerationDao';
 
 @injectable()
-export class DepthCoverageService {
+export class DepthCoverageServiceImpl implements DepthCoverageService {
     @inject(InjectableTypes.DepthCoverageDao)
-    private depthCoverageDao: DepthCoverageDao;
+    private depthCoverageDao: DepthCoverageDaoImpl;
     @inject(InjectableTypes.CodeGenerationDao)
     private codeGenerationDao: CodeGenerationDao;
 
-    public async retriveResourceToGenerate(
+    public async retrieveResourceToGenerate(
         depthcoverageType: string,
         supportedResources: CandidateResource[] = undefined
     ): Promise<ResourceAndOperation[]> {
@@ -328,7 +329,7 @@ export class DepthCoverageService {
                 }
             }
         }
-        const tfResources = await this.retriveResourceToGenerate(
+        const tfResources = await this.retrieveResourceToGenerate(
             DepthCoverageType.DEPTH_COVERAGE_TYPE_TF_NOT_SUPPORT_RESOURCE,
             tfsupportedResource
         );
@@ -354,7 +355,7 @@ export class DepthCoverageService {
             }
         }
 
-        const cliresources = await this.retriveResourceToGenerate(
+        const cliresources = await this.retrieveResourceToGenerate(
             DepthCoverageType.DEPTH_COVERAGE_TYPE_CLI_NOT_SUPPORT_OPERATION,
             cliSupportedResource
         );

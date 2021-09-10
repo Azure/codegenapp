@@ -8,9 +8,8 @@ import { InjectableTypes } from '../injectableTypes/injectableTypes';
 import { inject } from 'inversify';
 import { environmentConfigDev } from '../config/dev';
 import { config } from '../config';
-import { DepthCoverageDao } from '../dao/depthCoverageDao';
 import { ENV } from '../config/env';
-import { DepthCoverageService } from '../services/depthCoverageService';
+import { DepthCoverageService } from '../service/depthCoverageService';
 
 @controller('/depthCoverage')
 export class DepthCoverageController extends BaseController {

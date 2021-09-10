@@ -13,16 +13,21 @@ import { Config } from './config/config';
 import { AuthUtils, CustomersThumbprints } from './utils/authUtils';
 import { ENV } from './config/env';
 import { Connection, createConnection } from 'typeorm';
-import { CodeGenerationDao } from './dao/codeGenerationDao';
-import { DepthCoverageDao } from './dao/depthCoverageDao';
-import { TaskResultDao } from './dao/taskResultDao';
-import { CodeGenerationService } from './services/codeGenerationService';
-import { GithubDao } from './dao/githubDao';
+import { CodeGenerationDaoImpl } from './daoImpl/codeGenerationDaoImpl';
+import { DepthCoverageDaoImpl } from './daoImpl/depthCoverageDaoImpl';
+import { TaskResultDaoImpl } from './daoImpl/taskResultDaoImpl';
+import { CodeGenerationServiceImpl } from './servicesImpl/codeGenerationServiceImpl';
+import { GithubDaoImpl } from './daoImpl/githubDaoImpl';
 import { stringify } from 'flatted';
-import { DepthCoverageService } from './services/depthCoverageService';
+import { DepthCoverageServiceImpl } from './servicesImpl/depthCoverageServiceImpl';
 import * as http from 'http';
 import { Logger } from './utils/logger/Logger';
 import { CodegenAppLogger } from './utils/logger/CodegenAppLogger';
+import { CodeGenerationService } from './service/codeGenerationService';
+import { DepthCoverageService } from './service/depthCoverageService';
+import { CodeGenerationDao } from './dao/codeGenerationDao';
+import { GithubDao } from './dao/githubDao';
+import { TaskResultDao } from './dao/taskResultDao';
 
 class CodegenApp {
     private container: Container;
@@ -69,9 +74,9 @@ class CodegenApp {
                 process.env[secretProperties.name] = secret.value;
             }
         } catch (e) {
-            this.logger.error('Failed to list key secrets');
-            this.logger.error(e);
-            this.logger.info('use the credential locally for test');
+            this.logger.warn('Failed to list key secrets');
+            this.logger.warn(e);
+            this.logger.warn('use the credential locally for test');
         }
     }
 
@@ -142,29 +147,31 @@ class CodegenApp {
             .toConstantValue(this.sqlServerCodegenConnection);
         this.container
             .bind<CodeGenerationService>(InjectableTypes.CodeGenerationService)
-            .to(CodeGenerationService);
+            .to(CodeGenerationServiceImpl);
         this.container
             .bind<CodeGenerationDao>(InjectableTypes.CodeGenerationDao)
-            .to(CodeGenerationDao);
+            .to(CodeGenerationDaoImpl);
 
         this.container
             .bind<Connection>(InjectableTypes.DepthCoverageSqlServerConnection)
             .toConstantValue(this.sqlServerDepthCoverageConnection);
         this.container
             .bind<DepthCoverageService>(InjectableTypes.DepthCoverageService)
-            .to(DepthCoverageService);
+            .to(DepthCoverageServiceImpl);
         this.container
-            .bind<DepthCoverageDao>(InjectableTypes.DepthCoverageDao)
-            .to(DepthCoverageDao);
+            .bind<DepthCoverageDaoImpl>(InjectableTypes.DepthCoverageDao)
+            .to(DepthCoverageDaoImpl);
 
         this.container
             .bind<Connection>(InjectableTypes.MongoDbConnection)
             .toConstantValue(this.mongoDbConnection);
         this.container
             .bind<TaskResultDao>(InjectableTypes.TaskResultDao)
-            .to(TaskResultDao);
+            .to(TaskResultDaoImpl);
 
-        this.container.bind<GithubDao>(InjectableTypes.GithubDao).to(GithubDao);
+        this.container
+            .bind<GithubDao>(InjectableTypes.GithubDao)
+            .to(GithubDaoImpl);
 
         this.container.bind<AuthUtils>(InjectableTypes.AuthUtils).to(AuthUtils);
     }
