@@ -19,7 +19,7 @@ import { TfCandidateResource } from '../models/entity/depthCoverageSqlServer/ent
 import { CliCandidateOperation } from '../models/entity/depthCoverageSqlServer/entity/cliCandidateOperation';
 import { DepthCoverageService } from '../service/depthCoverageService';
 import { CodeGenerationDao } from '../dao/codeGenerationDao';
-import { Logger } from '../utils/logger/Logger';
+import { Logger } from '../utils/logger/logger';
 
 @injectable()
 export class DepthCoverageServiceImpl implements DepthCoverageService {

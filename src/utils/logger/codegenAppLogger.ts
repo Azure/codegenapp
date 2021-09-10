@@ -1,6 +1,6 @@
 import * as winston from 'winston';
 import { Config } from '../../config/config';
-import { Logger } from './Logger';
+import { Logger } from './logger';
 import { Env } from '../../config/environment';
 import WinstonDailyRotate = require('winston-daily-rotate-file');
 

@@ -18,7 +18,7 @@ import {
     CodegenPipelineTaskResult,
     TaskResult,
 } from '../models/entity/taskResultMongodb/entity/TaskResult';
-import { Logger } from '../utils/logger/Logger';
+import { Logger } from '../utils/logger/logger';
 import { CodeGenerationService } from '../service/codeGenerationService';
 import { CodeGenerationDao } from '../dao/codeGenerationDao';
 import { GithubDao } from '../dao/githubDao';

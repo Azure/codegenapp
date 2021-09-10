@@ -6,7 +6,7 @@ import { PeerCertificate, TLSSocket } from 'node:tls';
 import fetch, { RequestInit, Response } from 'node-fetch';
 import { inject, injectable } from 'inversify';
 import { InjectableTypes } from '../injectableTypes/injectableTypes';
-import { Logger } from './logger/Logger';
+import { Logger } from './logger/logger';
 import * as retry from 'async-retry';
 
 @injectable()
