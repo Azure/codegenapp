@@ -142,10 +142,10 @@ export class CodeGenerateController extends BaseController {
     @httpGet('/:codegenname')
     public async getSDKCodeGeneration(request: Request): Promise<JsonResult> {
         const name = request.params.codegenname;
-        const codegen = this.codeGenerationService.getCodeGenerationByName(
+        const codegen = await this.codeGenerationService.getCodeGenerationByName(
             name
         );
-        if (!!codegen) {
+        if (!codegen) {
             this.logger.info(
                 'The code generation (' + name + ') does not exist.'
             );
@@ -166,7 +166,7 @@ export class CodeGenerateController extends BaseController {
             name
         );
 
-        if (!!codegen) {
+        if (!codegen) {
             this.logger.info(
                 'The code generation (' + name + ') does not exist.'
             );
@@ -203,7 +203,7 @@ export class CodeGenerateController extends BaseController {
             name
         );
 
-        if (!!codegen) {
+        if (!codegen) {
             this.logger.info(
                 'The code generation (' + name + ') does not exist.'
             );
@@ -235,7 +235,7 @@ export class CodeGenerateController extends BaseController {
             name
         );
 
-        if (!!codegen) {
+        if (!codegen) {
             this.logger.info(
                 'The code generation (' + name + ') does not exist.'
             );
@@ -291,7 +291,7 @@ export class CodeGenerateController extends BaseController {
             name
         );
 
-        if (!!codegen) {
+        if (!codegen) {
             this.logger.info(
                 'The code generation (' + name + ') does not exist.'
             );
@@ -330,7 +330,7 @@ export class CodeGenerateController extends BaseController {
             name
         );
 
-        if (!!codegen) {
+        if (!codegen) {
             this.logger.info(
                 'The code generation (' + name + ') does not exist.'
             );
@@ -414,7 +414,7 @@ export class CodeGenerateController extends BaseController {
             name
         );
 
-        if (!!codegen) {
+        if (!codegen) {
             const message =
                 'code generation ' +
                 name +
@@ -516,7 +516,7 @@ export class CodeGenerateController extends BaseController {
             name
         );
 
-        if (!!codegen) {
+        if (!codegen) {
             this.logger.info(
                 'code generation ' +
                     name +
@@ -619,7 +619,7 @@ export class CodeGenerateController extends BaseController {
             name
         );
 
-        if (!!codegen) {
+        if (!codegen) {
             this.logger.info(
                 'code generation ' +
                     name +
@@ -657,7 +657,7 @@ export class CodeGenerateController extends BaseController {
             name
         );
 
-        if (!!codegen) {
+        if (!codegen) {
             this.logger.info(
                 'code generation ' +
                     name +

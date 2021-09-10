@@ -32,13 +32,17 @@ export class CodegenAppLogger implements Logger {
             exitOnError: false,
             format: winston.format.combine(
                 addMeta(),
+                winston.format.errors({ stack: true }),
                 winston.format.timestamp(),
                 winston.format.printf((info) => {
-                    return JSON.stringify({
+                    const log = {
                         level: info.level,
                         timestamp: info.timestamp,
                         message: info.message,
-                    });
+                    };
+                    if (info.stack !== undefined)
+                        log['errorStack'] = info.stack;
+                    return JSON.stringify(log);
                 })
             ),
             transports: [
@@ -61,45 +65,27 @@ export class CodegenAppLogger implements Logger {
                     handleExceptions: true,
                     dirname: 'logs',
                 }),
-                // new winstonDailyFile({
-                //   filename: `${config.serviceName}-errors-%DATE%.log`,
-                //   datePattern: "YYYY-MM-DD-HH",
-                //   maxFiles: Number(config.loggingMaxFiles),
-                //   maxSize: config.loggingMaxFileSize,
-                //   level: "error",
-                //   handleExceptions: true,
-                //   dirname: "logs",
-                // }),
-                // new winstonDailyFile({
-                //   filename: `${config.serviceName}-combined-%DATE%.log`,
-                //   datePattern: "YYYY-MM-DD-HH",
-                //   maxFiles: Number(config.loggingMaxFiles),
-                //   maxSize: config.loggingMaxFileSize,
-                //   level: "debug",
-                //   handleExceptions: true,
-                //   dirname: "logs",
-                // }),
             ],
         });
     }
 
     public error(message: string, meta?: any): void {
-        this.logger.log('error', message, meta);
+        this.logger.error(message, meta);
     }
 
     public warn(message: string, meta?: any): void {
-        this.logger.log('warn', message, meta);
+        this.logger.warn(message, meta);
     }
 
     public info(message: string, meta?: any): void {
-        this.logger.log('info', message, meta);
+        this.logger.info(message, meta);
     }
 
     public debug(message: string, meta?: any): void {
-        this.logger.log('debug', message, meta);
+        this.logger.debug(message, meta);
     }
 
     public verbose(message: string, meta?: any): void {
-        this.logger.log('verbose', message, meta);
+        this.logger.verbose(message, meta);
     }
 }

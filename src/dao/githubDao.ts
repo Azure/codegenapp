@@ -1,12 +1,14 @@
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { Octokit } from '@octokit/rest';
 import { ENV } from '../config/env';
 import { IRepoInfo, RepoInfo } from '../models/CodeGenerationModel';
 import { MemoryFileSystem } from 'memory-fs';
-import * as path from 'path';
+import { InjectableTypes } from '../injectableTypes/injectableTypes';
 
 @injectable()
 export class GithubDao {
+    @inject(InjectableTypes.Logger) private logger;
+
     public client: Octokit = new Octokit({
         auth: process.env[ENV.GITHUB_TOKEN],
     });
@@ -140,11 +142,18 @@ export class GithubDao {
     }
 
     public async deleteBranch(org: string, repo: string, branch: string) {
-        await this.client.git.deleteRef({
-            owner: org,
-            repo,
-            ref: 'heads/' + branch,
-        });
+        try {
+            await this.client.git.deleteRef({
+                owner: org,
+                repo,
+                ref: 'heads/' + branch,
+            });
+        } catch (e) {
+            this.logger.warn(
+                `Delete Branch ${branch} Failed in ${org}/${repo}`,
+                e
+            );
+        }
     }
 
     /**

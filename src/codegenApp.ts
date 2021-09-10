@@ -55,13 +55,13 @@ class CodegenApp {
         }
 
         // load config from keyvault
-        const credential = new ManagedIdentityCredential();
-        const keyVaultUrl =
-            process.env[ENV.ENV_KEYVAULT_URL] ||
-            'https://codegencontrollerkv.vault.azure.net/';
-
-        const client = new SecretClient(keyVaultUrl, credential);
         try {
+            const credential = new ManagedIdentityCredential();
+            const keyVaultUrl =
+                process.env[ENV.ENV_KEYVAULT_URL] ||
+                'https://codegencontrollerkv.vault.azure.net/';
+
+            const client = new SecretClient(keyVaultUrl, credential);
             for await (let secretProperties of client.listPropertiesOfSecrets()) {
                 this.logger.info('Secret properties: ', secretProperties);
                 this.logger.info(secretProperties.name);
@@ -176,11 +176,7 @@ class CodegenApp {
             res,
             next
         ) => {
-            this.logger.error(`Exception was thrown during Request`, {
-                request: req,
-                error: err,
-            });
-            console.error(err);
+            this.logger.error(`Exception was thrown during Request`, err);
             res.status(500).send('Internal Server Error');
         };
 

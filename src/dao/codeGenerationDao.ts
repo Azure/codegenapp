@@ -65,7 +65,7 @@ export class CodeGenerationDao {
         filters: {} = undefined,
         filterCompleted: boolean = false
     ): Promise<CodeGeneration[]> {
-        if (!!filters) filters = {};
+        if (!filters) filters = {};
         if (filterCompleted) {
             filters['status'] =
                 'Not(Equal(completed) OR Equal(pipelineCompleted))';

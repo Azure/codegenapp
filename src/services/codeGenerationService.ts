@@ -658,6 +658,7 @@ export class CodeGenerationService {
         cg.codegenRepo = JSON.stringify(rpToGen.codegenRepo);
         cg.owner = owner === undefined ? '' : owner;
         cg.type = rpToGen.onboardType;
+        cg.status = CodeGenerationStatus.CODE_GENERATION_STATUS_SUBMIT;
 
         await this.codeGenerationDao.submitCodeGeneration(cg);
     }
