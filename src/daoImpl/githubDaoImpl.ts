@@ -150,7 +150,7 @@ export class GithubDaoImpl implements GithubDao {
      * @param token The github access token
      * @param rp The resource provider
      * @param sdk The target sdk, terrform, cli or others
-     * @param onbaordtype The onboard type, depth ad-hoc or others
+     * @param onboardType The onboard type, depth ad-hoc or others
      * @param codegenorg The codegen org
      * @param sdkorg The sdk org
      * @param swaggerorg The swagger org
@@ -159,29 +159,31 @@ export class GithubDaoImpl implements GithubDao {
     public async clearSDKCodeGenerationWorkSpace(
         rp: string,
         sdk: string,
-        onbaordtype: string,
-        codegenrepo: RepoInfo,
-        sdkrepo: RepoInfo,
-        swaggerrepo: RepoInfo,
+        onboardType: string,
+        codegenRepo: RepoInfo,
+        sdkRepo: RepoInfo,
+        swaggerRepo: RepoInfo,
         branch?: string
     ): Promise<void> {
         if (branch === undefined) {
-            branch = onbaordtype + '-' + sdk.toLowerCase() + '-' + rp;
+            branch = onboardType + '-' + sdk.toLowerCase() + '-' + rp;
         }
         /* delete depth-coverage rp branch */
-        const { org: cgorg, repo: cgreop } = this.getGitRepoInfo(codegenrepo);
-        await this.deleteBranch(cgorg, cgreop, branch);
+        const { org: cgOrg, repo: cgRepoName } = this.getGitRepoInfo(
+            codegenRepo
+        );
+        await this.deleteBranch(cgOrg, cgRepoName, branch);
 
-        const { org: sdkorg, repo: sdkreponame } = this.getGitRepoInfo(sdkrepo);
-        await this.deleteBranch(sdkorg, sdkreponame, branch);
-        let codebranch = branch + '-code';
-        await this.deleteBranch(sdkorg, sdkreponame, codebranch);
+        const { org: sdkOrg, repo: sdkRepoName } = this.getGitRepoInfo(sdkRepo);
+        await this.deleteBranch(sdkOrg, sdkRepoName, branch);
+        let codeBranch = branch + '-code';
+        await this.deleteBranch(sdkOrg, sdkRepoName, codeBranch);
 
         /*delete swagger rp branch */
-        const { org: swaggerorg, repo: swagger_repo } = this.getGitRepoInfo(
-            swaggerrepo
+        const { org: swaggerOrg, repo: swaggerRepoName } = this.getGitRepoInfo(
+            swaggerRepo
         );
-        await this.deleteBranch(swaggerorg, swagger_repo, branch);
+        await this.deleteBranch(swaggerOrg, swaggerRepoName, branch);
     }
 
     public async readFileFromRepo(
@@ -288,14 +290,14 @@ export class GithubDaoImpl implements GithubDao {
         fs: MemoryFileSystem,
         fileList: string[]
     ): Promise<string> {
-        const prdata = await this.getPullRequest(org, repo, prNumber);
-        const headbranch = prdata.head.ref;
+        const prData = await this.getPullRequest(org, repo, prNumber);
+        const headBranch = prData.head.ref;
         let retrievedFileLst: string[] = [];
         for (let file of fileList) {
             const content = await this.getBlobContent(
                 org,
                 repo,
-                headbranch,
+                headBranch,
                 file
             );
             if (content.length > 0) {

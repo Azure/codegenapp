@@ -65,7 +65,7 @@ export class CodeGenerationDaoImpl implements CodeGenerationDao {
         key: string,
         value: string
     ): Promise<any> {
-        let codegen = await this.repo.find({ name: name });
+        let codegen = await this.repo.findOne({ name: name });
         codegen[key] = value;
         await this.repo.save(codegen);
     }

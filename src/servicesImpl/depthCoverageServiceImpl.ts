@@ -19,6 +19,7 @@ import { TfCandidateResource } from '../models/entity/depthCoverageSqlServer/ent
 import { CliCandidateOperation } from '../models/entity/depthCoverageSqlServer/entity/cliCandidateOperation';
 import { DepthCoverageService } from '../service/depthCoverageService';
 import { CodeGenerationDao } from '../dao/codeGenerationDao';
+import { Logger } from '../utils/logger/Logger';
 
 @injectable()
 export class DepthCoverageServiceImpl implements DepthCoverageService {
@@ -26,21 +27,23 @@ export class DepthCoverageServiceImpl implements DepthCoverageService {
     private depthCoverageDao: DepthCoverageDaoImpl;
     @inject(InjectableTypes.CodeGenerationDao)
     private codeGenerationDao: CodeGenerationDao;
+    @inject(InjectableTypes.Logger)
+    private logger: Logger;
 
     public async retrieveResourceToGenerate(
-        depthcoverageType: string,
+        depthCoverageType: string,
         supportedResources: CandidateResource[] = undefined
     ): Promise<ResourceAndOperation[]> {
-        const opOrresources: any[] = await this.depthCoverageDao.queryDepthCoverageReport(
-            depthcoverageType
+        const opOrResources: any[] = await this.depthCoverageDao.queryDepthCoverageReport(
+            depthCoverageType
         );
         /*TODO: get the supported service from db. */
 
         let sdk = '';
         if (
-            depthcoverageType ===
+            depthCoverageType ===
                 DepthCoverageType.DEPTH_COVERAGE_TYPE_CLI_NOT_SUPPORT_OPERATION ||
-            depthcoverageType ===
+            depthCoverageType ===
                 DepthCoverageType.DEPTH_COVERAGE_TYPE_CLI_NOT_SUPPOT_RESOURCE
         ) {
             sdk = SDK.CLI_CORE_SDK;
@@ -48,26 +51,24 @@ export class DepthCoverageServiceImpl implements DepthCoverageService {
             sdk = SDK.TF_SDK;
         }
         if (
-            depthcoverageType ===
+            depthCoverageType ===
                 DepthCoverageType.DEPTH_COVERAGE_TYPE_CLI_NOT_SUPPORT_OPERATION ||
-            depthcoverageType ===
+            depthCoverageType ===
                 DepthCoverageType.DEPTH_COVERAGE_TYPE_TF_NOT_SUPPORT_OPERATION
         ) {
             const res: ResourceAndOperation[] = await this.convertOperationToDepthCoverageResourceAndOperation(
-                opOrresources,
+                opOrResources,
                 sdk,
                 supportedResources
             );
-            console.log(res);
 
             return res;
         } else {
             const res: ResourceAndOperation[] = await this.convertResourceToDepthCoverageResourceAndOperation(
-                opOrresources,
+                opOrResources,
                 sdk,
                 supportedResources
             );
-            console.log(res);
 
             return res;
         }
@@ -119,8 +120,8 @@ export class DepthCoverageServiceImpl implements DepthCoverageService {
         for (let op of ops) {
             let m = op.fileName.match(specFileRegex);
             if (!m) {
-                console.warn(
-                    `\tFail to parse swagger file json ${op.fileName}`
+                this.logger.warn(
+                    `Fail to parse swagger file json ${op.fileName}`
                 );
                 continue;
             }
@@ -309,41 +310,41 @@ export class DepthCoverageServiceImpl implements DepthCoverageService {
         codegenRepo: RepoInfo,
         supported: string[] = undefined
     ): Promise<any> {
-        let tfsupportedResource: CandidateResource[] = undefined;
-        const tfcandidates = await this.depthCoverageDao.queryCandidateResources(
+        let tfSupportedResource: CandidateResource[] = undefined;
+        const tfCandidates = await this.depthCoverageDao.queryCandidateResources(
             DepthCoverageType.DEPTH_COVERAGE_TYPE_TF_NOT_SUPPORT_RESOURCE
         );
         if (
-            tfcandidates.length > 0 ||
+            tfCandidates.length > 0 ||
             (supported !== undefined && supported.length > 0)
         ) {
-            tfsupportedResource = [];
-            for (let candidate of tfcandidates) {
-                tfsupportedResource.push(candidate);
+            tfSupportedResource = [];
+            for (let candidate of tfCandidates) {
+                tfSupportedResource.push(candidate);
             }
 
             if (supported !== undefined) {
                 for (let s of supported) {
                     const candidate = new CandidateResource(s, 'ALL');
-                    tfsupportedResource.push(candidate);
+                    tfSupportedResource.push(candidate);
                 }
             }
         }
         const tfResources = await this.retrieveResourceToGenerate(
             DepthCoverageType.DEPTH_COVERAGE_TYPE_TF_NOT_SUPPORT_RESOURCE,
-            tfsupportedResource
+            tfSupportedResource
         );
 
         let cliSupportedResource: CandidateResource[] = undefined;
-        const clicandidates = await this.depthCoverageDao.queryCandidateResources(
+        const cliCandidates = await this.depthCoverageDao.queryCandidateResources(
             DepthCoverageType.DEPTH_COVERAGE_TYPE_CLI_NOT_SUPPORT_OPERATION
         );
         if (
-            clicandidates.length > 0 ||
+            cliCandidates.length > 0 ||
             (supported !== undefined && supported.length > 0)
         ) {
             cliSupportedResource = [];
-            for (let candidate of clicandidates) {
+            for (let candidate of cliCandidates) {
                 cliSupportedResource.push(candidate);
             }
 
@@ -355,12 +356,12 @@ export class DepthCoverageServiceImpl implements DepthCoverageService {
             }
         }
 
-        const cliresources = await this.retrieveResourceToGenerate(
+        const cliResources = await this.retrieveResourceToGenerate(
             DepthCoverageType.DEPTH_COVERAGE_TYPE_CLI_NOT_SUPPORT_OPERATION,
             cliSupportedResource
         );
 
-        let resources = tfResources.concat(cliresources);
+        let resources = tfResources.concat(cliResources);
 
         for (let rs of resources) {
             try {
@@ -382,7 +383,7 @@ export class DepthCoverageServiceImpl implements DepthCoverageService {
                     codegen.status !=
                         CodeGenerationStatus.CODE_GENERATION_STATUS_CANCELED
                 ) {
-                    console.log(
+                    this.logger.info(
                         'The code generation pipeline(' +
                             rs.RPName +
                             ',' +
@@ -393,7 +394,7 @@ export class DepthCoverageServiceImpl implements DepthCoverageService {
                     );
                 }
             } catch (err) {
-                console.log(err);
+                this.logger.error(err);
                 return err;
             }
         }

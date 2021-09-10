@@ -60,13 +60,13 @@ export class CodeGenerationServiceImpl implements CodeGenerationService {
         sdkRepo: RepoInfo,
         tag: string
     ) {
-        let readmefile: string =
+        let readmeFile: string =
             '/specification/' +
             resourceProvider +
             '/resource-manager/readme.md';
         let rs: ResourceAndOperation = new ResourceAndOperation(
             resourceProvider,
-            readmefile,
+            readmeFile,
             [],
             sdk,
             type,
@@ -142,9 +142,9 @@ export class CodeGenerationServiceImpl implements CodeGenerationService {
         const sdk = codegen.sdk;
         const type = codegen.type;
 
-        const codegenrepo = JSON.parse(codegen.codegenRepo);
-        const swagger_repo = JSON.parse(codegen.swaggerRepo);
-        const sdk_repo = JSON.parse(codegen.sdkRepo);
+        const codegenRepo = JSON.parse(codegen.codegenRepo);
+        const swaggerRepo = JSON.parse(codegen.swaggerRepo);
+        const sdkRepo = JSON.parse(codegen.sdkRepo);
 
         const branch = codegen.name;
 
@@ -152,9 +152,9 @@ export class CodeGenerationServiceImpl implements CodeGenerationService {
             rp,
             sdk,
             type,
-            codegenrepo,
-            sdk_repo,
-            swagger_repo,
+            codegenRepo,
+            sdkRepo,
+            swaggerRepo,
             branch
         );
         /* update code generation status table. */
@@ -264,18 +264,18 @@ export class CodeGenerationServiceImpl implements CodeGenerationService {
         const resourceProvider = codegen.resourceProvider;
         const sdk = codegen.sdk;
 
-        const codegenrepo = JSON.parse(codegen.codegenRepo);
-        const sdkrepo = JSON.parse(codegen.sdkRepo);
+        const codeGenRepo = JSON.parse(codegen.codegenRepo);
+        const sdkRepo = JSON.parse(codegen.sdkRepo);
         /* generate PR in swagger repo. */
         let branch = name;
 
         const { org: cgorg, repo: cgreponame } = this.githubDao.getGitRepoInfo(
-            codegenrepo
+            codeGenRepo
         );
 
         const jsonMapFile: string = 'ToGenerate.json';
         const fs = new MemoryFileSystem();
-        let filepaths: string[] = [];
+        let filePaths: string[] = [];
 
         let content = await this.githubDao.readFileFromRepo(
             cgorg !== undefined ? cgorg : ORG.AZURE,
@@ -293,14 +293,14 @@ export class CodeGenerationServiceImpl implements CodeGenerationService {
                 resource.excludeStages.length > 0
             )
                 excludes = resource.excludeStages.split(';');
-            let ischanged: boolean = false;
+            let isChanged: boolean = false;
             if (excludeTest) {
                 if (excludes.indexOf('MockTest') === -1) {
-                    ischanged = true;
+                    isChanged = true;
                     excludes.push('MockTest');
                 }
                 if (excludes.indexOf('LiveTest') === -1) {
-                    ischanged = true;
+                    isChanged = true;
                     excludes.push('LiveTest');
                 }
                 resource.excludeStages = excludes.join(';');
@@ -310,106 +310,95 @@ export class CodeGenerationServiceImpl implements CodeGenerationService {
                 );
                 if (newArray.length !== excludes.length) {
                     resource.excludeStages = newArray.join(';');
-                    ischanged = true;
+                    isChanged = true;
                 }
             }
 
-            if (ischanged) {
+            if (isChanged) {
                 fs.writeFileSync(
                     '/' + jsonMapFile,
                     JSON.stringify(resource, null, 2)
                 );
-                filepaths.push(jsonMapFile);
+                filePaths.push(jsonMapFile);
             }
         }
 
-        let readfile = README.CLI_README_FILE;
+        let readmeFile = README.CLI_README_FILE;
         if (sdk === SDK.TF_SDK) {
-            readfile = README.TF_README_FILE;
+            readmeFile = README.TF_README_FILE;
         }
 
         let tfSchemafile =
             'azurerm/internal/services/' + resourceProvider + '/schema.json';
         let tfSchemaDir = 'azurerm/internal/services/' + resourceProvider;
         const {
-            org: sdkorg,
-            repo: sdkreponame,
-        } = this.githubDao.getGitRepoInfo(sdkrepo);
+            org: sdkOrg,
+            repo: sdkRepoName,
+        } = this.githubDao.getGitRepoInfo(sdkRepo);
         const prNumber = codePR.split('/').pop();
-        const filelist: string[] = [readfile];
+        const fileList: string[] = [readmeFile];
         if (sdk === SDK.TF_SDK) {
-            filelist.push(tfSchemafile);
+            fileList.push(tfSchemafile);
             if (!fs.existsSync('/' + tfSchemaDir)) {
                 fs.mkdirSync('/' + tfSchemaDir, { recursive: true });
             }
         }
         const readedFiles: string = await this.githubDao.readCustomizeFiles(
-            sdkorg,
-            sdkreponame,
+            sdkOrg,
+            sdkRepoName,
             +prNumber,
             fs,
-            filelist
+            fileList
         );
 
         /* copy configuration to swagger repo */
-        const specpath =
+        const specPath =
             'specification/' + resourceProvider + '/resource-manager';
-        if (!fs.existsSync('/' + specpath)) {
-            fs.mkdirSync('/' + specpath, { recursive: true });
+        if (!fs.existsSync('/' + specPath)) {
+            fs.mkdirSync('/' + specPath, { recursive: true });
         }
         const swaggerReadMePath =
             'specification/' +
             resourceProvider +
             '/resource-manager/' +
-            readfile;
-        fs.copyFile('/' + readfile, '/' + swaggerReadMePath, (err) => {
+            readmeFile;
+        fs.copyFile('/' + readmeFile, '/' + swaggerReadMePath, (err) => {
             if (err) {
                 this.logger.error('Error Found:', err);
             }
         });
 
-        filepaths.push(swaggerReadMePath);
+        filePaths.push(swaggerReadMePath);
 
         if (sdk === SDK.TF_SDK && readedFiles.indexOf(tfSchemafile) !== -1) {
-            const schemapath = 'schema.json';
+            const schemaPath = 'schema.json';
             const swaggerSchemaPath =
                 'specification/' +
                 resourceProvider +
                 '/resource-manager/' +
-                schemapath;
+                schemaPath;
             fs.copyFile('/' + tfSchemafile, '/' + swaggerSchemaPath, (err) => {
                 if (err) {
                     console.log('Error Found:', err);
                 }
             });
-            filepaths.push(swaggerSchemaPath);
+            filePaths.push(swaggerSchemaPath);
         }
 
-        try {
-            /* update depth-coverage-pipeline trigger pull request. */
-            await this.githubDao.uploadToRepo(
-                fs,
-                filepaths,
-                cgorg !== undefined ? cgorg : ORG.AZURE,
-                cgreponame !== undefined
-                    ? cgreponame
-                    : REPO.DEPTH_COVERAGE_REPO,
-                branch
-            );
-        } catch (e) {
-            console.log(e);
-            return e;
-        }
+        /* update depth-coverage-pipeline trigger pull request. */
+        await this.githubDao.uploadToRepo(
+            fs,
+            filePaths,
+            cgorg !== undefined ? cgorg : ORG.AZURE,
+            cgreponame !== undefined ? cgreponame : REPO.DEPTH_COVERAGE_REPO,
+            branch
+        );
 
-        if (customizer === undefined) {
-            /* update the code generation status. */
-            await this.codeGenerationDao.updateCodeGenerationValueByName(
-                name,
-                CodeGenerationDBColumn.CODE_GENERATION_COLUMN_STATUS,
-                CodeGenerationStatus.CODE_GENERATION_STATUS_CUSTOMIZING
-            );
-        }
-        /* delete sdk rp branch. */
+        await this.codeGenerationDao.updateCodeGenerationValueByName(
+            name,
+            CodeGenerationDBColumn.CODE_GENERATION_COLUMN_STATUS,
+            CodeGenerationStatus.CODE_GENERATION_STATUS_CUSTOMIZING
+        );
 
         return undefined;
     }
@@ -429,21 +418,20 @@ export class CodeGenerationServiceImpl implements CodeGenerationService {
         const rp = codegen.resourceProvider;
         const type = codegen.type;
 
-        const swaggerrepo = JSON.parse(codegen.swaggerRepo);
-        const sdkrepo = JSON.parse(codegen.sdkRepo);
+        const swaggerRepo = JSON.parse(codegen.swaggerRepo);
+        const sdkRepo = JSON.parse(codegen.sdkRepo);
 
         /* generate PR in swagger repo. */
         let branch = codegen.name;
-        // let branch = onboardtype + "-" + sdk + "-" + rp;
 
         const {
-            org: swaggerorg,
-            repo: swaggerreponame,
-        } = this.githubDao.getGitRepoInfo(swaggerrepo);
+            org: swaggerOrg,
+            repo: swaggerRepoName,
+        } = this.githubDao.getGitRepoInfo(swaggerRepo);
         const swaggerPR = await this.githubDao.createPullRequest(
-            swaggerorg !== undefined ? swaggerorg : ORG.AZURE,
-            swaggerreponame !== undefined ? swaggerreponame : REPO.SWAGGER_REPO,
-            swaggerrepo.branch,
+            swaggerOrg !== undefined ? swaggerOrg : ORG.AZURE,
+            swaggerRepoName !== undefined ? swaggerRepoName : REPO.SWAGGER_REPO,
+            swaggerRepo.branch,
             branch,
             '[' + type + ', ' + rp + ']pull request from pipeline ' + branch
         );
@@ -451,20 +439,20 @@ export class CodeGenerationServiceImpl implements CodeGenerationService {
         /* generate PR in sdk code repo. */
 
         const {
-            org: sdkorg,
-            repo: sdkreponame,
-        } = this.githubDao.getGitRepoInfo(sdkrepo);
+            org: sdkOrg,
+            repo: sdkRepoName,
+        } = this.githubDao.getGitRepoInfo(sdkRepo);
         const codePR = await this.githubDao.createPullRequest(
-            sdkorg,
-            sdkreponame,
-            sdkrepo.branch,
+            sdkOrg,
+            sdkRepoName,
+            sdkRepo.branch,
             branch,
             '[' + type + ', ' + rp + ']pull request from pipeline ' + branch
         );
 
         /* close work sdk branch. */
-        let workbranch = codegen.name + '-code';
-        await this.githubDao.deleteBranch(sdkorg, sdkreponame, workbranch);
+        let workBranch = codegen.name + '-code';
+        await this.githubDao.deleteBranch(sdkOrg, sdkRepoName, workBranch);
 
         /* update the code generation status. */
         const values = {

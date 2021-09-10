@@ -42,14 +42,14 @@ export class CodeGenerateController extends BaseController {
         const branch = request.body.branch;
         const baseBranch = request.body.base;
 
-        const prlink = await this.codeGenerationService.generateCodePullRequest(
+        const prLink = await this.codeGenerationService.generateCodePullRequest(
             org,
             repo,
             title,
             branch,
             baseBranch
         );
-        return this.json(prlink, 200);
+        return this.json(prLink, 200);
     }
 
     /*generate source code. */
@@ -297,12 +297,12 @@ export class CodeGenerateController extends BaseController {
             );
             return this.json({ error: 'Not Exist.' }, 400);
         } else if (
-            codegen.status !==
+            codegen.status ===
                 CodeGenerationStatus.CODE_GENERATION_STATUS_COMPLETED &&
-            codegen.status !==
+            codegen.status ===
                 CodeGenerationStatus.CODE_GENERATION_STATUS_CANCELED
         ) {
-            const message = `Cannot complete code generation ${name} because it's status is not completed or cancelled.`;
+            const message = `Cannot complete code generation ${name} because it's status is ${codegen.status}.`;
             this.logger.info(message);
             return this.json({ error: message }, 400);
         }
@@ -461,41 +461,27 @@ export class CodeGenerateController extends BaseController {
             );
         }
 
-        const customizer = await this.codeGenerationService.customizeCodeGeneration(
+        await this.codeGenerationService.customizeCodeGeneration(
             name,
             triggerPR,
             codePR,
             excludeTest
         );
 
-        if (customizer !== undefined) {
-            this.logger.error(
-                "Failed to customize code generation '" +
-                    name +
-                    "'( " +
-                    codegen.resourceProvider +
-                    ', ' +
-                    codegen.sdk +
-                    ').',
-                customizer
-            );
-            return this.json({ error: customizer }, 400);
-        } else {
-            this.logger.info(
-                "Succeeded to customize code generation '" +
-                    name +
-                    "'( " +
-                    codegen.resourceProvider +
-                    ', ' +
-                    codegen.sdk +
-                    ').'
-            );
-            return this.json(
-                'customize. pipeline: https://devdiv.visualstudio.com/DevDiv/_build?definitionId=' +
-                    codegen.lastPipelineBuildID,
-                200
-            );
-        }
+        this.logger.info(
+            "Succeeded to customize code generation '" +
+                name +
+                "'( " +
+                codegen.resourceProvider +
+                ', ' +
+                codegen.sdk +
+                ').'
+        );
+        return this.json(
+            'customize.pipeline: https://devdiv.visualstudio.com/DevDiv/_build?definitionId=' +
+                codegen.lastPipelineBuildID,
+            200
+        );
     }
 
     /* customize the code generation. */

@@ -15,10 +15,10 @@ export interface GithubDao {
     clearSDKCodeGenerationWorkSpace(
         rp: string,
         sdk: string,
-        onbaordtype: string,
-        codegenrepo: RepoInfo,
-        sdkrepo: RepoInfo,
-        swaggerrepo: RepoInfo,
+        onboardType: string,
+        codegenRepo: RepoInfo,
+        sdkRepo: RepoInfo,
+        swaggerRepo: RepoInfo,
         branch?: string
     );
     readFileFromRepo(

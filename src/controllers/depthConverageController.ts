@@ -21,7 +21,6 @@ export class DepthCoverageController extends BaseController {
     public async candidates(request: Request): Promise<JsonResult> {
         const sdk = request.params.sdk;
         let candidates = request.body.candidates;
-        //let table = req.body.table;
         await this.depthCoverageService.ingestCandidates(candidates, sdk);
         const statusCode = 200;
         const content = `ingest ${sdk} candidate`;
@@ -48,8 +47,8 @@ export class DepthCoverageController extends BaseController {
             codegenRepo,
             candidate
         );
-        let content = {};
-        let statusCode = 200;
+        let content;
+        let statusCode;
         if (err !== undefined) {
             statusCode = 400;
             content = { error: err };
