@@ -264,10 +264,6 @@ class CodegenApp {
             this.logger.info('running auto-complete task every minute');
             codeGenerationService.completeAllCodeGenerations();
         });
-
-        cron.schedule('* * * * *', function () {
-            this.logger.info('running second task every minute');
-        });
     }
 }
 

@@ -23,7 +23,7 @@
     "clean-bash": "rm nul && rm -rf dist && exit 0 || exit 0"
   },
   "bin":{
-    "publish-codeen-pipeline-result": "./dist/src/tools/publishCodegenPipelineResult.js"
+    "publish-codegen-pipeline-result": "./dist/src/tools/publishCodegenPipelineResult.js"
   },
   "jest": {
     "testEnvironment": "node"
