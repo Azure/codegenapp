@@ -19,8 +19,7 @@ export const environmentConfigPpe: Partial<Config> = {
     // namespaceName: "",
     defaultSwaggerRepo: {
         type: RepoType.GITHUB,
-        path:
-            'https://github.com/sdkautomationpipelinebot/azure-rest-api-specs',
+        path: 'https://github.com/AzureSDKPipelineBot/azure-rest-api-specs',
         branch: 'main',
     },
     defaultCodegenRepo: {
@@ -32,24 +31,22 @@ export const environmentConfigPpe: Partial<Config> = {
         [SDK.TF_SDK]: {
             type: RepoType.GITHUB,
             path:
-                'https://github.com/sdkautomationpipelinebot/terraform-provider-azurerm',
+                'https://github.com/AzureSDKPipelineBot/terraform-provider-azurerm',
             branch: 'pipeline',
         },
         [SDK.GO_SDK]: {
             type: RepoType.GITHUB,
-            path:
-                'https://github.com/sdkautomationpipelinebot/azure-sdk-for-go',
+            path: 'https://github.com/AzureSDKPipelineBot/azure-sdk-for-go',
             branch: 'main',
         },
         [SDK.CLI_CORE_SDK]: {
             type: RepoType.GITHUB,
-            path: 'https://github.com/sdkautomationpipelinebot/azure-cli',
+            path: 'https://github.com/AzureSDKPipelineBot/azure-cli',
             branch: 'dev',
         },
         [SDK.CLI_EXTENSTION_SDK]: {
             type: RepoType.GITHUB,
-            path:
-                'https://github.com/sdkautomationpipelinebot/azure-cli-extensions',
+            path: 'https://github.com/AzureSDKPipelineBot/azure-cli-extensions',
             branch: 'main',
         },
     },

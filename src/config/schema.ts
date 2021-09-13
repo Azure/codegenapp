@@ -100,7 +100,7 @@ export const configSchema = convict<Config>({
             doc: 'The url path of swagger repository.',
             format: String,
             default:
-                'https://github.com/sdkautomationpipelinebot/azure-rest-api-specs',
+                'https://github.com/AzureSDKPipelineBot/azure-rest-api-specs',
         },
         branch: {
             doc: 'The main branch of swagger repository.',
@@ -122,7 +122,7 @@ export const configSchema = convict<Config>({
                 doc: 'The url path of terraform repository.',
                 format: String,
                 default:
-                    'https://github.com/sdkautomationpipelinebot/terraform-provider-azurerm',
+                    'https://github.com/AzureSDKPipelineBot/terraform-provider-azurerm',
             },
             branch: {
                 doc: 'The main branch of terraform repository.',
@@ -140,7 +140,7 @@ export const configSchema = convict<Config>({
                 doc: 'The url path of go repository.',
                 format: String,
                 default:
-                    'https://github.com/sdkautomationpipelinebot/azure-sdk-for-go',
+                    'https://github.com/AzureSDKPipelineBot/azure-sdk-for-go',
             },
             branch: {
                 doc: 'The main branch of go repository.',
@@ -157,8 +157,7 @@ export const configSchema = convict<Config>({
             path: {
                 doc: 'The url path of clicore repository.',
                 format: String,
-                default:
-                    'https://github.com/sdkautomationpipelinebot/azure-cli',
+                default: 'https://github.com/AzureSDKPipelineBot/azure-cli',
             },
             branch: {
                 doc: 'The main branch of clicore repository.',
@@ -176,7 +175,7 @@ export const configSchema = convict<Config>({
                 doc: 'The url path of cliextension repository.',
                 format: String,
                 default:
-                    'https://github.com/sdkautomationpipelinebot/azure-cli-extensions',
+                    'https://github.com/AzureSDKPipelineBot/azure-cli-extensions',
             },
             branch: {
                 doc: 'The main branch of cliextension repository.',
