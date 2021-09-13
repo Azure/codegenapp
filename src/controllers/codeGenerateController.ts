@@ -18,7 +18,6 @@ import {
 } from '../models/CodeGenerationModel';
 import { config } from '../config';
 import { CodeGenerationType } from '../models/common';
-import { environmentConfigDev } from '../config/dev';
 import {
     CodegenPipelineTaskResult,
     TaskResult,
@@ -62,7 +61,6 @@ export class CodeGenerateController extends BaseController {
         const resourceProvider = request.body.resourceProvider;
         const sdk: string = request.body.sdk;
         const resources: string = request.body.resources;
-        const platform = request.body.platform;
         const serviceType = request.body.serviceType;
         const tag = request.body.tag;
 
@@ -71,11 +69,7 @@ export class CodeGenerateController extends BaseController {
             codegenRepo = request.body.codegenRepo as RepoInfo;
             codegenRepo.path = codegenRepo.path.replace('.git', '');
         } else {
-            if (platform !== undefined && platform.toLowerCase() === 'dev') {
-                codegenRepo = environmentConfigDev.defaultCodegenRepo;
-            } else {
-                codegenRepo = config.defaultCodegenRepo;
-            }
+            codegenRepo = config.defaultCodegenRepo;
         }
 
         let swaggerRepo: RepoInfo;
@@ -83,11 +77,7 @@ export class CodeGenerateController extends BaseController {
             swaggerRepo = request.body.swaggerRepo as RepoInfo;
             swaggerRepo.path = swaggerRepo.path.replace('.git', '');
         } else {
-            if (platform !== undefined && platform.toLowerCase() === 'dev') {
-                swaggerRepo = environmentConfigDev.defaultSwaggerRepo;
-            } else {
-                swaggerRepo = config.defaultSwaggerRepo;
-            }
+            swaggerRepo = config.defaultSwaggerRepo;
         }
 
         let sdkRepo: RepoInfo;
@@ -95,11 +85,7 @@ export class CodeGenerateController extends BaseController {
             sdkRepo = request.body.sdkRepo as RepoInfo;
             sdkRepo.path = sdkRepo.path.replace('.git', '');
         } else {
-            if (platform !== undefined && platform.toLowerCase() === 'dev') {
-                sdkRepo = environmentConfigDev.defaultSDKRepos[sdk];
-            } else {
-                sdkRepo = config.defaultSDKRepos[sdk];
-            }
+            sdkRepo = config.defaultSDKRepos[sdk];
         }
 
         let type = request.body.type;

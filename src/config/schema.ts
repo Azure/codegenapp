@@ -260,4 +260,9 @@ export const configSchema = convict<Config>({
         default: 6,
         env: 'retries',
     },
+    changeDatabase: {
+        doc: 'change the database based on entity',
+        format: Boolean,
+        default: false,
+    },
 });

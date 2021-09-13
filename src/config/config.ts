@@ -27,6 +27,7 @@ export interface Config {
     refreshClientCertificateIntervalSeconds: number;
     retries: number;
     healthProbeEndpoint: string;
+    changeDatabase: boolean;
 }
 
 export interface Customer {

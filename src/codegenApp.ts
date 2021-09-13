@@ -64,7 +64,7 @@ class CodegenApp {
             const credential = new ManagedIdentityCredential();
             const keyVaultUrl =
                 process.env[ENV.ENV_KEYVAULT_URL] ||
-                'https://codegencontrollerkv.vault.azure.net/';
+                'https://sdkautomationtest.vault.azure.net/';
 
             const client = new SecretClient(keyVaultUrl, credential);
             for await (let secretProperties of client.listPropertiesOfSecrets()) {
@@ -89,7 +89,7 @@ class CodegenApp {
             username: process.env[ENV.ENV_CODEGEN_DB_USER],
             password: process.env[ENV.ENV_CODEGEN_DB_PASSWORD],
             database: process.env[ENV.ENV_CODEGEN_DATABASE],
-            synchronize: true,
+            synchronize: config.changeDatabase,
             logging: false,
             entities: [
                 'dist/src/models/entity/codegenSqlServer/entity/**/*.js',
@@ -121,7 +121,7 @@ class CodegenApp {
             password: process.env[ENV.ENV_MONGO_DB_PASSWORD],
             database: process.env[ENV.ENV_MONGO_DB_DATABASE],
             ssl: true,
-            synchronize: true,
+            synchronize: config.changeDatabase,
             logging: true,
             entities: [
                 'dist/src/models/entity/taskResultMongodb/entity/**/*.js',

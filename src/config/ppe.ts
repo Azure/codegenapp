@@ -56,4 +56,5 @@ export const environmentConfigPpe: Partial<Config> = {
     armEndpoint: 'https://management.azure.com',
     clientAuthEnabled: true,
     retries: 2,
+    changeDatabase: false,
 };

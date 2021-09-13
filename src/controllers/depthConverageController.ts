@@ -6,7 +6,6 @@ import { RepoInfo } from '../models/CodeGenerationModel';
 import { BaseController } from './BaseController';
 import { InjectableTypes } from '../injectableTypes/injectableTypes';
 import { inject } from 'inversify';
-import { environmentConfigDev } from '../config/dev';
 import { config } from '../config';
 import { ENV } from '../config/env';
 import { DepthCoverageService } from '../service/depthCoverageService';
@@ -36,7 +35,7 @@ export class DepthCoverageController extends BaseController {
         if (codegenRepo === undefined) {
             const platform = req.body.platform;
             if (platform !== undefined && platform.toLowerCase() === 'dev') {
-                codegenRepo = environmentConfigDev.defaultCodegenRepo;
+                codegenRepo = config.defaultCodegenRepo;
             } else {
                 codegenRepo = config.defaultCodegenRepo;
             }
