@@ -1,6 +1,7 @@
 import { RepoInfo } from '../models/CodeGenerationModel';
 import { CodeGeneration } from '../models/entity/codegenSqlServer/entity/CodeGeneration';
 import { CodegenPipelineTaskResult } from '../models/entity/taskResultMongodb/entity/TaskResult';
+import { ResourceAndOperation } from '../models/ResourceAndOperationModel';
 
 export interface CodeGenerationService {
     updateCodeGenerationValuesByName(name: string, values: any);
@@ -15,6 +16,8 @@ export interface CodeGenerationService {
         swaggerRepo: RepoInfo,
         codegenRepo: RepoInfo,
         sdkRepo: RepoInfo,
+        commit: string,
+        owner: string,
         tag: string
     );
     deleteSDKCodeGeneration(codegen: CodeGeneration);
@@ -42,4 +45,13 @@ export interface CodeGenerationService {
         basebranch: string
     );
     completeAllCodeGenerations();
+    runCodeGenerationForCI(): void;
+    createCodeGenerationByCreatingPR(
+        name: string,
+        codegenOrg: string,
+        codegenRepo: string,
+        codegenBaseBranch: string,
+        rpToGen: ResourceAndOperation,
+        owner?: string
+    );
 }

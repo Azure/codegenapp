@@ -23,6 +23,7 @@ import { CodeGenerationService } from '../service/codeGenerationService';
 import { CodeGenerationDao } from '../dao/codeGenerationDao';
 import { GithubDao } from '../dao/githubDao';
 import { TaskResultDao } from '../dao/taskResultDao';
+import { Equal, Not } from 'typeorm';
 const MemoryFileSystem = require('memory-fs');
 
 @injectable()
@@ -58,6 +59,8 @@ export class CodeGenerationServiceImpl implements CodeGenerationService {
         swaggerRepo: RepoInfo,
         codegenRepo: RepoInfo,
         sdkRepo: RepoInfo,
+        commit: string,
+        owner: string,
         tag: string
     ) {
         let readmeFile: string =
@@ -73,7 +76,8 @@ export class CodeGenerationServiceImpl implements CodeGenerationService {
             serviceType,
             swaggerRepo,
             codegenRepo,
-            sdkRepo
+            sdkRepo,
+            commit
         );
         if (tag !== undefined) rs.tag = tag;
         rs.generateResourceList();
@@ -88,7 +92,8 @@ export class CodeGenerationServiceImpl implements CodeGenerationService {
             codegenOrg,
             codegenRepoName,
             codegenRepo.branch,
-            rs
+            rs,
+            owner
         );
     }
 
@@ -231,10 +236,12 @@ export class CodeGenerationServiceImpl implements CodeGenerationService {
             cgreponame !== undefined ? cgreponame : REPO.DEPTH_COVERAGE_REPO,
             branch
         );
-        await this.codeGenerationDao.updateCodeGenerationValueByName(
+        await this.codeGenerationDao.updateCodeGenerationValuesByName(
             codegen.name,
-            CodeGenerationDBColumn.CODE_GENERATION_COLUMN_STATUS,
-            CodeGenerationStatus.CODE_GENERATION_STATUS_SUBMIT
+            {
+                lastPipelineBuildID: '',
+                status: CodeGenerationStatus.CODE_GENERATION_STATUS_SUBMIT,
+            }
         );
     }
 
@@ -255,8 +262,6 @@ export class CodeGenerationServiceImpl implements CodeGenerationService {
         codePR: string,
         excludeTest: boolean = false
     ): Promise<any> {
-        let customizer: any = undefined;
-
         let codegen = await this.codeGenerationDao.getCodeGenerationByName(
             name
         );
@@ -394,11 +399,10 @@ export class CodeGenerationServiceImpl implements CodeGenerationService {
             branch
         );
 
-        await this.codeGenerationDao.updateCodeGenerationValueByName(
-            name,
-            CodeGenerationDBColumn.CODE_GENERATION_COLUMN_STATUS,
-            CodeGenerationStatus.CODE_GENERATION_STATUS_CUSTOMIZING
-        );
+        await this.codeGenerationDao.updateCodeGenerationValuesByName(name, {
+            lastPipelineBuildID: '',
+            status: CodeGenerationStatus.CODE_GENERATION_STATUS_CUSTOMIZING,
+        });
 
         return undefined;
     }
@@ -548,7 +552,7 @@ export class CodeGenerationServiceImpl implements CodeGenerationService {
         }
     }
 
-    private async createCodeGenerationByCreatingPR(
+    public async createCodeGenerationByCreatingPR(
         name: string,
         codegenOrg: string,
         codegenRepo: string,
@@ -596,10 +600,27 @@ export class CodeGenerationServiceImpl implements CodeGenerationService {
             org: sdkOrg,
             repo: sdkRepoName,
         } = this.githubDao.getGitRepoInfo(rpToGen.sdkRepo);
+
+        /*Get readme github url with commit. */
+        let readmeCommit = rpToGen.commit;
+        if (readmeCommit === undefined || readmeCommit.length === 0) {
+            const curCommit = await this.githubDao.getCurrentCommit(
+                swaggerOrg,
+                swaggerRepoName,
+                rpToGen.swaggerRepo.branch
+            );
+            readmeCommit = curCommit.commitSha;
+        }
+        let readmeurl: string = this.githubDao.getBlobURL(
+            readmeCommit,
+            rpToGen.RPName,
+            rpToGen.swaggerRepo
+        );
         const v: PipelineVariablesInterface = {
             variables: {
                 CodeGenerationName: name,
                 SDK: sdk,
+                SERVICE_TYPE: rpToGen.serviceType,
                 stages: st.join(';'),
                 SPEC_REPO_TYPE: rpToGen.swaggerRepo.type,
                 SPEC_REPO_URL: rpToGen.swaggerRepo.path
@@ -615,6 +636,7 @@ export class CodeGenerationServiceImpl implements CodeGenerationService {
                 SDK_REPO_BASE_BRANCH: rpToGen.sdkRepo.branch,
                 SDK_REPO_OWNER: sdkOrg,
                 SDK_REPO_NAME: sdkRepoName,
+                README_FILE_GITHUB_URL_WITH_COMMIT: readmeurl,
             },
         };
         fs.writeFileSync('/' + 'Variables.yml', yaml.dump(v));
@@ -675,5 +697,31 @@ export class CodeGenerationServiceImpl implements CodeGenerationService {
         if (sdk === SDK.TF_SDK || sdk === SDK.DOTNET_SDK || sdk === SDK.GO_SDK)
             return true;
         else return false;
+    }
+
+    public async runCodeGenerationForCI() {
+        const codeGens: CodeGeneration[] = await this.codeGenerationDao.listCodeGenerations(
+            {
+                type: CodeGenerationType.CI,
+                status: Not(
+                    Equal(
+                        CodeGenerationStatus.CODE_GENERATION_STATUS_IN_PROGRESS
+                    )
+                ),
+            }
+        );
+        for (const codeGen of codeGens) {
+            try {
+                this.runCodeGeneration(codeGen);
+            } catch (e) {
+                this.logger.info(
+                    `Failed to re-run Code generation ${codeGen.name} (resourceProvider: ${codeGen.resourceProvider}, sdk: ${codeGen.sdk}, type: ${codeGen.type})`
+                );
+                this.logger.error(e);
+            }
+            this.logger.info(
+                `Code generation ${codeGen.name} (resourceProvider: ${codeGen.resourceProvider}, sdk: ${codeGen.sdk}, type: ${codeGen.type}) is triggered`
+            );
+        }
     }
 }

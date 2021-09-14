@@ -7,5 +7,5 @@ export interface DepthCoverageService {
         candidates: TfCandidateResource[] | CliCandidateOperation[],
         sdk: string
     );
-    triggerOnboard(token: string, codegenRepo: RepoInfo, supported: string[]);
+    triggerOnboard(codegenRepo: RepoInfo, supported: string[]);
 }

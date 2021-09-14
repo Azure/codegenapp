@@ -9,7 +9,9 @@ import {
 import {
     CodegenCodeGenerateTaskResult,
     CodegenPipelineTaskResult,
+    TestTaskResult,
 } from '../models/entity/taskResultMongodb/entity/TaskResult';
+import { CodeGenerationPipelineTaskName } from '../models/common';
 
 export function formatCodeUrl(
     codegenName: string,
@@ -34,6 +36,7 @@ export function generateCodeGeneratePipelineTaskResult(
 ): CodegenPipelineTaskResult {
     let errorNum: number = 0;
     let warnNum: number = 0;
+    let codeCoverage: number = 0;
     let messages: MessageRecord[] = [];
     const fs = require('fs');
     if (fs.existsSync(logfile)) {
@@ -45,7 +48,8 @@ export function generateCodeGeneratePipelineTaskResult(
             console.log(line);
             if (
                 line.toLowerCase().indexOf('error') !== -1 ||
-                line.toLowerCase().indexOf('FAIL') !== -1
+                line.toLowerCase().indexOf('fail') !== -1 ||
+                line.toLowerCase().indexOf('fatal') !== -1
             ) {
                 errorNum++;
                 let message: RawMessageRecord = {
@@ -57,8 +61,22 @@ export function generateCodeGeneratePipelineTaskResult(
                 messages.push(message);
             } else if (line.toLowerCase().indexOf('warning') !== -1) {
                 warnNum++;
+            } else if (line.toLowerCase().indexOf('exception') !== -1) {
+                errorNum++;
+                let message: RawMessageRecord = {
+                    level: 'Error',
+                    message: line,
+                    time: new Date(),
+                    type: 'Raw',
+                };
+                messages.push(message);
+            } else if (line.toLowerCase().indexOf('coverage:') !== -1) {
+                let coverage: string = line.replace('coverage:', '').trim();
+                codeCoverage = parseFloat(coverage) / 100;
             }
         });
+    } else {
+        console.log('logfile ' + logfile + ' does not exist.');
     }
 
     let result: CodegenPipelineTaskResult = {
@@ -74,11 +92,17 @@ export function generateCodeGeneratePipelineTaskResult(
         messages: messages,
     };
 
-    if (task === 'GenerateCode') {
+    if (task === CodeGenerationPipelineTaskName.GENERATE_CODE) {
         (result as CodegenCodeGenerateTaskResult).codeUrl = formatCodeUrl(
             codegenName,
             pipelineBuildId
         );
+    }
+    if (
+        task === CodeGenerationPipelineTaskName.MOCK_TEST ||
+        task === CodeGenerationPipelineTaskName.LIVE_TEST
+    ) {
+        (result as TestTaskResult).codeCoverage = codeCoverage;
     }
     return result;
 }

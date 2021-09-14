@@ -122,7 +122,7 @@ export const configSchema = convict<Config>({
                 doc: 'The url path of terraform repository.',
                 format: String,
                 default:
-                    'https://github.com/AzureSDKPipelineBot/terraform-provider-azurerm',
+                    'https://github.com/microsoft/terraform-provider-azurerm',
             },
             branch: {
                 doc: 'The main branch of terraform repository.',
@@ -139,8 +139,7 @@ export const configSchema = convict<Config>({
             path: {
                 doc: 'The url path of go repository.',
                 format: String,
-                default:
-                    'https://github.com/AzureSDKPipelineBot/azure-sdk-for-go',
+                default: 'https://github.com/Azure/azure-sdk-for-go',
             },
             branch: {
                 doc: 'The main branch of go repository.',
@@ -157,7 +156,7 @@ export const configSchema = convict<Config>({
             path: {
                 doc: 'The url path of clicore repository.',
                 format: String,
-                default: 'https://github.com/AzureSDKPipelineBot/azure-cli',
+                default: 'https://github.com/Azure/azure-cli',
             },
             branch: {
                 doc: 'The main branch of clicore repository.',
@@ -174,11 +173,27 @@ export const configSchema = convict<Config>({
             path: {
                 doc: 'The url path of cliextension repository.',
                 format: String,
-                default:
-                    'https://github.com/AzureSDKPipelineBot/azure-cli-extensions',
+                default: 'https://github.com/Azure/azure-cli-extensions',
             },
             branch: {
                 doc: 'The main branch of cliextension repository.',
+                format: String,
+                default: 'main',
+            },
+        },
+        [SDK.DOTNET_SDK]: {
+            type: {
+                doc: 'The dotnet repository type.',
+                format: String,
+                default: RepoType.GITHUB,
+            },
+            path: {
+                doc: 'The url path of dotnet repository.',
+                format: String,
+                default: 'https://github.com/Azure/azure-sdk-for-net',
+            },
+            branch: {
+                doc: 'The main branch of dotnet repository.',
                 format: String,
                 default: 'main',
             },

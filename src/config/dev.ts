@@ -46,6 +46,11 @@ export const environmentConfigDev: Partial<Config> = {
             path: 'https://github.com/AzureSDKPipelineBot/azure-cli-extensions',
             branch: 'main',
         },
+        [SDK.DOTNET_SDK]: {
+            type: RepoType.GITHUB,
+            path: 'https://github.com/AzureSDKPipelineBot/azure-sdk-for-net',
+            branch: 'main',
+        },
     },
     armEndpoint: 'https://management.azure.com',
     clientAuthEnabled: false,

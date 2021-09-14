@@ -5,6 +5,7 @@ import { RepoInfo } from '../models/CodeGenerationModel';
 import { MemoryFileSystem } from 'memory-fs';
 import { InjectableTypes } from '../injectableTypes/injectableTypes';
 import { GithubDao } from '../dao/githubDao';
+import { RepoType } from '../models/common';
 
 @injectable()
 export class GithubDaoImpl implements GithubDao {
@@ -414,5 +415,18 @@ export class GithubDaoImpl implements GithubDao {
         });
 
         return pullData;
+    }
+
+    public getBlobURL(
+        commit: string,
+        resourceProvider: string,
+        repoInfo: RepoInfo
+    ) {
+        if (repoInfo.type === RepoType.GITHUB) {
+            let githubpath: string = repoInfo.path.replace('.git', '');
+            return `${githubpath}/blob/${commit}/specification/${resourceProvider}/resource-manager/readme.md`;
+        } else {
+            return ''; //ADO not implement.
+        }
     }
 }

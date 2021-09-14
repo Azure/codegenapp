@@ -24,7 +24,8 @@ export class ResourceAndOperation {
         stype?: string,
         swagger?: RepoInfo,
         codegen_repo?: RepoInfo,
-        sdk_repo?: RepoInfo
+        sdk_repo?: RepoInfo,
+        commit?: string
     ) {
         this.RPName = RPName;
         this.readmeFile = readme;
@@ -48,6 +49,7 @@ export class ResourceAndOperation {
         } else {
             this.sdkRepo = config.defaultSDKRepos[target];
         }
+        this.commit = commit;
     }
     public name: string;
     public RPName: string;
@@ -62,6 +64,7 @@ export class ResourceAndOperation {
     public swaggerRepo: RepoInfo = config.defaultSwaggerRepo;
     public sdkRepo: RepoInfo = undefined;
     public codegenRepo: RepoInfo = config.defaultCodegenRepo;
+    public commit: string = undefined; // the commit id.
 
     public jsonFileList: JsonOperationMap[] = [];
 

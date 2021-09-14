@@ -7,7 +7,6 @@ import { BaseController } from './BaseController';
 import { InjectableTypes } from '../injectableTypes/injectableTypes';
 import { inject } from 'inversify';
 import { config } from '../config';
-import { ENV } from '../config/env';
 import { DepthCoverageService } from '../service/depthCoverageService';
 
 @controller('/depthCoverage')
@@ -42,7 +41,6 @@ export class DepthCoverageController extends BaseController {
         }
         const candidate = req.body.candidateResources;
         const err = await this.depthCoverageService.triggerOnboard(
-            process.env[ENV.GITHUB_TOKEN],
             codegenRepo,
             candidate
         );

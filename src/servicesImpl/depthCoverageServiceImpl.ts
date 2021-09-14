@@ -20,13 +20,21 @@ import { CliCandidateOperation } from '../models/entity/depthCoverageSqlServer/e
 import { DepthCoverageService } from '../service/depthCoverageService';
 import { CodeGenerationDao } from '../dao/codeGenerationDao';
 import { Logger } from '../utils/logger/logger';
+import { CodeGenerationService } from '../service/codeGenerationService';
+import { CodeGeneration } from '../models/entity/codegenSqlServer/entity/CodeGeneration';
+import { DepthCoverageDao } from '../dao/depthCoverageDao';
+import { GithubDao } from '../dao/githubDao';
 
 @injectable()
 export class DepthCoverageServiceImpl implements DepthCoverageService {
     @inject(InjectableTypes.DepthCoverageDao)
-    private depthCoverageDao: DepthCoverageDaoImpl;
+    private depthCoverageDao: DepthCoverageDao;
+    @inject(InjectableTypes.GithubDao)
+    private githubDao: GithubDao;
     @inject(InjectableTypes.CodeGenerationDao)
     private codeGenerationDao: CodeGenerationDao;
+    @inject(InjectableTypes.CodeGenerationService)
+    private codeGenerationService: CodeGenerationService;
     @inject(InjectableTypes.Logger)
     private logger: Logger;
 
@@ -306,7 +314,6 @@ export class DepthCoverageServiceImpl implements DepthCoverageService {
     }
 
     public async triggerOnboard(
-        token: string,
         codegenRepo: RepoInfo,
         supported: string[] = undefined
     ): Promise<any> {
@@ -372,7 +379,7 @@ export class DepthCoverageServiceImpl implements DepthCoverageService {
                     rs.target.toLowerCase() +
                     '-' +
                     rs.RPName;
-                let codegen = await this.codeGenerationDao.getCodeGenerationByName(
+                let codegen: CodeGeneration = await this.codeGenerationDao.getCodeGenerationByName(
                     name
                 );
 
@@ -391,6 +398,19 @@ export class DepthCoverageServiceImpl implements DepthCoverageService {
                             ') is under ' +
                             codegen.status +
                             ' Already. Ignore this trigger.'
+                    );
+                } else {
+                    const {
+                        org: codegenOrg,
+                        repo: codegenRepoName,
+                    } = this.githubDao.getGitRepoInfo(codegenRepo);
+                    const baseBranch = codegenRepo.branch;
+                    await this.codeGenerationService.createCodeGenerationByCreatingPR(
+                        codegen.name,
+                        codegenOrg,
+                        codegenRepoName,
+                        baseBranch,
+                        rs
                     );
                 }
             } catch (err) {

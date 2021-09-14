@@ -37,3 +37,11 @@ export enum RepoType {
     GITHUB = 'github',
     DEVOPS = 'devops',
 }
+
+export enum CodeGenerationPipelineTaskName {
+    SET_UP = 'Setup',
+    GENERATE_CODE = 'GenerateCode',
+    BUILD = 'Build',
+    MOCK_TEST = 'MockTest',
+    LIVE_TEST = 'LiveTest',
+}

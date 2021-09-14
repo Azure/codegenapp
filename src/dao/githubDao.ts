@@ -52,4 +52,5 @@ export interface GithubDao {
         basebranch: string
     );
     isMergedPullRequest(prlink: string);
+    getBlobURL(commit: string, resourceProvider: string, repoInfo: RepoInfo);
 }

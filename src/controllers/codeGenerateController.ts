@@ -9,21 +9,21 @@ import {
 import { JsonResult } from 'inversify-express-utils/dts/results';
 import { Request } from 'express';
 import { BaseController } from './BaseController';
-import { InjectableTypes } from '../injectableTypes/injectableTypes';
 import { inject } from 'inversify';
+import { config } from '../config';
+import { InjectableTypes } from '../injectableTypes/injectableTypes';
+import { CodeGenerationService } from '../service/codeGenerationService';
 import {
     CodeGenerationStatus,
     RepoInfo,
     SDKCodeGenerationDetailInfo,
 } from '../models/CodeGenerationModel';
-import { config } from '../config';
-import { CodeGenerationType } from '../models/common';
 import {
     CodegenPipelineTaskResult,
     TaskResult,
 } from '../models/entity/taskResultMongodb/entity/TaskResult';
 import { CodeGeneration } from '../models/entity/codegenSqlServer/entity/CodeGeneration';
-import { CodeGenerationService } from '../service/codeGenerationService';
+import { CodeGenerationType } from '../models/common';
 
 @controller('/codegenerations')
 export class CodeGenerateController extends BaseController {
@@ -63,6 +63,8 @@ export class CodeGenerateController extends BaseController {
         const resources: string = request.body.resources;
         const serviceType = request.body.serviceType;
         const tag = request.body.tag;
+        const commit = request.body.commit;
+        const owners = request.body.contactAliases;
 
         let codegenRepo: RepoInfo;
         if (request.body.codegenRepo !== undefined) {
@@ -116,6 +118,8 @@ export class CodeGenerateController extends BaseController {
             swaggerRepo,
             codegenRepo,
             sdkRepo,
+            commit,
+            owners !== undefined ? owners.join(';') : '',
             tag
         );
         return this.json(

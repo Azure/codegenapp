@@ -1,6 +1,6 @@
-import { RepoType, SDK } from '../models/common';
 import { Config } from './config';
 import { Env } from './environment';
+import { RepoType, SDK } from '../models/common';
 import { LoggerLevel } from '../utils/logger/loggerLevel';
 
 export const environmentConfigProd: Partial<Config> = {
@@ -46,6 +46,11 @@ export const environmentConfigProd: Partial<Config> = {
         [SDK.CLI_EXTENSTION_SDK]: {
             type: RepoType.GITHUB,
             path: 'https://github.com/Azure/azure-cli-extensions',
+            branch: 'main',
+        },
+        [SDK.DOTNET_SDK]: {
+            type: RepoType.GITHUB,
+            path: 'https://github.com/Azure/azure-sdk-for-net',
             branch: 'main',
         },
     },

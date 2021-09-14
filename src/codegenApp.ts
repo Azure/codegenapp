@@ -264,6 +264,11 @@ class CodegenApp {
             this.logger.info('running auto-complete task every minute');
             codeGenerationService.completeAllCodeGenerations();
         });
+        /* CI code generation schedule-trigger. */
+        cron.schedule('5 1 * * 0', function () {
+            this.logger.info('running CI task every week');
+            codeGenerationService.runCodeGenerationForCI();
+        });
     }
 }
 
