@@ -1,4 +1,10 @@
 import { inject, injectable } from 'inversify';
+import * as yaml from 'node-yaml';
+import { Equal, Not } from 'typeorm';
+
+import { CodeGenerationDao } from '../dao/codeGenerationDao';
+import { GithubDao } from '../dao/githubDao';
+import { TaskResultDao } from '../dao/taskResultDao';
 import { InjectableTypes } from '../injectableTypes/injectableTypes';
 import {
     CodeGenerationDBColumn,
@@ -9,21 +15,16 @@ import {
     RESOUCEMAPFile,
     ResourceAndOperation,
 } from '../models/ResourceAndOperationModel';
-import * as yaml from 'node-yaml';
-
 import { CodeGenerationType, ORG, README, REPO, SDK } from '../models/common';
-import { PipelineVariablesInterface } from '../models/pipelineVariables';
 import { CodeGeneration } from '../models/entity/codegenSqlServer/entity/CodeGeneration';
 import {
     CodegenPipelineTaskResult,
     TaskResult,
 } from '../models/entity/taskResultMongodb/entity/TaskResult';
-import { Logger } from '../utils/logger/logger';
+import { PipelineVariablesInterface } from '../models/pipelineVariables';
 import { CodeGenerationService } from '../service/codeGenerationService';
-import { CodeGenerationDao } from '../dao/codeGenerationDao';
-import { GithubDao } from '../dao/githubDao';
-import { TaskResultDao } from '../dao/taskResultDao';
-import { Equal, Not } from 'typeorm';
+import { Logger } from '../utils/logger/logger';
+
 const MemoryFileSystem = require('memory-fs');
 
 @injectable()
@@ -83,10 +84,8 @@ export class CodeGenerationServiceImpl implements CodeGenerationService {
         rs.generateResourceList();
         if (resources !== undefined) rs.resourcelist = resources;
 
-        const {
-            org: codegenOrg,
-            repo: codegenRepoName,
-        } = this.githubDao.getGitRepoInfo(codegenRepo);
+        const { org: codegenOrg, repo: codegenRepoName } =
+            this.githubDao.getGitRepoInfo(codegenRepo);
         await this.createCodeGenerationByCreatingPR(
             name,
             codegenOrg,
@@ -205,9 +204,8 @@ export class CodeGenerationServiceImpl implements CodeGenerationService {
         /* generate PR in swagger repo. */
         let branch = codegen.name;
 
-        const { org: cgorg, repo: cgreponame } = this.githubDao.getGitRepoInfo(
-            codegenrepo
-        );
+        const { org: cgorg, repo: cgreponame } =
+            this.githubDao.getGitRepoInfo(codegenrepo);
         const fs = new MemoryFileSystem();
         const jsonMapFile: string = 'ToGenerate.json';
         let filepaths: string[] = [];
@@ -274,9 +272,8 @@ export class CodeGenerationServiceImpl implements CodeGenerationService {
         /* generate PR in swagger repo. */
         let branch = name;
 
-        const { org: cgorg, repo: cgreponame } = this.githubDao.getGitRepoInfo(
-            codeGenRepo
-        );
+        const { org: cgorg, repo: cgreponame } =
+            this.githubDao.getGitRepoInfo(codeGenRepo);
 
         const jsonMapFile: string = 'ToGenerate.json';
         const fs = new MemoryFileSystem();
@@ -336,10 +333,8 @@ export class CodeGenerationServiceImpl implements CodeGenerationService {
         let tfSchemafile =
             'azurerm/internal/services/' + resourceProvider + '/schema.json';
         let tfSchemaDir = 'azurerm/internal/services/' + resourceProvider;
-        const {
-            org: sdkOrg,
-            repo: sdkRepoName,
-        } = this.githubDao.getGitRepoInfo(sdkRepo);
+        const { org: sdkOrg, repo: sdkRepoName } =
+            this.githubDao.getGitRepoInfo(sdkRepo);
         const prNumber = codePR.split('/').pop();
         const fileList: string[] = [readmeFile];
         if (sdk === SDK.TF_SDK) {
@@ -428,10 +423,8 @@ export class CodeGenerationServiceImpl implements CodeGenerationService {
         /* generate PR in swagger repo. */
         let branch = codegen.name;
 
-        const {
-            org: swaggerOrg,
-            repo: swaggerRepoName,
-        } = this.githubDao.getGitRepoInfo(swaggerRepo);
+        const { org: swaggerOrg, repo: swaggerRepoName } =
+            this.githubDao.getGitRepoInfo(swaggerRepo);
         const swaggerPR = await this.githubDao.createPullRequest(
             swaggerOrg !== undefined ? swaggerOrg : ORG.AZURE,
             swaggerRepoName !== undefined ? swaggerRepoName : REPO.SWAGGER_REPO,
@@ -442,10 +435,8 @@ export class CodeGenerationServiceImpl implements CodeGenerationService {
 
         /* generate PR in sdk code repo. */
 
-        const {
-            org: sdkOrg,
-            repo: sdkRepoName,
-        } = this.githubDao.getGitRepoInfo(sdkRepo);
+        const { org: sdkOrg, repo: sdkRepoName } =
+            this.githubDao.getGitRepoInfo(sdkRepo);
         const codePR = await this.githubDao.createPullRequest(
             sdkOrg,
             sdkRepoName,
@@ -518,23 +509,22 @@ export class CodeGenerationServiceImpl implements CodeGenerationService {
 
     public async completeAllCodeGenerations() {
         /* Get all code generations which under pipeline completed status. */
-        let codegens: CodeGeneration[] = await this.codeGenerationDao.listCodeGenerationsByStatus(
-            CodeGenerationStatus.CODE_GENERATION_STATUS_PIPELINE_COMPLETED
-        );
+        let codegens: CodeGeneration[] =
+            await this.codeGenerationDao.listCodeGenerationsByStatus(
+                CodeGenerationStatus.CODE_GENERATION_STATUS_PIPELINE_COMPLETED
+            );
         for (let codegen of codegens) {
             const codepr = codegen.codePR;
             if (codepr !== undefined && codepr.length > 0) {
-                const isMerged: boolean = await this.githubDao.isMergedPullRequest(
-                    codepr
-                );
+                const isMerged: boolean =
+                    await this.githubDao.isMergedPullRequest(codepr);
                 if (!isMerged) continue;
             }
 
             const swaggerpr = codegen.swaggerPR;
             if (swaggerpr !== undefined && swaggerpr.length > 0) {
-                const isMerged: boolean = await this.githubDao.isMergedPullRequest(
-                    swaggerpr
-                );
+                const isMerged: boolean =
+                    await this.githubDao.isMergedPullRequest(swaggerpr);
                 if (!isMerged) continue;
             }
             /* pr is merged. complete the code generation. */
@@ -591,15 +581,11 @@ export class CodeGenerationServiceImpl implements CodeGenerationService {
         if (sdk === SDK.CLI_CORE_SDK || sdk === SDK.CLI_EXTENSTION_SDK) {
             sdk = SDK.CLI;
         }
-        const {
-            org: swaggerOrg,
-            repo: swaggerRepoName,
-        } = this.githubDao.getGitRepoInfo(rpToGen.swaggerRepo);
+        const { org: swaggerOrg, repo: swaggerRepoName } =
+            this.githubDao.getGitRepoInfo(rpToGen.swaggerRepo);
 
-        const {
-            org: sdkOrg,
-            repo: sdkRepoName,
-        } = this.githubDao.getGitRepoInfo(rpToGen.sdkRepo);
+        const { org: sdkOrg, repo: sdkRepoName } =
+            this.githubDao.getGitRepoInfo(rpToGen.sdkRepo);
 
         /*Get readme github url with commit. */
         let readmeCommit = rpToGen.commit;
@@ -700,16 +686,15 @@ export class CodeGenerationServiceImpl implements CodeGenerationService {
     }
 
     public async runCodeGenerationForCI() {
-        const codeGens: CodeGeneration[] = await this.codeGenerationDao.listCodeGenerations(
-            {
+        const codeGens: CodeGeneration[] =
+            await this.codeGenerationDao.listCodeGenerations({
                 type: CodeGenerationType.CI,
                 status: Not(
                     Equal(
                         CodeGenerationStatus.CODE_GENERATION_STATUS_IN_PROGRESS
                     )
                 ),
-            }
-        );
+            });
         for (const codeGen of codeGens) {
             try {
                 this.runCodeGeneration(codeGen);

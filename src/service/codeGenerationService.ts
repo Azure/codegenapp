@@ -1,7 +1,7 @@
 import { RepoInfo } from '../models/CodeGenerationModel';
+import { ResourceAndOperation } from '../models/ResourceAndOperationModel';
 import { CodeGeneration } from '../models/entity/codegenSqlServer/entity/CodeGeneration';
 import { CodegenPipelineTaskResult } from '../models/entity/taskResultMongodb/entity/TaskResult';
-import { ResourceAndOperation } from '../models/ResourceAndOperationModel';
 
 export interface CodeGenerationService {
     updateCodeGenerationValuesByName(name: string, values: any);

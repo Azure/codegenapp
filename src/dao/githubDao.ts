@@ -1,5 +1,6 @@
-import { RepoInfo } from '../models/CodeGenerationModel';
 import { MemoryFileSystem } from 'memory-fs';
+
+import { RepoInfo } from '../models/CodeGenerationModel';
 
 export interface GithubDao {
     getCurrentCommit(org: string, repo: string, branch: string);

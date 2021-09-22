@@ -1,13 +1,14 @@
-import { controller, httpPost, httpPut } from 'inversify-express-utils';
-import { check } from 'express-validator/check';
 import { Request } from 'express';
-import { JsonResult } from 'inversify-express-utils/dts/results';
-import { RepoInfo } from '../models/CodeGenerationModel';
-import { BaseController } from './BaseController';
-import { InjectableTypes } from '../injectableTypes/injectableTypes';
+import { check } from 'express-validator/check';
 import { inject } from 'inversify';
+import { controller, httpPost, httpPut } from 'inversify-express-utils';
+import { JsonResult } from 'inversify-express-utils/dts/results';
+
 import { config } from '../config';
+import { InjectableTypes } from '../injectableTypes/injectableTypes';
+import { RepoInfo } from '../models/CodeGenerationModel';
 import { DepthCoverageService } from '../service/depthCoverageService';
+import { BaseController } from './BaseController';
 
 @controller('/depthCoverage')
 export class DepthCoverageController extends BaseController {

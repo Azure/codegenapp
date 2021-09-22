@@ -1,9 +1,9 @@
-import { Column, Entity, ObjectIdColumn } from 'typeorm';
 import {
     MessageRecord,
     PipelineResult,
     PipelineStatus,
 } from '@azure/swagger-validation-common';
+import { Column, Entity, ObjectIdColumn } from 'typeorm';
 
 @Entity('sdkGenerationResults')
 export class TaskResult {

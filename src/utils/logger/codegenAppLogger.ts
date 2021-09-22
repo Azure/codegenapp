@@ -1,7 +1,9 @@
 import * as winston from 'winston';
+
 import { Config } from '../../config/config';
-import { Logger } from './logger';
 import { Env } from '../../config/environment';
+import { Logger } from './logger';
+
 import WinstonDailyRotate = require('winston-daily-rotate-file');
 
 export class CodegenAppLogger implements Logger {
@@ -14,10 +16,11 @@ export class CodegenAppLogger implements Logger {
             return info;
         });
 
-        const consoleTransportOptions: winston.transports.ConsoleTransportOptions = {
-            handleExceptions: true,
-            level: config.loggingConsoleLevel,
-        };
+        const consoleTransportOptions: winston.transports.ConsoleTransportOptions =
+            {
+                handleExceptions: true,
+                level: config.loggingConsoleLevel,
+            };
 
         if (config.env === Env.Development || config.env === Env.Local) {
             consoleTransportOptions.format = winston.format.combine(

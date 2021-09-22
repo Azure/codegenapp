@@ -1,33 +1,35 @@
 import 'reflect-metadata';
-import { Container } from 'inversify';
-import * as express from 'express';
-import { InversifyExpressServer } from 'inversify-express-utils';
-import * as bodyParser from 'body-parser';
+
 import { ManagedIdentityCredential } from '@azure/identity';
 import { SecretClient } from '@azure/keyvault-secrets';
-import './controllers/depthConverageController';
-import './controllers/codeGenerateController';
-import { config } from './config';
-import { InjectableTypes } from './injectableTypes/injectableTypes';
-import { Config } from './config/config';
-import { AuthUtils, CustomersThumbprints } from './utils/authUtils';
-import { ENV } from './config/env';
-import { Connection, createConnection } from 'typeorm';
-import { CodeGenerationDaoImpl } from './daoImpl/codeGenerationDaoImpl';
-import { DepthCoverageDaoImpl } from './daoImpl/depthCoverageDaoImpl';
-import { TaskResultDaoImpl } from './daoImpl/taskResultDaoImpl';
-import { CodeGenerationServiceImpl } from './servicesImpl/codeGenerationServiceImpl';
-import { GithubDaoImpl } from './daoImpl/githubDaoImpl';
+import * as bodyParser from 'body-parser';
+import * as express from 'express';
 import { stringify } from 'flatted';
-import { DepthCoverageServiceImpl } from './servicesImpl/depthCoverageServiceImpl';
 import * as http from 'http';
-import { Logger } from './utils/logger/logger';
-import { CodegenAppLogger } from './utils/logger/codegenAppLogger';
-import { CodeGenerationService } from './service/codeGenerationService';
-import { DepthCoverageService } from './service/depthCoverageService';
+import { Container } from 'inversify';
+import { InversifyExpressServer } from 'inversify-express-utils';
+import { Connection, createConnection } from 'typeorm';
+
+import { config } from './config';
+import { Config } from './config/config';
+import { ENV } from './config/env';
+import './controllers/codeGenerateController';
+import './controllers/depthConverageController';
 import { CodeGenerationDao } from './dao/codeGenerationDao';
 import { GithubDao } from './dao/githubDao';
 import { TaskResultDao } from './dao/taskResultDao';
+import { CodeGenerationDaoImpl } from './daoImpl/codeGenerationDaoImpl';
+import { DepthCoverageDaoImpl } from './daoImpl/depthCoverageDaoImpl';
+import { GithubDaoImpl } from './daoImpl/githubDaoImpl';
+import { TaskResultDaoImpl } from './daoImpl/taskResultDaoImpl';
+import { InjectableTypes } from './injectableTypes/injectableTypes';
+import { CodeGenerationService } from './service/codeGenerationService';
+import { DepthCoverageService } from './service/depthCoverageService';
+import { CodeGenerationServiceImpl } from './servicesImpl/codeGenerationServiceImpl';
+import { DepthCoverageServiceImpl } from './servicesImpl/depthCoverageServiceImpl';
+import { AuthUtils, CustomersThumbprints } from './utils/authUtils';
+import { CodegenAppLogger } from './utils/logger/codegenAppLogger';
+import { Logger } from './utils/logger/logger';
 
 class CodegenApp {
     private container: Container;
@@ -215,9 +217,10 @@ class CodegenApp {
                     );
                     setInterval(async () => {
                         try {
-                            const latestCustomerThumbprints: CustomersThumbprints = await this.container
-                                .get<AuthUtils>(InjectableTypes.AuthUtils)
-                                .getCustomersThumbprints(config.customers);
+                            const latestCustomerThumbprints: CustomersThumbprints =
+                                await this.container
+                                    .get<AuthUtils>(InjectableTypes.AuthUtils)
+                                    .getCustomersThumbprints(config.customers);
                             for (const [key, value] of Object.entries(
                                 latestCustomerThumbprints
                             )) {

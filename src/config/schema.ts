@@ -1,8 +1,9 @@
 import * as convict from 'convict';
+
 import { RepoType, SDK } from '../models/common';
+import { LoggerLevel } from '../utils/logger/loggerLevel';
 import { Config } from './config';
 import { Env } from './environment';
-import { LoggerLevel } from '../utils/logger/loggerLevel';
 
 export const configSchema = convict<Config>({
     env: {

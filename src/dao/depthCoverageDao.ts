@@ -1,5 +1,5 @@
-import { TfCandidateResource } from '../models/entity/depthCoverageSqlServer/entity/tfCandidateResource';
 import { CliCandidateOperation } from '../models/entity/depthCoverageSqlServer/entity/cliCandidateOperation';
+import { TfCandidateResource } from '../models/entity/depthCoverageSqlServer/entity/tfCandidateResource';
 
 export interface DepthCoverageDao {
     ingestCandidates(

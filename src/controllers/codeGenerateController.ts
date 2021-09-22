@@ -1,3 +1,5 @@
+import { Request } from 'express';
+import { inject } from 'inversify';
 import {
     controller,
     httpDelete,
@@ -7,23 +9,22 @@ import {
     httpPut,
 } from 'inversify-express-utils';
 import { JsonResult } from 'inversify-express-utils/dts/results';
-import { Request } from 'express';
-import { BaseController } from './BaseController';
-import { inject } from 'inversify';
+
 import { config } from '../config';
 import { InjectableTypes } from '../injectableTypes/injectableTypes';
-import { CodeGenerationService } from '../service/codeGenerationService';
 import {
     CodeGenerationStatus,
     RepoInfo,
     SDKCodeGenerationDetailInfo,
 } from '../models/CodeGenerationModel';
+import { CodeGenerationType } from '../models/common';
+import { CodeGeneration } from '../models/entity/codegenSqlServer/entity/CodeGeneration';
 import {
     CodegenPipelineTaskResult,
     TaskResult,
 } from '../models/entity/taskResultMongodb/entity/TaskResult';
-import { CodeGeneration } from '../models/entity/codegenSqlServer/entity/CodeGeneration';
-import { CodeGenerationType } from '../models/common';
+import { CodeGenerationService } from '../service/codeGenerationService';
+import { BaseController } from './BaseController';
 
 @controller('/codegenerations')
 export class CodeGenerateController extends BaseController {
@@ -94,9 +95,8 @@ export class CodeGenerateController extends BaseController {
         if (type === undefined) {
             type = CodeGenerationType.ADHOC;
         }
-        const codegen = await this.codeGenerationService.getCodeGenerationByName(
-            name
-        );
+        const codegen =
+            await this.codeGenerationService.getCodeGenerationByName(name);
         if (
             codegen !== undefined &&
             codegen.status !==
@@ -132,9 +132,8 @@ export class CodeGenerateController extends BaseController {
     @httpGet('/:codegenname')
     public async getSDKCodeGeneration(request: Request): Promise<JsonResult> {
         const name = request.params.codegenname;
-        const codegen = await this.codeGenerationService.getCodeGenerationByName(
-            name
-        );
+        const codegen =
+            await this.codeGenerationService.getCodeGenerationByName(name);
         if (!codegen) {
             this.logger.info(
                 'The code generation (' + name + ') does not exist.'
@@ -233,27 +232,29 @@ export class CodeGenerateController extends BaseController {
         }
 
         const pipelineid: string = codegen.lastPipelineBuildID;
-        const taskResults: TaskResult[] = await this.codeGenerationService.getTaskResultByPipelineId(
-            pipelineid
-        );
-        let cginfo: SDKCodeGenerationDetailInfo = new SDKCodeGenerationDetailInfo(
-            codegen.name,
-            codegen.resourceProvider,
-            codegen.serviceType,
-            codegen.resourcesToGenerate,
-            codegen.tag,
-            codegen.sdk,
-            JSON.parse(codegen.swaggerRepo),
-            JSON.parse(codegen.sdkRepo),
-            JSON.parse(codegen.codegenRepo),
-            codegen.owner,
-            codegen.type,
-            codegen.swaggerPR,
-            codegen.codePR,
-            codegen.lastPipelineBuildID,
-            codegen.status,
-            taskResults
-        );
+        const taskResults: TaskResult[] =
+            await this.codeGenerationService.getTaskResultByPipelineId(
+                pipelineid
+            );
+        let cginfo: SDKCodeGenerationDetailInfo =
+            new SDKCodeGenerationDetailInfo(
+                codegen.name,
+                codegen.resourceProvider,
+                codegen.serviceType,
+                codegen.resourcesToGenerate,
+                codegen.tag,
+                codegen.sdk,
+                JSON.parse(codegen.swaggerRepo),
+                JSON.parse(codegen.sdkRepo),
+                JSON.parse(codegen.codegenRepo),
+                codegen.owner,
+                codegen.type,
+                codegen.swaggerPR,
+                codegen.codePR,
+                codegen.lastPipelineBuildID,
+                codegen.status,
+                taskResults
+            );
 
         return this.json(cginfo, 200);
     }
@@ -264,10 +265,11 @@ export class CodeGenerateController extends BaseController {
         request: Request
     ): Promise<JsonResult> {
         let filters = request.query;
-        const codegens: CodeGeneration[] = await this.codeGenerationService.listCodeGenerations(
-            filters,
-            false
-        );
+        const codegens: CodeGeneration[] =
+            await this.codeGenerationService.listCodeGenerations(
+                filters,
+                false
+            );
         return this.json(codegens, 200);
     }
 
@@ -547,12 +549,13 @@ export class CodeGenerateController extends BaseController {
             );
         }
 
-        const customizer = await this.codeGenerationService.customizeCodeGeneration(
-            name,
-            triggerPR,
-            codePR,
-            excludeTest
-        );
+        const customizer =
+            await this.codeGenerationService.customizeCodeGeneration(
+                name,
+                triggerPR,
+                codePR,
+                excludeTest
+            );
 
         if (customizer !== undefined) {
             this.logger.error(

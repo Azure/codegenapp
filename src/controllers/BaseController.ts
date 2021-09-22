@@ -1,5 +1,6 @@
 import { inject } from 'inversify';
 import { BaseHttpController } from 'inversify-express-utils';
+
 import { InjectableTypes } from '../injectableTypes/injectableTypes';
 import { Logger } from '../utils/logger/logger';
 

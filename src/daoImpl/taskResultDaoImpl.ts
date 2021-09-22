@@ -1,11 +1,12 @@
 import { inject, injectable } from 'inversify';
+import { Connection, MongoRepository } from 'typeorm';
+
+import { TaskResultDao } from '../dao/taskResultDao';
+import { InjectableTypes } from '../injectableTypes/injectableTypes';
 import {
     CodegenPipelineTaskResult,
     TaskResult,
 } from '../models/entity/taskResultMongodb/entity/TaskResult';
-import { InjectableTypes } from '../injectableTypes/injectableTypes';
-import { Connection, MongoRepository } from 'typeorm';
-import { TaskResultDao } from '../dao/taskResultDao';
 
 @injectable()
 export class TaskResultDaoImpl implements TaskResultDao {

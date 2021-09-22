@@ -1,17 +1,17 @@
 #!/usr/bin/env node
-
 import {
     MessageRecord,
     PipelineResult,
     PipelineStatus,
     RawMessageRecord,
 } from '@azure/swagger-validation-common';
+
+import { CodeGenerationPipelineTaskName } from '../models/common';
 import {
     CodegenCodeGenerateTaskResult,
     CodegenPipelineTaskResult,
     TestTaskResult,
 } from '../models/entity/taskResultMongodb/entity/TaskResult';
-import { CodeGenerationPipelineTaskName } from '../models/common';
 
 export function formatCodeUrl(
     codegenName: string,
@@ -116,14 +116,15 @@ export function generateCodeGeneratePipelineTaskResultFile(
     logfile: string,
     pipelineResultLog: string
 ): CodegenPipelineTaskResult {
-    const result: CodegenPipelineTaskResult = generateCodeGeneratePipelineTaskResult(
-        codegenname,
-        pipelineBuildId,
-        task,
-        status,
-        pipelineresult,
-        logfile
-    );
+    const result: CodegenPipelineTaskResult =
+        generateCodeGeneratePipelineTaskResult(
+            codegenname,
+            pipelineBuildId,
+            task,
+            status,
+            pipelineresult,
+            logfile
+        );
 
     if (pipelineResultLog !== undefined) {
         const fs = require('fs');

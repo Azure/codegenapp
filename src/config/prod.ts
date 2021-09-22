@@ -1,7 +1,7 @@
-import { Config } from './config';
-import { Env } from './environment';
 import { RepoType, SDK } from '../models/common';
 import { LoggerLevel } from '../utils/logger/loggerLevel';
+import { Config } from './config';
+import { Env } from './environment';
 
 export const environmentConfigProd: Partial<Config> = {
     env: Env.Production,

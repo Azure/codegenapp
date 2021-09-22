@@ -1,29 +1,30 @@
 import { inject, injectable } from 'inversify';
-import { InjectableTypes } from '../injectableTypes/injectableTypes';
+
+import { CodeGenerationDao } from '../dao/codeGenerationDao';
+import { DepthCoverageDao } from '../dao/depthCoverageDao';
+import { GithubDao } from '../dao/githubDao';
 import { DepthCoverageDaoImpl } from '../daoImpl/depthCoverageDaoImpl';
-import { CandidateResource } from '../models/ResourceCandiateModel';
+import { InjectableTypes } from '../injectableTypes/injectableTypes';
+import { CodeGenerationStatus, RepoInfo } from '../models/CodeGenerationModel';
+import {
+    DepthCoverageType,
+    Operation,
+    Resource,
+} from '../models/DepthCoverageModel';
 import {
     JsonOperationMap,
     OnboardOperation,
     OnboardResource,
     ResourceAndOperation,
 } from '../models/ResourceAndOperationModel';
-import {
-    DepthCoverageType,
-    Operation,
-    Resource,
-} from '../models/DepthCoverageModel';
+import { CandidateResource } from '../models/ResourceCandiateModel';
 import { SDK } from '../models/common';
-import { CodeGenerationStatus, RepoInfo } from '../models/CodeGenerationModel';
-import { TfCandidateResource } from '../models/entity/depthCoverageSqlServer/entity/tfCandidateResource';
-import { CliCandidateOperation } from '../models/entity/depthCoverageSqlServer/entity/cliCandidateOperation';
-import { DepthCoverageService } from '../service/depthCoverageService';
-import { CodeGenerationDao } from '../dao/codeGenerationDao';
-import { Logger } from '../utils/logger/logger';
-import { CodeGenerationService } from '../service/codeGenerationService';
 import { CodeGeneration } from '../models/entity/codegenSqlServer/entity/CodeGeneration';
-import { DepthCoverageDao } from '../dao/depthCoverageDao';
-import { GithubDao } from '../dao/githubDao';
+import { CliCandidateOperation } from '../models/entity/depthCoverageSqlServer/entity/cliCandidateOperation';
+import { TfCandidateResource } from '../models/entity/depthCoverageSqlServer/entity/tfCandidateResource';
+import { CodeGenerationService } from '../service/codeGenerationService';
+import { DepthCoverageService } from '../service/depthCoverageService';
+import { Logger } from '../utils/logger/logger';
 
 @injectable()
 export class DepthCoverageServiceImpl implements DepthCoverageService {
@@ -42,9 +43,10 @@ export class DepthCoverageServiceImpl implements DepthCoverageService {
         depthCoverageType: string,
         supportedResources: CandidateResource[] = undefined
     ): Promise<ResourceAndOperation[]> {
-        const opOrResources: any[] = await this.depthCoverageDao.queryDepthCoverageReport(
-            depthCoverageType
-        );
+        const opOrResources: any[] =
+            await this.depthCoverageDao.queryDepthCoverageReport(
+                depthCoverageType
+            );
         /*TODO: get the supported service from db. */
 
         let sdk = '';
@@ -64,19 +66,21 @@ export class DepthCoverageServiceImpl implements DepthCoverageService {
             depthCoverageType ===
                 DepthCoverageType.DEPTH_COVERAGE_TYPE_TF_NOT_SUPPORT_OPERATION
         ) {
-            const res: ResourceAndOperation[] = await this.convertOperationToDepthCoverageResourceAndOperation(
-                opOrResources,
-                sdk,
-                supportedResources
-            );
+            const res: ResourceAndOperation[] =
+                await this.convertOperationToDepthCoverageResourceAndOperation(
+                    opOrResources,
+                    sdk,
+                    supportedResources
+                );
 
             return res;
         } else {
-            const res: ResourceAndOperation[] = await this.convertResourceToDepthCoverageResourceAndOperation(
-                opOrResources,
-                sdk,
-                supportedResources
-            );
+            const res: ResourceAndOperation[] =
+                await this.convertResourceToDepthCoverageResourceAndOperation(
+                    opOrResources,
+                    sdk,
+                    supportedResources
+                );
 
             return res;
         }
@@ -318,9 +322,10 @@ export class DepthCoverageServiceImpl implements DepthCoverageService {
         supported: string[] = undefined
     ): Promise<any> {
         let tfSupportedResource: CandidateResource[] = undefined;
-        const tfCandidates = await this.depthCoverageDao.queryCandidateResources(
-            DepthCoverageType.DEPTH_COVERAGE_TYPE_TF_NOT_SUPPORT_RESOURCE
-        );
+        const tfCandidates =
+            await this.depthCoverageDao.queryCandidateResources(
+                DepthCoverageType.DEPTH_COVERAGE_TYPE_TF_NOT_SUPPORT_RESOURCE
+            );
         if (
             tfCandidates.length > 0 ||
             (supported !== undefined && supported.length > 0)
@@ -343,9 +348,10 @@ export class DepthCoverageServiceImpl implements DepthCoverageService {
         );
 
         let cliSupportedResource: CandidateResource[] = undefined;
-        const cliCandidates = await this.depthCoverageDao.queryCandidateResources(
-            DepthCoverageType.DEPTH_COVERAGE_TYPE_CLI_NOT_SUPPORT_OPERATION
-        );
+        const cliCandidates =
+            await this.depthCoverageDao.queryCandidateResources(
+                DepthCoverageType.DEPTH_COVERAGE_TYPE_CLI_NOT_SUPPORT_OPERATION
+            );
         if (
             cliCandidates.length > 0 ||
             (supported !== undefined && supported.length > 0)
@@ -379,9 +385,8 @@ export class DepthCoverageServiceImpl implements DepthCoverageService {
                     rs.target.toLowerCase() +
                     '-' +
                     rs.RPName;
-                let codegen: CodeGeneration = await this.codeGenerationDao.getCodeGenerationByName(
-                    name
-                );
+                let codegen: CodeGeneration =
+                    await this.codeGenerationDao.getCodeGenerationByName(name);
 
                 if (
                     codegen !== undefined &&
@@ -400,10 +405,8 @@ export class DepthCoverageServiceImpl implements DepthCoverageService {
                             ' Already. Ignore this trigger.'
                     );
                 } else {
-                    const {
-                        org: codegenOrg,
-                        repo: codegenRepoName,
-                    } = this.githubDao.getGitRepoInfo(codegenRepo);
+                    const { org: codegenOrg, repo: codegenRepoName } =
+                        this.githubDao.getGitRepoInfo(codegenRepo);
                     const baseBranch = codegenRepo.branch;
                     await this.codeGenerationService.createCodeGenerationByCreatingPR(
                         codegen.name,

@@ -1,13 +1,14 @@
-import { config } from '../config';
+import * as retry from 'async-retry';
 import * as express from 'express';
-import * as _ from 'lodash';
-import { Customer } from '../config/config';
-import { PeerCertificate, TLSSocket } from 'node:tls';
-import fetch, { RequestInit, Response } from 'node-fetch';
 import { inject, injectable } from 'inversify';
+import * as _ from 'lodash';
+import fetch, { RequestInit, Response } from 'node-fetch';
+import { PeerCertificate, TLSSocket } from 'node:tls';
+
+import { config } from '../config';
+import { Customer } from '../config/config';
 import { InjectableTypes } from '../injectableTypes/injectableTypes';
 import { Logger } from './logger/logger';
-import * as retry from 'async-retry';
 
 @injectable()
 export class AuthUtils {
@@ -91,22 +92,21 @@ export class AuthUtils {
     }
 
     public async getCustomersThumbprints(customers: Customer[]) {
-        const customerThumbprintsPairs: ReadonlyArray<
-            [string, string[]]
-        > = await Promise.all(
-            customers.map(
-                async (c) =>
-                    [
-                        c.id,
+        const customerThumbprintsPairs: ReadonlyArray<[string, string[]]> =
+            await Promise.all(
+                customers.map(
+                    async (c) =>
                         [
-                            ...c.thumbprints,
-                            ...(await this.getWhitelistedCerts(
-                                c.authMetadataEndpoints
-                            )),
-                        ],
-                    ] as [string, string[]]
-            )
-        );
+                            c.id,
+                            [
+                                ...c.thumbprints,
+                                ...(await this.getWhitelistedCerts(
+                                    c.authMetadataEndpoints
+                                )),
+                            ],
+                        ] as [string, string[]]
+                )
+            );
 
         return _.fromPairs(customerThumbprintsPairs);
     }

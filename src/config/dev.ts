@@ -1,7 +1,7 @@
 import { RepoType, SDK } from '../models/common';
+import { LoggerLevel } from '../utils/logger/loggerLevel';
 import { Config } from './config';
 import { Env } from './environment';
-import { LoggerLevel } from '../utils/logger/loggerLevel';
 
 export const environmentConfigDev: Partial<Config> = {
     env: Env.Test,
@@ -27,8 +27,7 @@ export const environmentConfigDev: Partial<Config> = {
     defaultSDKRepos: {
         [SDK.TF_SDK]: {
             type: RepoType.GITHUB,
-            path:
-                'https://github.com/AzureSDKPipelineBot/terraform-provider-azurerm',
+            path: 'https://github.com/AzureSDKPipelineBot/terraform-provider-azurerm',
             branch: 'pipeline',
         },
         [SDK.GO_SDK]: {

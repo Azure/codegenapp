@@ -1,6 +1,4 @@
 import * as azdev from 'azure-devops-node-api';
-import { ConnectionData } from 'azure-devops-node-api/interfaces/LocationsInterfaces';
-import { GitRepository } from 'azure-devops-node-api/interfaces/TfvcInterfaces';
 import { IGitApi } from 'azure-devops-node-api/GitApi';
 import {
     GitCommit,
@@ -8,6 +6,8 @@ import {
     GitRepositoryCreateOptions,
     GitTreeRef,
 } from 'azure-devops-node-api/interfaces/GitInterfaces';
+import { ConnectionData } from 'azure-devops-node-api/interfaces/LocationsInterfaces';
+import { GitRepository } from 'azure-devops-node-api/interfaces/TfvcInterfaces';
 
 export async function getApi(
     serverUrl: string,
@@ -74,9 +74,7 @@ export async function createRepository(
     project: string,
     reponame: string
 ): Promise<GitRepository> {
-    const createOptions: GitRepositoryCreateOptions = <
-        GitRepositoryCreateOptions
-    >{ name: reponame };
+    const createOptions: GitRepositoryCreateOptions = { name: reponame };
     const gitApiObject = await getGitApi(serverUrl);
     let newRepo: GitRepository = await gitApiObject.createRepository(
         createOptions,
@@ -120,7 +118,7 @@ export async function readRepoFile(
     branch: string = 'main'
 ) {
     const gitApiObject = await getGitApi(serverUrl);
-    let searchCriteria = <GitQueryCommitsCriteria>{
+    let searchCriteria = {
         $top: 1,
         itemVersion: { version: branch },
     };

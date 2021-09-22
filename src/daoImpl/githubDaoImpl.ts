@@ -1,10 +1,11 @@
-import { inject, injectable } from 'inversify';
 import { Octokit } from '@octokit/rest';
-import { ENV } from '../config/env';
-import { RepoInfo } from '../models/CodeGenerationModel';
+import { inject, injectable } from 'inversify';
 import { MemoryFileSystem } from 'memory-fs';
-import { InjectableTypes } from '../injectableTypes/injectableTypes';
+
+import { ENV } from '../config/env';
 import { GithubDao } from '../dao/githubDao';
+import { InjectableTypes } from '../injectableTypes/injectableTypes';
+import { RepoInfo } from '../models/CodeGenerationModel';
 import { RepoType } from '../models/common';
 
 @injectable()
@@ -170,9 +171,8 @@ export class GithubDaoImpl implements GithubDao {
             branch = onboardType + '-' + sdk.toLowerCase() + '-' + rp;
         }
         /* delete depth-coverage rp branch */
-        const { org: cgOrg, repo: cgRepoName } = this.getGitRepoInfo(
-            codegenRepo
-        );
+        const { org: cgOrg, repo: cgRepoName } =
+            this.getGitRepoInfo(codegenRepo);
         await this.deleteBranch(cgOrg, cgRepoName, branch);
 
         const { org: sdkOrg, repo: sdkRepoName } = this.getGitRepoInfo(sdkRepo);
@@ -181,9 +181,8 @@ export class GithubDaoImpl implements GithubDao {
         await this.deleteBranch(sdkOrg, sdkRepoName, codeBranch);
 
         /*delete swagger rp branch */
-        const { org: swaggerOrg, repo: swaggerRepoName } = this.getGitRepoInfo(
-            swaggerRepo
-        );
+        const { org: swaggerOrg, repo: swaggerRepoName } =
+            this.getGitRepoInfo(swaggerRepo);
         await this.deleteBranch(swaggerOrg, swaggerRepoName, branch);
     }
 

@@ -1,16 +1,17 @@
 import { inject, injectable } from 'inversify';
-import { InjectableTypes } from '../injectableTypes/injectableTypes';
 import { Connection } from 'typeorm';
 import { Repository } from 'typeorm/repository/Repository';
-import { CliCandidateOperation } from '../models/entity/depthCoverageSqlServer/entity/cliCandidateOperation';
-import { TfCandidateResource } from '../models/entity/depthCoverageSqlServer/entity/tfCandidateResource';
-import { SDK } from '../models/common';
+
+import { DepthCoverageDao } from '../dao/depthCoverageDao';
+import { InjectableTypes } from '../injectableTypes/injectableTypes';
 import { DepthCoverageType } from '../models/DepthCoverageModel';
+import { SDK } from '../models/common';
+import { CliCandidateOperation } from '../models/entity/depthCoverageSqlServer/entity/cliCandidateOperation';
 import { CliNotSupportedOperation } from '../models/entity/depthCoverageSqlServer/entity/cliNotSupportedOperation';
 import { CliNotSupportedResource } from '../models/entity/depthCoverageSqlServer/entity/cliNotSupportedResource';
+import { TfCandidateResource } from '../models/entity/depthCoverageSqlServer/entity/tfCandidateResource';
 import { TfNotSupportedOperation } from '../models/entity/depthCoverageSqlServer/entity/tfNotSupportedOperation';
 import { TfNotSupportedResource } from '../models/entity/depthCoverageSqlServer/entity/tfNotSupportedResource';
-import { DepthCoverageDao } from '../dao/depthCoverageDao';
 
 @injectable()
 export class DepthCoverageDaoImpl implements DepthCoverageDao {
@@ -34,9 +35,8 @@ export class DepthCoverageDaoImpl implements DepthCoverageDao {
         this.cliNotSupportedResourceRepository = connection.getRepository(
             CliNotSupportedResource
         );
-        this.tfCandidateResourceRepository = connection.getRepository(
-            TfCandidateResource
-        );
+        this.tfCandidateResourceRepository =
+            connection.getRepository(TfCandidateResource);
         this.tfNotSupportedOperationRepository = connection.getRepository(
             TfNotSupportedOperation
         );

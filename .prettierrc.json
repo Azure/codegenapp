@@ -1,5 +1,7 @@
 {
   "tabWidth": 4,
   "singleQuote": true,
-  "semi": true
+  "semi": true,
+  "importOrder": ["reflect-metadata", "^[^./]", "^[./]"],
+  "importOrderSeparation": true
 }
