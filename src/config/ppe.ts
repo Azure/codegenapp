@@ -7,8 +7,6 @@ export const environmentConfigPpe: Partial<Config> = {
     env: Env.Preproduction,
     httpPort: 3000,
     httpsPort: 8443,
-    certKeyPath: '.ssh/dev/server.key',
-    certPemPath: '.ssh/dev/server.crt',
     loggingConsoleLevel: LoggerLevel.INFO,
     loggingMaxFiles: 20,
     loggingMaxFileSize: '200MB',
@@ -30,7 +28,8 @@ export const environmentConfigPpe: Partial<Config> = {
     defaultSDKRepos: {
         [SDK.TF_SDK]: {
             type: RepoType.GITHUB,
-            path: 'https://github.com/AzureSDKPipelineBot/terraform-provider-azurerm',
+            path:
+                'https://github.com/AzureSDKPipelineBot/terraform-provider-azurerm',
             branch: 'pipeline',
         },
         [SDK.GO_SDK]: {

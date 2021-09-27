@@ -10,7 +10,7 @@ export interface Config {
     httpPort: number;
     httpsPort: number;
     certKeyPath: string;
-    certPemPath: string;
+    certPath: string;
     ciphers: string;
     loggingConsoleLevel: string;
     loggingMaxFiles: number;
@@ -28,6 +28,29 @@ export interface Config {
     retries: number;
     healthProbeEndpoint: string;
     changeDatabase: boolean;
+    depthDatabase: {
+        server: string;
+        port: number;
+        database: string;
+        username: string;
+        password: string;
+    };
+    codegenDatabase: {
+        server: string;
+        port: number;
+        database: string;
+        username: string;
+        password: string;
+    };
+    mongodb: {
+        server: string;
+        port: number;
+        database: string;
+        username: string;
+        password: string;
+    };
+    keyvaultUrl: string;
+    githubToken: string;
 }
 
 export interface Customer {

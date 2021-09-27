@@ -7,8 +7,6 @@ export const environmentConfigProd: Partial<Config> = {
     env: Env.Production,
     httpPort: 3000,
     httpsPort: 8443,
-    certKeyPath: '.ssh/prod/server.key',
-    certPemPath: '.ssh/prod/server.crt',
     loggingConsoleLevel: LoggerLevel.INFO,
     loggingMaxFiles: 20,
     loggingMaxFileSize: '200MB',

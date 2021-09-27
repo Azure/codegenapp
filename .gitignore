@@ -8,3 +8,4 @@ azurerm
 .vscode
 src/config/credential.config.properties
 *.tgz
+.ssh

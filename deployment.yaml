@@ -1,0 +1,130 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: codegenapp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: codegenapp
+  template:
+    metadata:
+      labels:
+        app: codegenapp
+        aadpodidbinding: azure-pod-identity-binding-selector
+    spec:
+      nodeSelector:
+        "kubernetes.io/os": linux
+      containers:
+        - name: codegenapp
+          image: weidongtestacr.azurecr.io/codegenapp:latest
+          env:
+            - name: DepthDBServer
+              valueFrom:
+                secretKeyRef:
+                  name: depth-db-server
+                  key: key
+            - name: DepthDBPORT
+              valueFrom:
+                secretKeyRef:
+                  name: depth-db-port
+                  key: key
+            - name: DepthDBUsername
+              valueFrom:
+                secretKeyRef:
+                  name: depth-db-username
+                  key: key
+            - name: DepthDBPassword
+              valueFrom:
+                secretKeyRef:
+                  name: depth-db-password
+                  key: key
+            - name: DepthDatabase
+              valueFrom:
+                secretKeyRef:
+                  name: depth-database
+                  key: key
+            - name: CodegenDBServer
+              valueFrom:
+                secretKeyRef:
+                  name: codegen-db-server
+                  key: key
+            - name: CodegenDBPORT
+              valueFrom:
+                secretKeyRef:
+                  name: codegen-db-port
+                  key: key
+            - name: CodegenDBUsername
+              valueFrom:
+                secretKeyRef:
+                  name: codegen-db-username
+                  key: key
+            - name: CodegenDBPassword
+              valueFrom:
+                secretKeyRef:
+                  name: codegen-db-password
+                  key: key
+            - name: CodegenDatabase
+              valueFrom:
+                secretKeyRef:
+                  name: codegen-database
+                  key: key
+            - name: MongoDbHost
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb-server
+                  key: key
+            - name: MongoDbPort
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb-port
+                  key: key
+            - name: MongoDbUsername
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb-username
+                  key: key
+            - name: MongoDbPassword
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb-password
+                  key: key
+            - name: MongoDbDatabase
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb-database
+                  key: key
+            - name: GithubToken
+              valueFrom:
+                secretKeyRef:
+                  name: github-token
+                  key: key
+          ports:
+            - containerPort: 3000
+              name: codegenapp
+          volumeMounts:
+            - name: secrets-store-inline
+              mountPath: "/mnt/secrets-store"
+              readOnly: true
+      volumes:
+        - name: secrets-store-inline
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: spc-myk8skv
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: codegenapp
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 3000
+      name: http
+    - port: 8443
+      name: https
+  selector:
+    app: codegenapp
+

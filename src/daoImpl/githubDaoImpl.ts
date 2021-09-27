@@ -2,7 +2,7 @@ import { Octokit } from '@octokit/rest';
 import { inject, injectable } from 'inversify';
 import { MemoryFileSystem } from 'memory-fs';
 
-import { ENV } from '../config/env';
+import { config } from '../config';
 import { GithubDao } from '../dao/githubDao';
 import { InjectableTypes } from '../injectableTypes/injectableTypes';
 import { RepoInfo } from '../models/CodeGenerationModel';
@@ -13,7 +13,7 @@ export class GithubDaoImpl implements GithubDao {
     @inject(InjectableTypes.Logger) private logger;
 
     public client: Octokit = new Octokit({
-        auth: process.env[ENV.GITHUB_TOKEN],
+        auth: config.githubToken,
     });
 
     public async getCurrentCommit(
@@ -45,6 +45,7 @@ export class GithubDaoImpl implements GithubDao {
         branch: string,
         commitSha: string
     ) {
+        const test = config;
         await this.client.git.createRef({
             owner: org,
             repo,
@@ -171,8 +172,9 @@ export class GithubDaoImpl implements GithubDao {
             branch = onboardType + '-' + sdk.toLowerCase() + '-' + rp;
         }
         /* delete depth-coverage rp branch */
-        const { org: cgOrg, repo: cgRepoName } =
-            this.getGitRepoInfo(codegenRepo);
+        const { org: cgOrg, repo: cgRepoName } = this.getGitRepoInfo(
+            codegenRepo
+        );
         await this.deleteBranch(cgOrg, cgRepoName, branch);
 
         const { org: sdkOrg, repo: sdkRepoName } = this.getGitRepoInfo(sdkRepo);
@@ -181,8 +183,9 @@ export class GithubDaoImpl implements GithubDao {
         await this.deleteBranch(sdkOrg, sdkRepoName, codeBranch);
 
         /*delete swagger rp branch */
-        const { org: swaggerOrg, repo: swaggerRepoName } =
-            this.getGitRepoInfo(swaggerRepo);
+        const { org: swaggerOrg, repo: swaggerRepoName } = this.getGitRepoInfo(
+            swaggerRepo
+        );
         await this.deleteBranch(swaggerOrg, swaggerRepoName, branch);
     }
 

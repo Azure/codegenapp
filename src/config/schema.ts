@@ -32,14 +32,14 @@ export const configSchema = convict<Config>({
     certKeyPath: {
         doc: 'The path to the key file.',
         format: String,
-        default: '.ssh/prod/server.key',
-        env: 'certKeyPath',
+        default: '.ssh/server.key',
+        env: 'CertKeyPath',
     },
-    certPemPath: {
+    certPath: {
         doc: 'The path to the pem file.',
         format: String,
-        default: '.ssh/prod/server.crt',
-        env: 'certPemPath',
+        default: '.ssh/server.crt',
+        env: 'CertPath',
     },
     ciphers: {
         doc: 'The compliant ciphers to use and in the correct order.',
@@ -279,5 +279,114 @@ export const configSchema = convict<Config>({
         doc: 'change the database based on entity',
         format: Boolean,
         default: false,
+    },
+    depthDatabase: {
+        server: {
+            doc: 'The host used to connect db',
+            format: String,
+            default: '',
+            env: 'DepthDBServer',
+        },
+        port: {
+            doc: 'The port used to connect db',
+            format: Number,
+            default: 1433,
+            env: 'DepthDBPORT',
+        },
+        database: {
+            doc: 'The database used to connect db',
+            format: String,
+            default: '',
+            env: 'DepthDatabase',
+        },
+        username: {
+            doc: 'The username used to connect db',
+            format: String,
+            default: '',
+            env: 'DepthDBUsername',
+        },
+        password: {
+            doc: 'The password used to connect db',
+            format: String,
+            default: '',
+            env: 'DepthDBPassword',
+        },
+    },
+
+    codegenDatabase: {
+        server: {
+            doc: 'The host used to connect db',
+            format: String,
+            default: '',
+            env: 'CodegenDBServer',
+        },
+        port: {
+            doc: 'The port used to connect db',
+            format: Number,
+            default: 1433,
+            env: 'CodegenDBPORT',
+        },
+        database: {
+            doc: 'The database used to connect db',
+            format: String,
+            default: '',
+            env: 'CodegenDatabase',
+        },
+        username: {
+            doc: 'The username used to connect db',
+            format: String,
+            default: '',
+            env: 'CodegenDBUsername',
+        },
+        password: {
+            doc: 'The password used to connect db',
+            format: String,
+            default: '',
+            env: 'CodegenDBPassword',
+        },
+    },
+    mongodb: {
+        server: {
+            doc: 'The host used to connect db',
+            format: String,
+            default: '',
+            env: 'MongoDbHost',
+        },
+        port: {
+            doc: 'The port used to connect db',
+            format: Number,
+            default: 10225,
+            env: 'MongoDbPort',
+        },
+        database: {
+            doc: 'The database used to connect db',
+            format: String,
+            default: '',
+            env: 'MongoDbDatabase',
+        },
+        username: {
+            doc: 'The username used to connect db',
+            format: String,
+            default: '',
+            env: 'MongoDbUsername',
+        },
+        password: {
+            doc: 'The password used to connect db',
+            format: String,
+            default: '',
+            env: 'MongoDbPassword',
+        },
+    },
+    keyvaultUrl: {
+        doc: 'The url of keyvault',
+        format: String,
+        default: 'https://sdkautomationtest.vault.azure.net/',
+        env: 'KeyvaultUrl',
+    },
+    githubToken: {
+        doc: 'The token used by github',
+        format: String,
+        default: '',
+        env: 'GithubToken',
     },
 });

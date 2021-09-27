@@ -1,18 +1,18 @@
 import 'reflect-metadata';
 
-import { ManagedIdentityCredential } from '@azure/identity';
-import { SecretClient } from '@azure/keyvault-secrets';
 import * as bodyParser from 'body-parser';
 import * as express from 'express';
 import { stringify } from 'flatted';
+import * as fs from 'fs';
+import { Server } from 'http';
 import * as http from 'http';
+import * as https from 'https';
 import { Container } from 'inversify';
 import { InversifyExpressServer } from 'inversify-express-utils';
 import { Connection, createConnection } from 'typeorm';
 
 import { config } from './config';
 import { Config } from './config/config';
-import { ENV } from './config/env';
 import './controllers/codeGenerateController';
 import './controllers/depthConverageController';
 import { CodeGenerationDao } from './dao/codeGenerationDao';
@@ -40,7 +40,6 @@ class CodegenApp {
 
     public async start(): Promise<void> {
         this.buildLogger();
-        await this.init();
         await this.buildSqlServerConnection();
         await this.buildMongoDBCollection();
         this.buildContainer();
@@ -48,49 +47,15 @@ class CodegenApp {
         this.buildSchedulerTask();
     }
 
-    private async init() {
-        // load config from config.properties
-        const fs = require('fs');
-        if (fs.existsSync('src/config/credential.config.properties')) {
-            const propertiesReader = require('properties-reader');
-            const properties = propertiesReader(
-                'src/config/credential.config.properties'
-            );
-            properties.each((key, value) => {
-                process.env[key] = value;
-            });
-        }
-
-        // load config from keyvault
-        try {
-            const credential = new ManagedIdentityCredential();
-            const keyVaultUrl =
-                process.env[ENV.ENV_KEYVAULT_URL] ||
-                'https://sdkautomationtest.vault.azure.net/';
-
-            const client = new SecretClient(keyVaultUrl, credential);
-            for await (let secretProperties of client.listPropertiesOfSecrets()) {
-                this.logger.info('Secret properties: ', secretProperties);
-                this.logger.info(secretProperties.name);
-                const secret = await client.getSecret(secretProperties.name);
-                process.env[secretProperties.name] = secret.value;
-            }
-        } catch (e) {
-            this.logger.warn('Failed to list key secrets');
-            this.logger.warn(e);
-            this.logger.warn('use the credential locally for test');
-        }
-    }
-
     private async buildSqlServerConnection() {
         this.sqlServerCodegenConnection = await createConnection({
             name: 'codegen',
             type: 'mssql',
-            host: process.env[ENV.ENV_CODEGEN_DB_SERVER],
-            port: parseInt(process.env[ENV.ENV_CODEGEN_DB_PORT]),
-            username: process.env[ENV.ENV_CODEGEN_DB_USER],
-            password: process.env[ENV.ENV_CODEGEN_DB_PASSWORD],
-            database: process.env[ENV.ENV_CODEGEN_DATABASE],
+            host: config.codegenDatabase.server,
+            port: config.codegenDatabase.port,
+            username: config.codegenDatabase.username,
+            password: config.codegenDatabase.password,
+            database: config.codegenDatabase.database,
             synchronize: config.changeDatabase,
             logging: false,
             entities: [
@@ -101,11 +66,11 @@ class CodegenApp {
         this.sqlServerDepthCoverageConnection = await createConnection({
             name: 'depthCoverage',
             type: 'mssql',
-            host: process.env[ENV.ENV_DEPTH_DB_SERVER],
-            port: parseInt(process.env[ENV.ENV_DEPTH_DB_PORT]),
-            username: process.env[ENV.ENV_DEPTH_DB_USER],
-            password: process.env[ENV.ENV_DEPTH_DB_PASSWORD],
-            database: process.env[ENV.ENV_DEPTH_DATABASE],
+            host: config.depthDatabase.server,
+            port: config.depthDatabase.port,
+            username: config.depthDatabase.username,
+            password: config.depthDatabase.password,
+            database: config.depthDatabase.database,
             logging: false,
             entities: [
                 'dist/src/models/entity/depthCoverageSqlServer/entity/**/*.js',
@@ -117,11 +82,11 @@ class CodegenApp {
         this.mongoDbConnection = await createConnection({
             name: 'mongodb',
             type: 'mongodb',
-            host: process.env[ENV.ENV_MONGO_DB_SERVER],
-            port: parseInt(process.env[ENV.ENV_MONGO_DB_PORT]),
-            username: process.env[ENV.ENV_MONGO_DB_USER],
-            password: process.env[ENV.ENV_MONGO_DB_PASSWORD],
-            database: process.env[ENV.ENV_MONGO_DB_DATABASE],
+            host: config.mongodb.server,
+            port: config.mongodb.port,
+            username: config.mongodb.username,
+            password: config.mongodb.password,
+            database: config.mongodb.database,
             ssl: true,
             synchronize: config.changeDatabase,
             logging: true,
@@ -217,10 +182,9 @@ class CodegenApp {
                     );
                     setInterval(async () => {
                         try {
-                            const latestCustomerThumbprints: CustomersThumbprints =
-                                await this.container
-                                    .get<AuthUtils>(InjectableTypes.AuthUtils)
-                                    .getCustomersThumbprints(config.customers);
+                            const latestCustomerThumbprints: CustomersThumbprints = await this.container
+                                .get<AuthUtils>(InjectableTypes.AuthUtils)
+                                .getCustomersThumbprints(config.customers);
                             for (const [key, value] of Object.entries(
                                 latestCustomerThumbprints
                             )) {
@@ -247,13 +211,25 @@ class CodegenApp {
             res.send('welcome to codegen app service.');
         });
 
-        const httpServer = http.createServer(serverInstance);
-        let port = config.httpPort;
+        let webServer: Server;
+        let port: number;
         if (config.enableHttps) {
-            port = config.httpsPort || 8443;
+            webServer = https.createServer(
+                {
+                    key: fs.readFileSync(config.certKeyPath),
+                    cert: fs.readFileSync(config.certPath),
+                    requestCert: true,
+                    rejectUnauthorized: false,
+                },
+                serverInstance
+            );
+            port = config.httpsPort;
+        } else {
+            webServer = http.createServer(serverInstance);
+            port = config.httpPort;
         }
-        httpServer.listen(port, () => {
-            this.logger.info(`Listening http on port: ${config.httpPort}`);
+        webServer.listen(port, () => {
+            this.logger.info(`Listening http on port: ${port}`);
         });
     }
 
