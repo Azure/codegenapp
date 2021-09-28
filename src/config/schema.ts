@@ -9,7 +9,7 @@ export const configSchema = convict<Config>({
     env: {
         doc: 'The application environment.',
         format: [Env.Production, Env.Preproduction, Env.Development, Env.Test],
-        default: Env.Development,
+        default: Env.Test,
         env: 'NODE_ENV',
     },
     httpPort: {
@@ -21,7 +21,7 @@ export const configSchema = convict<Config>({
     httpsPort: {
         doc: 'Backend https port.',
         format: 'port',
-        default: '8443',
+        default: '443',
         env: 'HTTPSPORT',
     },
     enableHttps: {
@@ -32,14 +32,14 @@ export const configSchema = convict<Config>({
     certKeyPath: {
         doc: 'The path to the key file.',
         format: String,
-        default: '.ssh/server.key',
-        env: 'CertKeyPath',
+        default: '/secrets/certs_keys/cert_ssl.key',
+        env: 'certKeyPath',
     },
-    certPath: {
+    certPemPath: {
         doc: 'The path to the pem file.',
         format: String,
-        default: '.ssh/server.crt',
-        env: 'CertPath',
+        default: '/secrets/certs_keys/cert_sslcrt.pem',
+        env: 'certPemPath',
     },
     ciphers: {
         doc: 'The compliant ciphers to use and in the correct order.',
@@ -72,7 +72,7 @@ export const configSchema = convict<Config>({
     serviceName: {
         doc: 'The service name.',
         format: String,
-        default: 'codegenappdev',
+        default: 'sdkpipelinetest',
     },
     defaultCodegenRepo: {
         type: {
@@ -285,31 +285,31 @@ export const configSchema = convict<Config>({
             doc: 'The host used to connect db',
             format: String,
             default: '',
-            env: 'DepthDBServer',
+            env: 'sdkPipelineDepthDBServer',
         },
         port: {
             doc: 'The port used to connect db',
             format: Number,
             default: 1433,
-            env: 'DepthDBPORT',
+            env: 'sdkPipelineDepthDBPort',
         },
         database: {
             doc: 'The database used to connect db',
             format: String,
             default: '',
-            env: 'DepthDatabase',
+            env: 'sdkPipelineDepthDatabase',
         },
         username: {
             doc: 'The username used to connect db',
             format: String,
             default: '',
-            env: 'DepthDBUsername',
+            env: 'sdkPipelineDepthDBUsername',
         },
         password: {
             doc: 'The password used to connect db',
             format: String,
             default: '',
-            env: 'DepthDBPassword',
+            env: 'sdkPipelineDepthDBPassword',
         },
     },
 
@@ -318,31 +318,31 @@ export const configSchema = convict<Config>({
             doc: 'The host used to connect db',
             format: String,
             default: '',
-            env: 'CodegenDBServer',
+            env: 'sdkPipelineCodegenDBServer',
         },
         port: {
             doc: 'The port used to connect db',
             format: Number,
             default: 1433,
-            env: 'CodegenDBPORT',
+            env: 'sdkPipelineCodegenDBPort',
         },
         database: {
             doc: 'The database used to connect db',
             format: String,
             default: '',
-            env: 'CodegenDatabase',
+            env: 'sdkPipelineCodegenDatabase',
         },
         username: {
             doc: 'The username used to connect db',
             format: String,
             default: '',
-            env: 'CodegenDBUsername',
+            env: 'sdkPipelineCodegenDBUsername',
         },
         password: {
             doc: 'The password used to connect db',
             format: String,
             default: '',
-            env: 'CodegenDBPassword',
+            env: 'sdkPipelineCodegenDBPassword',
         },
     },
     mongodb: {
@@ -350,43 +350,37 @@ export const configSchema = convict<Config>({
             doc: 'The host used to connect db',
             format: String,
             default: '',
-            env: 'MongoDbHost',
+            env: 'sdkPipelineMongoDbHost',
         },
         port: {
             doc: 'The port used to connect db',
             format: Number,
             default: 10225,
-            env: 'MongoDbPort',
+            env: 'sdkPipelineMongoDbPort',
         },
         database: {
             doc: 'The database used to connect db',
             format: String,
             default: '',
-            env: 'MongoDbDatabase',
+            env: 'sdkPipelineMongoDbDatabase',
         },
         username: {
             doc: 'The username used to connect db',
             format: String,
             default: '',
-            env: 'MongoDbUsername',
+            env: 'sdkPipelineMongoDbUsername',
         },
         password: {
             doc: 'The password used to connect db',
             format: String,
             default: '',
-            env: 'MongoDbPassword',
+            env: 'sdkPipelineMongoDbPassword',
         },
-    },
-    keyvaultUrl: {
-        doc: 'The url of keyvault',
-        format: String,
-        default: 'https://sdkautomationtest.vault.azure.net/',
-        env: 'KeyvaultUrl',
     },
     githubToken: {
         doc: 'The token used by github',
         format: String,
         default: '',
-        env: 'GithubToken',
+        env: 'sdkPipelineGithubToken',
     },
 });

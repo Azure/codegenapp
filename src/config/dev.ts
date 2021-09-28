@@ -6,7 +6,7 @@ import { Env } from './environment';
 export const environmentConfigDev: Partial<Config> = {
     env: Env.Test,
     httpPort: 3000,
-    httpsPort: 8443,
+    httpsPort: 443,
     enableHttps: false,
     loggingConsoleLevel: LoggerLevel.INFO,
     loggingMaxFiles: 20,
@@ -25,8 +25,7 @@ export const environmentConfigDev: Partial<Config> = {
     defaultSDKRepos: {
         [SDK.TF_SDK]: {
             type: RepoType.GITHUB,
-            path:
-                'https://github.com/AzureSDKPipelineBot/terraform-provider-azurerm',
+            path: 'https://github.com/AzureSDKPipelineBot/terraform-provider-azurerm',
             branch: 'pipeline',
         },
         [SDK.GO_SDK]: {

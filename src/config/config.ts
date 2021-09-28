@@ -10,7 +10,7 @@ export interface Config {
     httpPort: number;
     httpsPort: number;
     certKeyPath: string;
-    certPath: string;
+    certPemPath: string;
     ciphers: string;
     loggingConsoleLevel: string;
     loggingMaxFiles: number;
@@ -49,7 +49,6 @@ export interface Config {
         username: string;
         password: string;
     };
-    keyvaultUrl: string;
     githubToken: string;
 }
 

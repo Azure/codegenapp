@@ -8,7 +8,7 @@ import { config } from '../config';
 import { InjectableTypes } from '../injectableTypes/injectableTypes';
 import { RepoInfo } from '../models/CodeGenerationModel';
 import { DepthCoverageService } from '../service/depthCoverageService';
-import { BaseController } from './BaseController';
+import { BaseController } from './baseController';
 
 @controller('/depthCoverage')
 export class DepthCoverageController extends BaseController {
@@ -33,12 +33,7 @@ export class DepthCoverageController extends BaseController {
         /* The code gen pipeline org. */
         let codegenRepo: RepoInfo = req.body.codegenRepo;
         if (codegenRepo === undefined) {
-            const platform = req.body.platform;
-            if (platform !== undefined && platform.toLowerCase() === 'dev') {
-                codegenRepo = config.defaultCodegenRepo;
-            } else {
-                codegenRepo = config.defaultCodegenRepo;
-            }
+            codegenRepo = config.defaultCodegenRepo;
         }
         const candidate = req.body.candidateResources;
         const err = await this.depthCoverageService.triggerOnboard(

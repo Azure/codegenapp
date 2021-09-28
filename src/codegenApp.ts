@@ -182,9 +182,10 @@ class CodegenApp {
                     );
                     setInterval(async () => {
                         try {
-                            const latestCustomerThumbprints: CustomersThumbprints = await this.container
-                                .get<AuthUtils>(InjectableTypes.AuthUtils)
-                                .getCustomersThumbprints(config.customers);
+                            const latestCustomerThumbprints: CustomersThumbprints =
+                                await this.container
+                                    .get<AuthUtils>(InjectableTypes.AuthUtils)
+                                    .getCustomersThumbprints(config.customers);
                             for (const [key, value] of Object.entries(
                                 latestCustomerThumbprints
                             )) {
@@ -217,7 +218,7 @@ class CodegenApp {
             webServer = https.createServer(
                 {
                     key: fs.readFileSync(config.certKeyPath),
-                    cert: fs.readFileSync(config.certPath),
+                    cert: fs.readFileSync(config.certPemPath),
                     requestCert: true,
                     rejectUnauthorized: false,
                 },

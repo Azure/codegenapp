@@ -24,7 +24,7 @@ import {
     TaskResult,
 } from '../models/entity/taskResultMongodb/entity/TaskResult';
 import { CodeGenerationService } from '../service/codeGenerationService';
-import { BaseController } from './BaseController';
+import { BaseController } from './baseController';
 
 @controller('/codegenerations')
 export class CodeGenerateController extends BaseController {
