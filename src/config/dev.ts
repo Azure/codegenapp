@@ -4,14 +4,13 @@ import { Config } from './config';
 import { Env } from './environment';
 
 export const environmentConfigDev: Partial<Config> = {
-    env: Env.Test,
+    env: Env.Development,
     httpPort: 3000,
     httpsPort: 443,
     enableHttps: false,
     loggingConsoleLevel: LoggerLevel.INFO,
     loggingMaxFiles: 20,
     loggingMaxFileSize: '200MB',
-    serviceName: 'codegenappdev',
     defaultSwaggerRepo: {
         type: RepoType.GITHUB,
         path: 'https://github.com/AzureSDKPipelineBot/azure-rest-api-specs',

@@ -9,7 +9,7 @@ export const configSchema = convict<Config>({
     env: {
         doc: 'The application environment.',
         format: [Env.Production, Env.Preproduction, Env.Development, Env.Test],
-        default: Env.Test,
+        default: Env.Development,
         env: 'NODE_ENV',
     },
     httpPort: {
@@ -69,10 +69,28 @@ export const configSchema = convict<Config>({
         format: String,
         default: '200MB',
     },
+    statsdHost: {
+        doc: 'The statsd host name.',
+        format: String,
+        default: 'geneva-services.geneva-monitoring',
+        env: 'statsdHost',
+    },
+    statsdPort: {
+        doc: 'The statsd port.',
+        format: Number,
+        default: 8125,
+        env: 'statsdPort',
+    },
+    deploymentRegion: {
+        doc: 'The region of this service deployed to',
+        format: String,
+        default: 'eastus',
+        env: 'DEPLOYMENT_REGION',
+    },
     serviceName: {
         doc: 'The service name.',
         format: String,
-        default: 'sdkpipelinetest',
+        default: 'sdkpipeline',
     },
     defaultCodegenRepo: {
         type: {

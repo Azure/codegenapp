@@ -7,5 +7,4 @@ export enum Env {
     Preproduction = 'preproduction',
     Development = 'development',
     Test = 'test',
-    Local = 'local',
 }

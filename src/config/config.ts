@@ -15,6 +15,9 @@ export interface Config {
     loggingConsoleLevel: string;
     loggingMaxFiles: number;
     loggingMaxFileSize: string;
+    statsdHost: string;
+    statsdPort: number;
+    deploymentRegion: string;
     serviceName: string;
     defaultCodegenRepo: RepoInfo;
     defaultSwaggerRepo: RepoInfo;

@@ -11,7 +11,6 @@ export const environmentConfigTest: Partial<Config> = {
     loggingConsoleLevel: LoggerLevel.INFO,
     loggingMaxFiles: 20,
     loggingMaxFileSize: '200MB',
-    serviceName: 'sdkpipelinetest',
     defaultSwaggerRepo: {
         type: RepoType.GITHUB,
         path: 'https://github.com/AzureSDKPipelineBot/azure-rest-api-specs',

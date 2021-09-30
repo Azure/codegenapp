@@ -4,8 +4,8 @@ import * as bodyParser from 'body-parser';
 import * as express from 'express';
 import { stringify } from 'flatted';
 import * as fs from 'fs';
-import { Server } from 'http';
 import * as http from 'http';
+import { Server } from 'http';
 import * as https from 'https';
 import { Container } from 'inversify';
 import { InversifyExpressServer } from 'inversify-express-utils';
@@ -30,6 +30,9 @@ import { DepthCoverageServiceImpl } from './servicesImpl/depthCoverageServiceImp
 import { AuthUtils, CustomersThumbprints } from './utils/authUtils';
 import { CodegenAppLogger } from './utils/logger/codegenAppLogger';
 import { Logger } from './utils/logger/logger';
+import { emitMetric, Metrics } from './utils/logger/telemetry';
+
+const morgan = require('morgan');
 
 class CodegenApp {
     private container: Container;
@@ -173,6 +176,48 @@ class CodegenApp {
                     })
                 );
                 app.use(bodyParser.json());
+
+                app.use(
+                    morgan(
+                        function (tokens, req, res) {
+                            const content = {
+                                method: tokens.method(req, res),
+                                path: tokens.url(req, res),
+                                userAgent: tokens['user-agent'](req, res),
+                                statusCode: tokens.status(req, res),
+                                time: tokens['total-time'](req, res),
+                            };
+                            if (
+                                content.path &&
+                                content.path.includes('alive')
+                            ) {
+                                emitMetric(Metrics.LIVENESS, 1, content);
+                            } else {
+                                emitMetric(Metrics.API_CALLS, 1, content);
+                            }
+                            if (content.statusCode === 400) {
+                                emitMetric(Metrics.BAD_REQUEST, 1, content);
+                            } else if (content.statusCode === 404) {
+                                emitMetric(Metrics.NOT_FOUND, 1, content);
+                            } else if (content.statusCode === 500) {
+                                emitMetric(
+                                    Metrics.INTERNAL_SERVER_ERROR,
+                                    1,
+                                    content
+                                );
+                            } else {
+                                emitMetric(Metrics.SUCCESS, 1, content);
+                            }
+                            return JSON.stringify(content);
+                        },
+                        {
+                            stream: {
+                                write: (message) => this.logger.info(message),
+                            },
+                        }
+                    )
+                );
+
                 app.use(express.json());
                 if (config.enableHttps && config.clientAuthEnabled) {
                     app.use((req, res, next) =>
@@ -209,7 +254,12 @@ class CodegenApp {
             });
         const serverInstance = server.build();
         serverInstance.get('/', function (req, res) {
-            res.send('welcome to codegen app service.');
+            res.send('welcome to sdk pipeline service.');
+            res.status(200);
+        });
+        serverInstance.get('/alive', function (req, res) {
+            res.send('alive');
+            res.status(200);
         });
 
         let webServer: Server;
