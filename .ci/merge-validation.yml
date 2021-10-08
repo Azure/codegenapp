@@ -1,4 +1,4 @@
-trigger:
+pr:
   - main
   - dev
 
@@ -22,12 +22,3 @@ steps:
   - script: |
       npm run build
     displayName: 'npm run build'
-
-  - task: Docker@2
-    displayName: Build and push an image to container registry
-    inputs:
-      containerRegistry: 'openapi-test-docker-sc'
-      repository: 'openapi/sdkpipeline'
-      command: 'buildAndPush'
-      Dockerfile: 'Dockerfile'
-      tags: '$(Build.BuildNumber)'
