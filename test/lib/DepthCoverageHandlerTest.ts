@@ -12,7 +12,7 @@
 //     //   process.env[ENVKEY.ENV_DEPTH_DB_PASSWORD],
 //     //   process.env[ENVKEY.ENV_REPO_ACCESS_TOKEN],
 //     //   "chunyu3",
-//     //   "depth-coverage-pipeline"
+//     //   "azure-sdk-pipeline"
 //     // );
 //   });
 // });

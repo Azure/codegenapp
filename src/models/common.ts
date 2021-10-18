@@ -3,7 +3,7 @@ export enum REPO {
     TF_PROVIDER_REPO = 'terraform-provider-azurerm',
     CLI_REPO = 'azure-cli',
     CLI_EXTENSION_REPO = 'azure-cli-extensions',
-    DEPTH_COVERAGE_REPO = 'depth-coverage-pipeline',
+    DEPTH_COVERAGE_REPO = 'azure-sdk-pipeline',
 }
 
 export enum ORG {

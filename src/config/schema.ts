@@ -101,7 +101,7 @@ export const configSchema = convict<Config>({
         path: {
             doc: 'The url path of codegen repository.',
             format: String,
-            default: 'https://github.com/Azure/depth-coverage-pipeline',
+            default: 'https://github.com/Azure/azure-sdk-pipeline',
         },
         branch: {
             doc: 'The main branch of codegen repository.',

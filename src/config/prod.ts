@@ -22,7 +22,7 @@ export const environmentConfigProd: Partial<Config> = {
     },
     defaultCodegenRepo: {
         type: RepoType.GITHUB,
-        path: 'https://github.com/Azure/depth-coverage-pipeline',
+        path: 'https://github.com/Azure/azure-sdk-pipeline',
         branch: 'main',
     },
     defaultSDKRepos: {

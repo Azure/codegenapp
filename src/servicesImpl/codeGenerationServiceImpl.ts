@@ -226,7 +226,7 @@ export class CodeGenerationServiceImpl implements CodeGenerationService {
             filepaths.push(jsonMapFile);
         }
 
-        /* update depth-coverage-pipeline trigger pull request. */
+        /* update azure-sdk-pipeline trigger pull request. */
         await this.githubDao.uploadToRepo(
             fs,
             filepaths,
@@ -385,7 +385,7 @@ export class CodeGenerationServiceImpl implements CodeGenerationService {
             filePaths.push(swaggerSchemaPath);
         }
 
-        /* update depth-coverage-pipeline trigger pull request. */
+        /* update azure-sdk-pipeline trigger pull request. */
         await this.githubDao.uploadToRepo(
             fs,
             filePaths,
