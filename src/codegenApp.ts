@@ -69,11 +69,12 @@ class CodegenApp {
         this.sqlServerDepthCoverageConnection = await createConnection({
             name: 'depthCoverage',
             type: 'mssql',
-            host: config.depthDatabase.server,
-            port: config.depthDatabase.port,
-            username: config.depthDatabase.username,
-            password: config.depthDatabase.password,
-            database: config.depthDatabase.database,
+            host: config.codegenDatabase.server,
+            port: config.codegenDatabase.port,
+            username: config.codegenDatabase.username,
+            password: config.codegenDatabase.password,
+            database: config.codegenDatabase.database,
+            synchronize: config.changeDatabase,
             logging: false,
             entities: [
                 'dist/src/models/entity/depthCoverageSqlServer/entity/**/*.js',
