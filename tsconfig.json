@@ -6,13 +6,11 @@
         ],
         "outDir": "dist",
         "module": "commonjs",
-        "types": [
-            "node",
-            "jest"
-        ],
-        "target": "es2017", 
+        "target": "es2017",
         "sourceMap" :true,
-        "experimentalDecorators": true
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "strictNullChecks": false
     },
     "exclude": [
         "node_modules",
