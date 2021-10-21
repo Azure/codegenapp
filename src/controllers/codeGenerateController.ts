@@ -233,25 +233,24 @@ export class CodeGenerateController extends BaseController {
             await this.codeGenerationService.getTaskResultByPipelineId(
                 pipelineid
             );
-        let cginfo: SDKCodeGenerationDetailInfo =
-            new SDKCodeGenerationDetailInfo(
-                codegen.name,
-                codegen.resourceProvider,
-                codegen.serviceType,
-                codegen.resourcesToGenerate,
-                codegen.tag,
-                codegen.sdk,
-                JSON.parse(codegen.swaggerRepo),
-                JSON.parse(codegen.sdkRepo),
-                JSON.parse(codegen.codegenRepo),
-                codegen.owner,
-                codegen.type,
-                codegen.swaggerPR,
-                codegen.codePR,
-                codegen.lastPipelineBuildID,
-                codegen.status,
-                taskResults
-            );
+        let cginfo = {
+            name: codegen.name,
+            resourceProvider: codegen.resourceProvider,
+            serviceType: codegen.serviceType,
+            resourcesToGenerate: codegen.resourcesToGenerate,
+            tag: codegen.tag,
+            sdk: codegen.sdk,
+            swaggerRepo: codegen.swaggerRepo,
+            sdkRepo: codegen.sdkRepo,
+            codegenRepo: codegen.codegenRepo,
+            owner: codegen.owner,
+            type: codegen.type,
+            swaggerPR: codegen.swaggerPR,
+            codePR: codegen.codePR,
+            lastPipelineBuildID: codegen.lastPipelineBuildID,
+            status: codegen.status,
+            taskResults = taskResults;
+        }
 
         return this.json(cginfo, 200);
     }
