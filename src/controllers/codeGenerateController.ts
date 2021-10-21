@@ -19,10 +19,7 @@ import {
 } from '../models/CodeGenerationModel';
 import { CodeGenerationType } from '../models/common';
 import { CodeGeneration } from '../models/entity/codegenSqlServer/entity/CodeGeneration';
-import {
-    CodegenPipelineTaskResult,
-    TaskResult,
-} from '../models/entity/taskResultMongodb/entity/TaskResult';
+import { CodegenPipelineTaskResult } from '../models/entity/taskResultMongodb/entity/TaskResult';
 import { CodeGenerationService } from '../service/codeGenerationService';
 import { BaseController } from './baseController';
 
@@ -232,7 +229,7 @@ export class CodeGenerateController extends BaseController {
         }
 
         const pipelineid: string = codegen.lastPipelineBuildID;
-        const taskResults: TaskResult[] =
+        const taskResults: CodegenPipelineTaskResult[] =
             await this.codeGenerationService.getTaskResultByPipelineId(
                 pipelineid
             );
