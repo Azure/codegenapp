@@ -249,8 +249,8 @@ export class CodeGenerateController extends BaseController {
             codePR: codegen.codePR,
             lastPipelineBuildID: codegen.lastPipelineBuildID,
             status: codegen.status,
-            taskResults = taskResults;
-        }
+            taskResults: taskResults,
+        };
 
         return this.json(cginfo, 200);
     }
