@@ -18,11 +18,17 @@ export class TaskResultDaoImpl implements TaskResultDao {
         this.repo = connection.getMongoRepository(TaskResult);
     }
 
-    public async getFromBuild(pipelineBuildId: string): Promise<TaskResult[]> {
+    public async getFromBuild(
+        pipelineBuildId: string
+    ): Promise<CodegenPipelineTaskResult[]> {
         const taskResults: TaskResult[] = await this.repo.find({
             pipelineBuildId: pipelineBuildId,
         });
-        return taskResults;
+        const results: CodegenPipelineTaskResult[] = [];
+        for (const taskResult of taskResults) {
+            results.push(taskResult.taskResult);
+        }
+        return results;
     }
 
     public async put(

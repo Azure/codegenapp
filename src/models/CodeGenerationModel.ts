@@ -1,5 +1,5 @@
 import { CodeGeneration } from './entity/codegenSqlServer/entity/CodeGeneration';
-import { TaskResult } from './entity/taskResultMongodb/entity/TaskResult';
+import { CodegenPipelineTaskResult } from './entity/taskResultMongodb/entity/TaskResult';
 
 export enum CodeGenerationStatus {
     CODE_GENERATION_STATUS_SUBMIT = 'submit',
@@ -52,7 +52,7 @@ export class SDKCodeGenerationDetailInfo extends CodeGeneration {
         codePR: string = '',
         pipelineBuildID: string = '',
         status: string = 'submit',
-        results: TaskResult[] = []
+        results: CodegenPipelineTaskResult[] = []
     ) {
         super();
         this.name = name;
@@ -73,5 +73,5 @@ export class SDKCodeGenerationDetailInfo extends CodeGeneration {
         this.taskResults = results;
     }
 
-    public taskResults: TaskResult[] = [];
+    public taskResults: CodegenPipelineTaskResult[] = [];
 }
