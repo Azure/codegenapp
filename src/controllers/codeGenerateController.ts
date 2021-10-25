@@ -482,8 +482,8 @@ export class CodeGenerateController extends BaseController {
         request: Request
     ): Promise<JsonResult> {
         const name = request.params.codegenname;
-        const triggerPR = request.body.triggerPR as string;
-        const codePR = request.body.codePR as string;
+        const triggerPR = request.query.triggerPR as string;
+        const codePR = request.query.codePR as string;
 
         let excludeTest: boolean = false;
         if (request.query.excludeTest !== undefined) {
