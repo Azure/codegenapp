@@ -19,10 +19,7 @@ import {
 } from '../models/CodeGenerationModel';
 import { CodeGenerationType } from '../models/common';
 import { CodeGeneration } from '../models/entity/codegenSqlServer/entity/CodeGeneration';
-import {
-    CodegenPipelineTaskResult,
-    TaskResult,
-} from '../models/entity/taskResultMongodb/entity/TaskResult';
+import { CodegenPipelineTaskResult } from '../models/entity/taskResultMongodb/entity/TaskResult';
 import { CodeGenerationService } from '../service/codeGenerationService';
 import { BaseController } from './baseController';
 
@@ -232,29 +229,28 @@ export class CodeGenerateController extends BaseController {
         }
 
         const pipelineid: string = codegen.lastPipelineBuildID;
-        const taskResults: TaskResult[] =
+        const taskResults: CodegenPipelineTaskResult[] =
             await this.codeGenerationService.getTaskResultByPipelineId(
                 pipelineid
             );
-        let cginfo: SDKCodeGenerationDetailInfo =
-            new SDKCodeGenerationDetailInfo(
-                codegen.name,
-                codegen.resourceProvider,
-                codegen.serviceType,
-                codegen.resourcesToGenerate,
-                codegen.tag,
-                codegen.sdk,
-                JSON.parse(codegen.swaggerRepo),
-                JSON.parse(codegen.sdkRepo),
-                JSON.parse(codegen.codegenRepo),
-                codegen.owner,
-                codegen.type,
-                codegen.swaggerPR,
-                codegen.codePR,
-                codegen.lastPipelineBuildID,
-                codegen.status,
-                taskResults
-            );
+        let cginfo = {
+            name: codegen.name,
+            resourceProvider: codegen.resourceProvider,
+            serviceType: codegen.serviceType,
+            resourcesToGenerate: codegen.resourcesToGenerate,
+            tag: codegen.tag,
+            sdk: codegen.sdk,
+            swaggerRepo: JSON.parse(codegen.swaggerRepo),
+            sdkRepo: JSON.parse(codegen.sdkRepo),
+            codegenRepo: JSON.parse(codegen.codegenRepo),
+            owner: codegen.owner,
+            type: codegen.type,
+            swaggerPR: codegen.swaggerPR,
+            codePR: codegen.codePR,
+            lastPipelineBuildID: codegen.lastPipelineBuildID,
+            status: codegen.status,
+            taskResults: taskResults,
+        };
 
         return this.json(cginfo, 200);
     }

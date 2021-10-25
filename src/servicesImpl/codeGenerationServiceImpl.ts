@@ -17,10 +17,7 @@ import {
 } from '../models/ResourceAndOperationModel';
 import { CodeGenerationType, ORG, README, REPO, SDK } from '../models/common';
 import { CodeGeneration } from '../models/entity/codegenSqlServer/entity/CodeGeneration';
-import {
-    CodegenPipelineTaskResult,
-    TaskResult,
-} from '../models/entity/taskResultMongodb/entity/TaskResult';
+import { CodegenPipelineTaskResult } from '../models/entity/taskResultMongodb/entity/TaskResult';
 import { PipelineVariablesInterface } from '../models/pipelineVariables';
 import { CodeGenerationService } from '../service/codeGenerationService';
 import { Logger } from '../utils/logger/logger';
@@ -125,7 +122,9 @@ export class CodeGenerationServiceImpl implements CodeGenerationService {
         return err;
     }
 
-    public async getTaskResultByPipelineId(id: string): Promise<TaskResult[]> {
+    public async getTaskResultByPipelineId(
+        id: string
+    ): Promise<CodegenPipelineTaskResult[]> {
         return await this.taskResultDao.getFromBuild(id);
     }
 
