@@ -622,6 +622,7 @@ export class CodeGenerationServiceImpl implements CodeGenerationService {
                 SDK_REPO_OWNER: sdkOrg,
                 SDK_REPO_NAME: sdkRepoName,
                 README_FILE_GITHUB_URL_WITH_COMMIT: readmeurl,
+                CHECK_OUT: rpToGen.onboardType === CodeGenerationType.RELEASE,
             },
         };
         fs.writeFileSync('/' + 'Variables.yml', yaml.dump(v));

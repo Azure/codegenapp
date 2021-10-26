@@ -18,5 +18,6 @@ export interface PipelineVariablesInterface {
         SDK_REPO_NAME: string;
         SDK_REPO_OWNER: string;
         README_FILE_GITHUB_URL_WITH_COMMIT: string;
+        CHECK_OUT: boolean;
     };
 }
