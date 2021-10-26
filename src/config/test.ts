@@ -3,57 +3,53 @@ import { LoggerLevel } from '../utils/logger/loggerLevel';
 import { Config } from './config';
 import { Env } from './environment';
 
-export const environmentConfigProd: Partial<Config> = {
-    env: Env.Production,
+export const environmentConfigTest: Partial<Config> = {
+    env: Env.Test,
     httpPort: 3000,
     httpsPort: 443,
+    enableHttps: true,
     loggingConsoleLevel: LoggerLevel.INFO,
     loggingMaxFiles: 20,
     loggingMaxFileSize: '200MB',
-    // serviceEnvironment: "",
-    serviceName: 'sdkpipeline',
-    // statsdHost: "",
-    // statsdPort: 443,
-    // namespaceName: "",
     defaultSwaggerRepo: {
         type: RepoType.GITHUB,
-        path: 'https://github.com/Azure/azure-rest-api-specs',
+        path: 'https://github.com/AzureSDKPipelineBot/azure-rest-api-specs',
         branch: 'main',
     },
     defaultCodegenRepo: {
         type: RepoType.GITHUB,
         path: 'https://github.com/Azure/azure-sdk-pipeline',
-        branch: 'main',
+        branch: 'dev',
     },
     defaultSDKRepos: {
         [SDK.TF_SDK]: {
             type: RepoType.GITHUB,
-            path: 'https://github.com/microsoft/terraform-provider-azurerm',
+            path: 'https://github.com/AzureSDKPipelineBot/terraform-provider-azurerm',
             branch: 'pipeline',
         },
         [SDK.GO_SDK]: {
             type: RepoType.GITHUB,
-            path: 'https://github.com/Azure/azure-sdk-for-go',
+            path: 'https://github.com/AzureSDKPipelineBot/azure-sdk-for-go',
             branch: 'main',
         },
         [SDK.CLI_CORE_SDK]: {
             type: RepoType.GITHUB,
-            path: 'https://github.com/Azure/azure-cli',
+            path: 'https://github.com/AzureSDKPipelineBot/azure-cli',
             branch: 'dev',
         },
         [SDK.CLI_EXTENSTION_SDK]: {
             type: RepoType.GITHUB,
-            path: 'https://github.com/Azure/azure-cli-extensions',
+            path: 'https://github.com/AzureSDKPipelineBot/azure-cli-extensions',
             branch: 'main',
         },
         [SDK.DOTNET_SDK]: {
             type: RepoType.GITHUB,
-            path: 'https://github.com/Azure/azure-sdk-for-net',
+            path: 'https://github.com/AzureSDKPipelineBot/azure-sdk-for-net',
             branch: 'main',
         },
     },
     armEndpoint: 'https://management.azure.com',
-    clientAuthEnabled: true,
+    clientAuthEnabled: false,
     retries: 2,
-    changeDatabase: false,
+    changeDatabase: true,
 };
