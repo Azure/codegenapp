@@ -29,7 +29,7 @@ export class CodeGeneration {
     ignoreFailure: string;
     @Column({ nullable: true })
     stages: string;
-    @Column({ nullable: true })
+    @Column({ nullable: true, default: '' })
     lastPipelineBuildID: string;
     @Column({ nullable: true })
     swaggerPR: string;
