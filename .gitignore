@@ -5,7 +5,6 @@ logs
 specification
 azurerm
 .deployment
-.vscode
 src/config/credential.config.properties
 *.tgz
 .ssh

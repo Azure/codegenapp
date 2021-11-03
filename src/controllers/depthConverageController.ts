@@ -1,5 +1,5 @@
 import { Request } from 'express';
-import { check } from 'express-validator/check';
+import { check } from 'express-validator';
 import { inject } from 'inversify';
 import { controller, httpPost, httpPut } from 'inversify-express-utils';
 import { JsonResult } from 'inversify-express-utils/dts/results';
