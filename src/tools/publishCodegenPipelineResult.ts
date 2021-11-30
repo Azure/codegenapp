@@ -11,7 +11,7 @@ import {
     CodegenCodeGenerateTaskResult,
     CodegenPipelineTaskResult,
     TestTaskResult,
-} from '../models/entity/taskResultMongodb/entity/TaskResult';
+} from '../models/entity/TaskResult';
 
 export function formatCodeUrl(
     codegenName: string,

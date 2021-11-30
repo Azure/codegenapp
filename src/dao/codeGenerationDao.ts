@@ -1,4 +1,4 @@
-import { CodeGeneration } from '../models/entity/codegenSqlServer/entity/CodeGeneration';
+import { CodeGeneration } from '../models/entity/CodeGeneration';
 
 export interface CodeGenerationDao {
     getCodeGenerationByName(name: string);

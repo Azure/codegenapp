@@ -41,7 +41,7 @@ export const environmentConfigProd: Partial<Config> = {
             path: 'https://github.com/Azure/azure-cli',
             branch: 'dev',
         },
-        [SDK.CLI_EXTENSTION_SDK]: {
+        [SDK.CLI_EXTENSION_SDK]: {
             type: RepoType.GITHUB,
             path: 'https://github.com/Azure/azure-cli-extensions',
             branch: 'main',

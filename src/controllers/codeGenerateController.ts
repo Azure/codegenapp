@@ -18,8 +18,8 @@ import {
     SDKCodeGenerationDetailInfo,
 } from '../models/CodeGenerationModel';
 import { CodeGenerationType } from '../models/common';
-import { CodeGeneration } from '../models/entity/codegenSqlServer/entity/CodeGeneration';
-import { CodegenPipelineTaskResult } from '../models/entity/taskResultMongodb/entity/TaskResult';
+import { CodeGeneration } from '../models/entity/CodeGeneration';
+import { CodegenPipelineTaskResult } from '../models/entity/TaskResult';
 import { CodeGenerationService } from '../service/codeGenerationService';
 import { BaseController } from './baseController';
 

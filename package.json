@@ -13,7 +13,7 @@
     "coverage": "nyc npm run test",
     "lint-fix": "prettier --write \"**/*.ts\"",
     "eslint-fix": "eslint  . --fix --ext .ts",
-    "build": "tsc -p .",
+    "build": "rimraf dist && tsc -p .",
     "start-testserver": "./node_modules/.bin/start-autorest-testserver",
     "stop-testserver": "./node_modules/.bin/stop-autorest-testserver",
     "watch": "tsc -p . --watch",
@@ -51,6 +51,7 @@
     "mocha-prepare": "^0.1.0",
     "nyc": "^15.1.0",
     "prettier": "^2.4.1",
+    "rimraf": "^3.0.2",
     "shelljs": "^0.8.3",
     "ts-jest": "^26.4.4"
   },

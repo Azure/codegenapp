@@ -183,7 +183,7 @@ export const configSchema = convict<Config>({
                 default: 'dev',
             },
         },
-        [SDK.CLI_EXTENSTION_SDK]: {
+        [SDK.CLI_EXTENSION_SDK]: {
             type: {
                 doc: 'The cliextension repository type.',
                 format: String,
@@ -217,18 +217,56 @@ export const configSchema = convict<Config>({
                 default: 'main',
             },
         },
-    },
-    database: {
-        connectionString: {
-            doc: 'The mongo db connection string.',
-            format: String,
-            default:
-                'mongodb://sdkcodegen:g2MhYaEUT4CMDdw18BGbduTkjFUFXB69tX6xpCHFEzgkp8mZBuTFY8OdzvDJctBdpOQiSctmjmOyKahnkr2ZeA==@sdkcodegen.mongo.cosmos.azure.com:10255/?ssl=true&retrywrites=false&maxIdleTimeMS=120000&appName=@sdkcodegen@',
+        [SDK.JS_SDK]: {
+            type: {
+                doc: 'The js repository type.',
+                format: String,
+                default: RepoType.GITHUB,
+            },
+            path: {
+                doc: 'The url path of js repository.',
+                format: String,
+                default: 'https://github.com/Azure/azure-sdk-for-js',
+            },
+            branch: {
+                doc: 'The main branch of js repository.',
+                format: String,
+                default: 'main',
+            },
         },
-        databaseName: {
-            doc: 'The mongo entity name.',
-            format: String,
-            default: 'openapiPlatform',
+        [SDK.JAVA_SDK]: {
+            type: {
+                doc: 'The java repository type.',
+                format: String,
+                default: RepoType.GITHUB,
+            },
+            path: {
+                doc: 'The url path of java repository.',
+                format: String,
+                default: 'https://github.com/Azure/azure-sdk-for-net',
+            },
+            branch: {
+                doc: 'The main branch of java repository.',
+                format: String,
+                default: 'main',
+            },
+        },
+        [SDK.PYTHON_SDK]: {
+            type: {
+                doc: 'The python repository type.',
+                format: String,
+                default: RepoType.GITHUB,
+            },
+            path: {
+                doc: 'The url path of python repository.',
+                format: String,
+                default: 'https://github.com/Azure/azure-sdk-for-net',
+            },
+            branch: {
+                doc: 'The main branch of python repository.',
+                format: String,
+                default: 'main',
+            },
         },
     },
     armEndpoint: {
@@ -298,107 +336,74 @@ export const configSchema = convict<Config>({
         format: Boolean,
         default: false,
     },
-    depthDatabase: {
-        server: {
-            doc: 'The host used to connect db',
-            format: String,
-            default: '',
-            env: 'sdkPipelineDepthDBServer',
-        },
-        port: {
-            doc: 'The port used to connect db',
-            format: Number,
-            default: 1433,
-            env: 'sdkPipelineDepthDBPort',
-        },
-        database: {
-            doc: 'The database used to connect db',
-            format: String,
-            default: '',
-            env: 'sdkPipelineDepthDatabase',
-        },
-        username: {
-            doc: 'The username used to connect db',
-            format: String,
-            default: '',
-            env: 'sdkPipelineDepthDBUsername',
-        },
-        password: {
-            doc: 'The password used to connect db',
-            format: String,
-            default: '',
-            env: 'sdkPipelineDepthDBPassword',
-        },
-    },
-
-    codegenDatabase: {
-        server: {
-            doc: 'The host used to connect db',
-            format: String,
-            default: '',
-            env: 'sdkPipelineCodegenDBServer',
-        },
-        port: {
-            doc: 'The port used to connect db',
-            format: Number,
-            default: 1433,
-            env: 'sdkPipelineCodegenDBPort',
-        },
-        database: {
-            doc: 'The database used to connect db',
-            format: String,
-            default: '',
-            env: 'sdkPipelineCodegenDatabase',
-        },
-        username: {
-            doc: 'The username used to connect db',
-            format: String,
-            default: '',
-            env: 'sdkPipelineCodegenDBUsername',
-        },
-        password: {
-            doc: 'The password used to connect db',
-            format: String,
-            default: '',
-            env: 'sdkPipelineCodegenDBPassword',
-        },
-    },
+    // depthDatabase: {
+    //     server: {
+    //         doc: 'The host used to connect db',
+    //         format: String,
+    //         default: '',
+    //         env: 'sdkGenerationDepthDBServer',
+    //     },
+    //     port: {
+    //         doc: 'The port used to connect db',
+    //         format: Number,
+    //         default: 1433,
+    //         env: 'sdkGenerationDepthDBPort',
+    //     },
+    //     database: {
+    //         doc: 'The database used to connect db',
+    //         format: String,
+    //         default: '',
+    //         env: 'sdkGenerationDepthDatabase',
+    //     },
+    //     username: {
+    //         doc: 'The username used to connect db',
+    //         format: String,
+    //         default: '',
+    //         env: 'sdkGenerationDepthDBUsername',
+    //     },
+    //     password: {
+    //         doc: 'The password used to connect db',
+    //         format: String,
+    //         default: '',
+    //         env: 'sdkGenerationDepthDBPassword',
+    //     },
+    // },
     mongodb: {
         server: {
             doc: 'The host used to connect db',
             format: String,
             default: '',
-            env: 'sdkPipelineMongoDbHost',
+            env: 'sdkGenerationMongoDbHost',
         },
         port: {
             doc: 'The port used to connect db',
             format: Number,
             default: 10225,
-            env: 'sdkPipelineMongoDbPort',
+            env: 'sdkGenerationMongoDbPort',
         },
         database: {
             doc: 'The database used to connect db',
             format: String,
             default: '',
-            env: 'sdkPipelineMongoDbDatabase',
+            env: 'sdkGenerationMongoDbDatabase',
         },
         username: {
             doc: 'The username used to connect db',
             format: String,
             default: '',
-            env: 'sdkPipelineMongoDbUsername',
+            env: 'sdkGenerationMongoDbUsername',
         },
         password: {
             doc: 'The password used to connect db',
             format: String,
             default: '',
-            env: 'sdkPipelineMongoDbPassword',
+            env: 'sdkGenerationMongoDbPassword',
         },
     },
     githubToken: {
         doc: 'The token used by github',
         format: String,
         default: '',
-        env: 'sdkPipelineGithubToken',
+        env: 'sdkGenerationGithubToken',
     },
 });

@@ -19,14 +19,11 @@ import { CodeGenerationDao } from './dao/codeGenerationDao';
 import { GithubDao } from './dao/githubDao';
 import { TaskResultDao } from './dao/taskResultDao';
 import { CodeGenerationDaoImpl } from './daoImpl/codeGenerationDaoImpl';
-import { DepthCoverageDaoImpl } from './daoImpl/depthCoverageDaoImpl';
 import { GithubDaoImpl } from './daoImpl/githubDaoImpl';
 import { TaskResultDaoImpl } from './daoImpl/taskResultDaoImpl';
 import { InjectableTypes } from './injectableTypes/injectableTypes';
 import { CodeGenerationService } from './service/codeGenerationService';
-import { DepthCoverageService } from './service/depthCoverageService';
 import { CodeGenerationServiceImpl } from './servicesImpl/codeGenerationServiceImpl';
-import { DepthCoverageServiceImpl } from './servicesImpl/depthCoverageServiceImpl';
 import { AuthUtils, CustomersThumbprints } from './utils/authUtils';
 import { CodegenAppLogger } from './utils/logger/codegenAppLogger';
 import { Logger } from './utils/logger/logger';
@@ -43,44 +40,29 @@ class CodegenApp {
 
     public async start(): Promise<void> {
         this.buildLogger();
-        await this.buildSqlServerConnection();
+        // await this.buildSqlServerConnection();
         await this.buildMongoDBCollection();
         this.buildContainer();
         await this.buildExpress();
         this.buildSchedulerTask();
     }
 
-    private async buildSqlServerConnection() {
-        this.sqlServerCodegenConnection = await createConnection({
-            name: 'codegen',
-            type: 'mssql',
-            host: config.codegenDatabase.server,
-            port: config.codegenDatabase.port,
-            username: config.codegenDatabase.username,
-            password: config.codegenDatabase.password,
-            database: config.codegenDatabase.database,
-            synchronize: config.changeDatabase,
-            logging: false,
-            entities: [
-                'dist/src/models/entity/codegenSqlServer/entity/**/*.js',
-            ],
-        });
-
-        this.sqlServerDepthCoverageConnection = await createConnection({
-            name: 'depthCoverage',
-            type: 'mssql',
-            host: config.codegenDatabase.server,
-            port: config.codegenDatabase.port,
-            username: config.codegenDatabase.username,
-            password: config.codegenDatabase.password,
-            database: config.codegenDatabase.database,
-            synchronize: config.changeDatabase,
-            logging: false,
-            entities: [
-                'dist/src/models/entity/depthCoverageSqlServer/entity/**/*.js',
-            ],
-        });
-    }
+    // private async buildSqlServerConnection() {
+    //     this.sqlServerDepthCoverageConnection = await createConnection({
+    //         name: 'depthCoverage',
+    //         type: 'mssql',
+    //         host: config.codegenDatabase.server,
+    //         port: config.codegenDatabase.port,
+    //         username: config.codegenDatabase.username,
+    //         password: config.codegenDatabase.password,
+    //         database: config.codegenDatabase.database,
+    //         synchronize: config.changeDatabase,
+    //         logging: false,
+    //         entities: [
+    //             'dist/src/models/entity/depthCoverageSqlServer/entity/**/*.js',
+    //         ],
+    //     });
+    // }
 
     private async buildMongoDBCollection() {
         this.mongoDbConnection = await createConnection({
@@ -94,9 +76,7 @@ class CodegenApp {
             ssl: true,
             synchronize: config.changeDatabase,
             logging: true,
-            entities: [
-                'dist/src/models/entity/taskResultMongodb/entity/**/*.js',
-            ],
+            entities: ['dist/src/models/entity/**/*.js'],
         });
     }
 
@@ -114,24 +94,11 @@ class CodegenApp {
             .toConstantValue(this.logger);
 
         this.container
-            .bind<Connection>(InjectableTypes.CodegenSqlServerConnection)
-            .toConstantValue(this.sqlServerCodegenConnection);
-        this.container
             .bind<CodeGenerationService>(InjectableTypes.CodeGenerationService)
             .to(CodeGenerationServiceImpl);
         this.container
             .bind<CodeGenerationDao>(InjectableTypes.CodeGenerationDao)
             .to(CodeGenerationDaoImpl);
-
-        this.container
-            .bind<Connection>(InjectableTypes.DepthCoverageSqlServerConnection)
-            .toConstantValue(this.sqlServerDepthCoverageConnection);
-        this.container
-            .bind<DepthCoverageService>(InjectableTypes.DepthCoverageService)
-            .to(DepthCoverageServiceImpl);
-        this.container
-            .bind<DepthCoverageDaoImpl>(InjectableTypes.DepthCoverageDao)
-            .to(DepthCoverageDaoImpl);
 
         this.container
             .bind<Connection>(InjectableTypes.MongoDbConnection)
