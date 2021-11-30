@@ -27,7 +27,7 @@ steps:
     displayName: Build and push an image to container registry
     inputs:
       containerRegistry: 'openapi-test-docker-sc'
-      repository: 'openapi/sdkGeneration'
+      repository: 'openapi/sdk-generation'
       command: 'buildAndPush'
       Dockerfile: 'Dockerfile'
       tags: '$(Build.BuildNumber)'
