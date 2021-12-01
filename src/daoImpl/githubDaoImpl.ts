@@ -45,13 +45,25 @@ export class GithubDaoImpl implements GithubDao {
         branch: string,
         commitSha: string
     ) {
-        const test = config;
         await this.client.git.createRef({
             owner: org,
             repo,
             ref: 'refs/heads/' + branch,
             sha: commitSha,
         });
+    }
+
+    public async getBranch(org: string, repo: string, branch: string) {
+        try {
+            const result = await this.client.git.getRef({
+                owner: org,
+                repo,
+                ref: 'heads/' + branch,
+            });
+            return result;
+        } catch (e) {
+            return undefined;
+        }
     }
 
     public async createNewTree(

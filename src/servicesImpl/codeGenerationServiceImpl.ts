@@ -82,7 +82,7 @@ export class CodeGenerationServiceImpl implements CodeGenerationService {
         if (resources !== undefined) rs.resourcelist = resources;
 
         const { org: codegenOrg, repo: codegenRepoName } =
-            this.githubDao.getGitRepoInfo(codegenRepo);
+            this.getGitRepoInfo(codegenRepo);
         await this.createCodeGenerationByCreatingPR(
             name,
             codegenOrg,
@@ -91,6 +91,21 @@ export class CodeGenerationServiceImpl implements CodeGenerationService {
             rs,
             owner
         );
+    }
+
+    public async getBranch(repoInfo: RepoInfo, branchName: string) {
+        const { org: codegenOrg, repo: codegenRepoName } =
+            this.getGitRepoInfo(repoInfo);
+        const result = await this.githubDao.getBranch(
+            codegenOrg,
+            codegenRepoName,
+            branchName
+        );
+        return result;
+    }
+
+    public getGitRepoInfo(repoInfo: RepoInfo) {
+        return this.githubDao.getGitRepoInfo(repoInfo);
     }
 
     public async deleteSDKCodeGeneration(

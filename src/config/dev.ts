@@ -18,7 +18,7 @@ export const environmentConfigDev: Partial<Config> = {
     },
     defaultCodegenRepo: {
         type: RepoType.GITHUB,
-        path: 'https://github.com/Azure/azure-sdk-pipeline',
+        path: 'https://github.com/AzureSDKPipelineTestBot/azure-sdk-pipeline',
         branch: 'dev',
     },
     defaultSDKRepos: {

@@ -1,8 +1,8 @@
-import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, Index, ObjectIdColumn } from 'typeorm';
 
 @Entity('sdkGenerations')
 export class CodeGeneration {
-    @PrimaryGeneratedColumn()
+    @ObjectIdColumn()
     id: number;
     @Index({ unique: true })
     @Column()

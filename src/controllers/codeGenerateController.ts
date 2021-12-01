@@ -105,6 +105,17 @@ export class CodeGenerateController extends BaseController {
             this.logger.info(message);
             return this.json(message, 400);
         }
+
+        const branch = await this.codeGenerationService.getBranch(
+            codegenRepo,
+            name
+        );
+        if (!!branch) {
+            const message = `The code generation ${name} has already been used. Please use another name`;
+            this.logger.info(message);
+            return this.json(message, 400);
+        }
+
         await this.codeGenerationService.createCodeGeneration(
             name,
             resourceProvider,

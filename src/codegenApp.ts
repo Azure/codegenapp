@@ -76,7 +76,10 @@ class CodegenApp {
             ssl: true,
             synchronize: config.changeDatabase,
             logging: true,
-            entities: ['dist/src/models/entity/**/*.js'],
+            entities: [
+                'dist/src/models/entity/CodeGeneration.js',
+                'dist/src/models/entity/TaskResult.js',
+            ],
         });
     }
 

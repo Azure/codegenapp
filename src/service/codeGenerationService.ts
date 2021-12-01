@@ -5,7 +5,9 @@ import { CodegenPipelineTaskResult } from '../models/entity/TaskResult';
 
 export interface CodeGenerationService {
     updateCodeGenerationValuesByName(name: string, values: any);
+
     getCodeGenerationByName(name: string);
+
     createCodeGeneration(
         name: string,
         resourceProvider: string,
@@ -20,23 +22,37 @@ export interface CodeGenerationService {
         owner: string,
         tag: string
     );
+
+    getBranch(repoInfo: RepoInfo, branchName: string);
+
+    getGitRepoInfo(repoInfo: RepoInfo);
+
     deleteSDKCodeGeneration(codegen: CodeGeneration);
+
     getTaskResultByPipelineId(id: string);
+
     listCodeGenerations(filters: {}, filterCompleted: boolean);
+
     completeCodeGeneration(codegen: CodeGeneration);
+
     cancelCodeGeneration(codegen: CodeGeneration);
+
     runCodeGeneration(codegen: CodeGeneration);
+
     customizeCodeGeneration(
         name: string,
         triggerPR: string,
         codePR: string,
         excludeTest: boolean
     );
+
     submitGeneratedCode(codegen: CodeGeneration);
+
     publishTaskResult(
         pipelineBuildId: string,
         taskResult: CodegenPipelineTaskResult
     );
+
     generateCodePullRequest(
         org: string,
         repo: string,
@@ -44,8 +60,11 @@ export interface CodeGenerationService {
         branch: string,
         basebranch: string
     );
+
     completeAllCodeGenerations();
+
     runCodeGenerationForCI(): void;
+
     createCodeGenerationByCreatingPR(
         name: string,
         codegenOrg: string,
