@@ -90,7 +90,7 @@ export const configSchema = convict<Config>({
     serviceName: {
         doc: 'The service name.',
         format: String,
-        default: 'sdkpipeline',
+        default: 'sdk-generation',
     },
     defaultCodegenRepo: {
         type: {

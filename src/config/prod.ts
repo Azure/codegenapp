@@ -11,7 +11,7 @@ export const environmentConfigProd: Partial<Config> = {
     loggingMaxFiles: 20,
     loggingMaxFileSize: '200MB',
     // serviceEnvironment: "",
-    serviceName: 'sdkpipeline',
+    serviceName: 'sdk-generation',
     // statsdHost: "",
     // statsdPort: 443,
     // namespaceName: "",
