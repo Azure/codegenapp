@@ -14,7 +14,6 @@ import { Connection, createConnection } from 'typeorm';
 import { config } from './config';
 import { Config } from './config/config';
 import './controllers/codeGenerateController';
-import './controllers/depthConverageController';
 import { CodeGenerationDao } from './dao/codeGenerationDao';
 import { GithubDao } from './dao/githubDao';
 import { TaskResultDao } from './dao/taskResultDao';
@@ -34,35 +33,15 @@ const morgan = require('morgan');
 class CodegenApp {
     private container: Container;
     private logger: Logger;
-    private sqlServerCodegenConnection: Connection;
-    private sqlServerDepthCoverageConnection: Connection;
     private mongoDbConnection: Connection;
 
     public async start(): Promise<void> {
         this.buildLogger();
-        // await this.buildSqlServerConnection();
         await this.buildMongoDBCollection();
         this.buildContainer();
         await this.buildExpress();
         this.buildSchedulerTask();
     }
-
-    // private async buildSqlServerConnection() {
-    //     this.sqlServerDepthCoverageConnection = await createConnection({
-    //         name: 'depthCoverage',
-    //         type: 'mssql',
-    //         host: config.codegenDatabase.server,
-    //         port: config.codegenDatabase.port,
-    //         username: config.codegenDatabase.username,
-    //         password: config.codegenDatabase.password,
-    //         database: config.codegenDatabase.database,
-    //         synchronize: config.changeDatabase,
-    //         logging: false,
-    //         entities: [
-    //             'dist/src/models/entity/depthCoverageSqlServer/entity/**/*.js',
-    //         ],
-    //     });
-    // }
 
     private async buildMongoDBCollection() {
         this.mongoDbConnection = await createConnection({
