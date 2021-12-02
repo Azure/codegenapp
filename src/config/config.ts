@@ -31,13 +31,6 @@ export interface Config {
     retries: number;
     healthProbeEndpoint: string;
     changeDatabase: boolean;
-    // depthDatabase: {
-    //     server: string;
-    //     port: number;
-    //     database: string;
-    //     username: string;
-    //     password: string;
-    // };
     mongodb: {
         server: string;
         port: number;

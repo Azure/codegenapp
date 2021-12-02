@@ -10,11 +10,7 @@ export const environmentConfigProd: Partial<Config> = {
     loggingConsoleLevel: LoggerLevel.INFO,
     loggingMaxFiles: 20,
     loggingMaxFileSize: '200MB',
-    // serviceEnvironment: "",
     serviceName: 'sdk-generation',
-    // statsdHost: "",
-    // statsdPort: 443,
-    // namespaceName: "",
     defaultSwaggerRepo: {
         type: RepoType.GITHUB,
         path: 'https://github.com/Azure/azure-rest-api-specs',

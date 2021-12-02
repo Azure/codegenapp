@@ -336,38 +336,6 @@ export const configSchema = convict<Config>({
         format: Boolean,
         default: false,
     },
-    // depthDatabase: {
-    //     server: {
-    //         doc: 'The host used to connect db',
-    //         format: String,
-    //         default: '',
-    //         env: 'sdkGenerationDepthDBServer',
-    //     },
-    //     port: {
-    //         doc: 'The port used to connect db',
-    //         format: Number,
-    //         default: 1433,
-    //         env: 'sdkGenerationDepthDBPort',
-    //     },
-    //     database: {
-    //         doc: 'The database used to connect db',
-    //         format: String,
-    //         default: '',
-    //         env: 'sdkGenerationDepthDatabase',
-    //     },
-    //     username: {
-    //         doc: 'The username used to connect db',
-    //         format: String,
-    //         default: '',
-    //         env: 'sdkGenerationDepthDBUsername',
-    //     },
-    //     password: {
-    //         doc: 'The password used to connect db',
-    //         format: String,
-    //         default: '',
-    //         env: 'sdkGenerationDepthDBPassword',
-    //     },
-    // },
     mongodb: {
         server: {
             doc: 'The host used to connect db',
