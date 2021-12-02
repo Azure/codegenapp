@@ -225,7 +225,7 @@ class CodegenApp {
             });
         const serverInstance = server.build();
         serverInstance.get('/', function (req, res) {
-            res.send('welcome to sdk pipeline service.');
+            res.send('welcome to sdk generation service.');
             res.status(200);
         });
         serverInstance.get('/alive', function (req, res) {
