@@ -2,27 +2,27 @@ import { CodeGeneration } from './entity/CodeGeneration';
 import { CodegenPipelineTaskResult } from './entity/TaskResult';
 
 export enum CodeGenerationStatus {
-    CODE_GENERATION_STATUS_SUBMIT = 'submit',
-    CODE_GENERATION_STATUS_IN_PROGRESS = 'in_progress',
-    CODE_GENERATION_STATUS_CUSTOMIZING = 'customizing',
-    CODE_GENERATION_STATUS_FAILED = 'failed',
-    CODE_GENERATION_STATUS_CANCELED = 'cancelled',
-    CODE_GENERATION_STATUS_PIPELINE_COMPLETED = 'pipelineCompleted',
-    CODE_GENERATION_STATUS_COMPLETED = 'completed',
+    CodeGenerationStatusSubmit = 'submit',
+    CodeGenerationStatusInProgress = 'in_progress',
+    CodeGenerationStatusCustomizing = 'customizing',
+    CodeGenerationStatusFailed = 'failed',
+    CodeGenerationStatusCancelled = 'cancelled',
+    CodeGenerationStatusPipelineCompleted = 'pipelineCompleted',
+    CodeGenerationStatusCompleted = 'completed',
 }
 
 export enum CodeGenerationDBColumn {
-    CODE_GENERATION_COLUMN_RESOURCE_PROVIDER = 'resourceProvider',
-    CODE_GENERATION_COLUMN_RESOURCETOGENERATE = 'resourcesToGenerate',
-    CODE_GENERATION_COLUMN_TAG = 'tag',
-    CODE_GENERATION_COLUMN_SWAGGER_PULLREQUEST = 'swaggerPR',
-    CODE_GENERATION_COLUMN_CODE_PULLREQUEST = 'codePR',
-    CODE_GENERATION_COLUMN_SDK = 'sdk',
-    CODE_GENERATION_COLUMN_TYPE = 'type',
-    CODE_GENERATION_COLUMN_IGNOAREFAILURE = 'ignoreFailure',
-    CODE_GENEERTION_COLUMN_EXCLUDESTAGES = 'excludeStages',
-    CODE_GENERATION_COLUMN_PIPELINEBUILDID = 'pipelineBuildID',
-    CODE_GENERATION_COLUMN_STATUS = 'status',
+    CodeGenerationColumnResourceProvider = 'resourceProvider',
+    CodeGenerationColumnResourceToGenerate = 'resourcesToGenerate',
+    CodeGenerationColumnTag = 'tag',
+    CodeGenerationColumnSwaggerPullRequest = 'swaggerPR',
+    CodeGenerationColumnCodePullRequest = 'codePR',
+    CodeGenerationColumnSdk = 'sdk',
+    CodeGenerationColumnType = 'type',
+    CodeGenerationColumnIgnoreFailure = 'ignoreFailure',
+    CodeGenerationColumnExcludeStages = 'excludeStages',
+    CodeGenerationColumnPipelineBuildId = 'pipelineBuildID',
+    CodeGenerationColumnStatus = 'status',
 }
 
 export interface RepoInfo {
@@ -47,12 +47,12 @@ export class SDKCodeGenerationDetailInfo extends CodeGeneration {
         sdkRepo: RepoInfo,
         codegenRepo: RepoInfo,
         owner: string,
-        type: string = 'depth',
-        swaggerPR: string = '',
-        codePR: string = '',
-        pipelineBuildID: string = '',
-        status: string = 'submit',
-        results: CodegenPipelineTaskResult[] = []
+        type = 'depth',
+        swaggerPR = '',
+        codePR = '',
+        pipelineBuildID = '',
+        status = 'submit',
+        results: CodegenPipelineTaskResult[] = [],
     ) {
         super();
         this.name = name;

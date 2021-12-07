@@ -1,6 +1,5 @@
-import * as statsd from 'hot-shots';
-
 import { config } from '../../config';
+import * as statsd from 'hot-shots';
 
 const stats = new statsd.StatsD({
     host: config.statsdHost,
@@ -9,12 +8,12 @@ const stats = new statsd.StatsD({
 });
 
 export enum Metrics {
-    LIVENESS = 'liveness',
-    API_CALLS = 'apiCalls',
-    INTERNAL_SERVER_ERROR = 'internalServerError',
-    BAD_REQUEST = 'badRequest',
-    NOT_FOUND = 'notFound',
-    SUCCESS = 'success',
+    Liveness = 'liveness',
+    ApiCalls = 'apiCalls',
+    InternalServerError = 'InternalServerError',
+    BadRequest = 'BadRequest',
+    NotFound = 'NotFound',
+    Success = 'success',
 }
 
 const nodeName = process.env.NODE_NAME || '';
@@ -23,11 +22,7 @@ const podName = process.env.POD_NAME || '';
 /**
  * call to emit metrics from the service.
  */
-export const emitMetric = (
-    metric: Metrics,
-    value: number,
-    dims?: { [key: string]: string | number }
-): void => {
+export function emitMetric(metric: Metrics, value: number, dims?: { [key: string]: string | number }): void {
     if (!dims) {
         dims = {};
     }
@@ -42,4 +37,4 @@ export const emitMetric = (
         Dims: dims,
     });
     stats.gauge(stat, value);
-};
+}

@@ -1,59 +1,37 @@
-import { Request } from 'express';
-import { inject } from 'inversify';
-import {
-    controller,
-    httpDelete,
-    httpGet,
-    httpPatch,
-    httpPost,
-    httpPut,
-} from 'inversify-express-utils';
-import { JsonResult } from 'inversify-express-utils/dts/results';
-
 import { config } from '../config';
-import { InjectableTypes } from '../injectableTypes/injectableTypes';
-import {
-    CodeGenerationStatus,
-    RepoInfo,
-    SDKCodeGenerationDetailInfo,
-} from '../models/CodeGenerationModel';
+import { injectableTypes } from '../injectableTypes/injectableTypes';
+import { CodeGenerationStatus, RepoInfo } from '../models/CodeGenerationModel';
 import { CodeGenerationType } from '../models/common';
 import { CodeGeneration } from '../models/entity/CodeGeneration';
 import { CodegenPipelineTaskResult } from '../models/entity/TaskResult';
 import { CodeGenerationService } from '../service/codeGenerationService';
 import { BaseController } from './baseController';
+import { Request } from 'express';
+import { inject } from 'inversify';
+import { controller, httpDelete, httpGet, httpPatch, httpPost, httpPut } from 'inversify-express-utils';
+import { JsonResult } from 'inversify-express-utils/dts/results';
 
 @controller('/codegenerations')
 export class CodeGenerateController extends BaseController {
-    @inject(InjectableTypes.CodeGenerationService)
+    @inject(injectableTypes.CodeGenerationService)
     private codeGenerationService: CodeGenerationService;
 
     /* generate an pull request. */
     @httpPost('/generatePullRequest')
-    public async generateCodePullRequest(
-        request: Request
-    ): Promise<JsonResult> {
+    public async generateCodePullRequest(request: Request): Promise<JsonResult> {
         const org = request.body.org;
         const repo = request.body.repo;
         const title = request.body.title;
         const branch = request.body.branch;
         const baseBranch = request.body.base;
 
-        const prLink = await this.codeGenerationService.generateCodePullRequest(
-            org,
-            repo,
-            title,
-            branch,
-            baseBranch
-        );
+        const prLink = await this.codeGenerationService.generateCodePullRequest(org, repo, title, branch, baseBranch);
         return this.json(prLink, 200);
     }
 
     /*generate source code. */
     @httpPut('/:codegenname')
-    public async createSDKCodeGeneration(
-        request: Request
-    ): Promise<JsonResult> {
+    public async createSDKCodeGeneration(request: Request): Promise<JsonResult> {
         const name = request.params.codegenname;
 
         const resourceProvider = request.body.resourceProvider;
@@ -90,27 +68,21 @@ export class CodeGenerateController extends BaseController {
 
         let type = request.body.type;
         if (type === undefined) {
-            type = CodeGenerationType.ADHOC;
+            type = CodeGenerationType.Adhoc;
         }
-        const codegen =
-            await this.codeGenerationService.getCodeGenerationByName(name);
+        const codegen = await this.codeGenerationService.getCodeGenerationByName(name);
         if (
             codegen !== undefined &&
-            codegen.status !==
-                CodeGenerationStatus.CODE_GENERATION_STATUS_COMPLETED &&
-            codegen.status !==
-                CodeGenerationStatus.CODE_GENERATION_STATUS_CANCELED
+            codegen.status !== CodeGenerationStatus.CodeGenerationStatusCompleted &&
+            codegen.status !== CodeGenerationStatus.CodeGenerationStatusCancelled
         ) {
             const message = `The code generation pipeline(${resourceProvider}, ${sdk} is under ${codegen.status}) already. Ignore this trigger.`;
             this.logger.info(message);
             return this.json(message, 400);
         }
 
-        const branch = await this.codeGenerationService.getBranch(
-            codegenRepo,
-            name
-        );
-        if (!!branch) {
+        const branch = await this.codeGenerationService.getBranch(codegenRepo, name);
+        if (branch) {
             const message = `The code generation ${name} has already been used. Please use another name`;
             this.logger.info(message);
             return this.json(message, 400);
@@ -128,24 +100,18 @@ export class CodeGenerateController extends BaseController {
             sdkRepo,
             commit,
             owners !== undefined ? owners.join(';') : '',
-            tag
+            tag,
         );
-        return this.json(
-            'Trigger ' + type + ' for resource provider ' + resourceProvider,
-            200
-        );
+        return this.json('Trigger ' + type + ' for resource provider ' + resourceProvider, 200);
     }
 
     /* get sdk code generation. */
     @httpGet('/:codegenname')
     public async getSDKCodeGeneration(request: Request): Promise<JsonResult> {
         const name = request.params.codegenname;
-        const codegen =
-            await this.codeGenerationService.getCodeGenerationByName(name);
+        const codegen = await this.codeGenerationService.getCodeGenerationByName(name);
         if (!codegen) {
-            this.logger.info(
-                'The code generation (' + name + ') does not exist.'
-            );
+            this.logger.info('The code generation (' + name + ') does not exist.');
             return this.json('Not Exist.', 400);
         } else {
             return this.json(codegen, 200);
@@ -154,63 +120,37 @@ export class CodeGenerateController extends BaseController {
 
     /* update sdk code generation. */
     @httpPatch('/:codegenname')
-    public async updateSDKCodeGeneration(
-        request: Request
-    ): Promise<JsonResult> {
+    public async updateSDKCodeGeneration(request: Request): Promise<JsonResult> {
         const name = request.params.codegenname;
 
-        let codegen = await this.codeGenerationService.getCodeGenerationByName(
-            name
-        );
+        const codegen = await this.codeGenerationService.getCodeGenerationByName(name);
 
         if (!codegen) {
-            this.logger.info(
-                'The code generation (' + name + ') does not exist.'
-            );
+            this.logger.info('The code generation (' + name + ') does not exist.');
             return this.json({ error: 'Not Exist.' }, 400);
         }
 
         const values = request.body.updateParameters;
 
-        await this.codeGenerationService.updateCodeGenerationValuesByName(
-            name,
-            values
-        );
+        await this.codeGenerationService.updateCodeGenerationValuesByName(name, values);
 
-        let content =
-            'Updated code generation ' +
-            name +
-            ' for ' +
-            codegen.resourceProvider +
-            ' sdk:' +
-            codegen.sdk;
-        let statusCode = 200;
+        const content = 'Updated code generation ' + name + ' for ' + codegen.resourceProvider + ' sdk:' + codegen.sdk;
+        const statusCode = 200;
         this.logger.info(content);
         return this.json(content, statusCode);
     }
 
     /* delete sdk code generation. */
     @httpDelete('/:codegenname')
-    public async deleteSDKCodeGeneration(
-        request: Request
-    ): Promise<JsonResult> {
+    public async deleteSDKCodeGeneration(request: Request): Promise<JsonResult> {
         const name = request.params.codegenname;
 
-        let codegen = await this.codeGenerationService.getCodeGenerationByName(
-            name
-        );
+        const codegen = await this.codeGenerationService.getCodeGenerationByName(name);
 
         if (!codegen) {
-            this.logger.info(
-                'The code generation (' + name + ') does not exist.'
-            );
+            this.logger.info('The code generation (' + name + ') does not exist.');
             return this.json({ error: 'Not Exist.' }, 400);
-        } else if (
-            codegen.status !=
-                CodeGenerationStatus.CODE_GENERATION_STATUS_COMPLETED &&
-            codegen.status !=
-                CodeGenerationStatus.CODE_GENERATION_STATUS_CANCELED
-        ) {
+        } else if (codegen.status !== CodeGenerationStatus.CodeGenerationStatusCompleted && codegen.status !== CodeGenerationStatus.CodeGenerationStatusCancelled) {
             const message = `Cannot delete codegen ${name} because its status is ${codegen.status}`;
             this.logger.info(message);
             return this.json({ error: message }, 400);
@@ -223,28 +163,19 @@ export class CodeGenerateController extends BaseController {
 
     /* get sdk code generation detail information. */
     @httpGet('/:codegenname/detail')
-    public async getSDKCodeGenerationDetailInfo(
-        request: Request
-    ): Promise<JsonResult> {
+    public async getSDKCodeGenerationDetailInfo(request: Request): Promise<JsonResult> {
         const name = request.params.codegenname;
 
-        let codegen = await this.codeGenerationService.getCodeGenerationByName(
-            name
-        );
+        const codegen = await this.codeGenerationService.getCodeGenerationByName(name);
 
         if (!codegen) {
-            this.logger.info(
-                'The code generation (' + name + ') does not exist.'
-            );
+            this.logger.info('The code generation (' + name + ') does not exist.');
             return this.json('Not Exist.', 400);
         }
 
         const pipelineid: string = codegen.lastPipelineBuildID;
-        const taskResults: CodegenPipelineTaskResult[] =
-            await this.codeGenerationService.getTaskResultByPipelineId(
-                pipelineid
-            );
-        let cginfo = {
+        const taskResults: CodegenPipelineTaskResult[] = await this.codeGenerationService.getTaskResultByPipelineId(pipelineid);
+        const cginfo = {
             name: codegen.name,
             resourceProvider: codegen.resourceProvider,
             serviceType: codegen.serviceType,
@@ -268,39 +199,22 @@ export class CodeGenerateController extends BaseController {
 
     /* list sdk code generations. */
     @httpGet('/')
-    public async listALLSDKCodeGenerations(
-        request: Request
-    ): Promise<JsonResult> {
-        let filters = request.query;
-        const codegens: CodeGeneration[] =
-            await this.codeGenerationService.listCodeGenerations(
-                filters,
-                false
-            );
+    public async listALLSDKCodeGenerations(request: Request): Promise<JsonResult> {
+        const filters = request.query;
+        const codegens: CodeGeneration[] = await this.codeGenerationService.listCodeGenerations(filters, false);
         return this.json(codegens, 200);
     }
 
     /*complete one code generation after all the code have been merged. */
     @httpPost('/:codegenname/complete')
-    public async completeSDKCodeGeneration(
-        request: Request
-    ): Promise<JsonResult> {
+    public async completeSDKCodeGeneration(request: Request): Promise<JsonResult> {
         const name = request.params.codegenname;
-        let codegen = await this.codeGenerationService.getCodeGenerationByName(
-            name
-        );
+        const codegen = await this.codeGenerationService.getCodeGenerationByName(name);
 
         if (!codegen) {
-            this.logger.info(
-                'The code generation (' + name + ') does not exist.'
-            );
+            this.logger.info('The code generation (' + name + ') does not exist.');
             return this.json({ error: 'Not Exist.' }, 400);
-        } else if (
-            codegen.status ===
-                CodeGenerationStatus.CODE_GENERATION_STATUS_COMPLETED &&
-            codegen.status ===
-                CodeGenerationStatus.CODE_GENERATION_STATUS_CANCELED
-        ) {
+        } else if (codegen.status === CodeGenerationStatus.CodeGenerationStatusCompleted && codegen.status === CodeGenerationStatus.CodeGenerationStatusCancelled) {
             const message = `Cannot complete code generation ${name} because it's status is ${codegen.status}.`;
             this.logger.info(message);
             return this.json({ error: message }, 400);
@@ -309,11 +223,7 @@ export class CodeGenerateController extends BaseController {
         await this.codeGenerationService.completeCodeGeneration(codegen);
 
         const statusCode = 200;
-        const content =
-            'Complete ' +
-            name +
-            ' for resource provider ' +
-            codegen.resourceProvider;
+        const content = 'Complete ' + name + ' for resource provider ' + codegen.resourceProvider;
         this.logger.info(content);
 
         return this.json(content, statusCode);
@@ -321,29 +231,19 @@ export class CodeGenerateController extends BaseController {
 
     /*cancel one code generation. */
     @httpPost('/:codegenname/cancel')
-    public async cancelSDKCodeGeneration(
-        request: Request
-    ): Promise<JsonResult> {
+    public async cancelSDKCodeGeneration(request: Request): Promise<JsonResult> {
         const name = request.params.codegenname;
-        let codegen = await this.codeGenerationService.getCodeGenerationByName(
-            name
-        );
+        const codegen = await this.codeGenerationService.getCodeGenerationByName(name);
 
         if (!codegen) {
-            this.logger.info(
-                'The code generation (' + name + ') does not exist.'
-            );
+            this.logger.info('The code generation (' + name + ') does not exist.');
             return this.json('Not Exist.', 400);
         }
 
         await this.codeGenerationService.cancelCodeGeneration(codegen);
 
         const statusCode = 200;
-        const content =
-            'Cancel ' +
-            name +
-            ' for resource provider ' +
-            codegen.resourceProvider;
+        const content = 'Cancel ' + name + ' for resource provider ' + codegen.resourceProvider;
         this.logger.info(content);
         return this.json(content, statusCode);
     }
@@ -352,44 +252,19 @@ export class CodeGenerateController extends BaseController {
     @httpPost('/:codegenname/run')
     public async runCodeGeneration(request: Request): Promise<JsonResult> {
         const name = request.params.codegenname;
-        let codegen = await this.codeGenerationService.getCodeGenerationByName(
-            name
-        );
+        const codegen = await this.codeGenerationService.getCodeGenerationByName(name);
 
         if (codegen === undefined) {
-            this.logger.info(
-                'code generation ' + name + ' does not exist. No run triggered.'
-            );
+            this.logger.info('code generation ' + name + ' does not exist. No run triggered.');
             return this.json('Not Exist.', 400);
-        } else if (
-            codegen.status ===
-                CodeGenerationStatus.CODE_GENERATION_STATUS_IN_PROGRESS ||
-            codegen.status ===
-                CodeGenerationStatus.CODE_GENERATION_STATUS_CANCELED
-        ) {
-            const message =
-                'The code generation ' +
-                name +
-                '(' +
-                codegen.resourceProvider +
-                ',' +
-                codegen.sdk +
-                ') is under ' +
-                codegen.status +
-                '. No avaialbe to run now.';
+        } else if (codegen.status === CodeGenerationStatus.CodeGenerationStatusInProgress || codegen.status === CodeGenerationStatus.CodeGenerationStatusCancelled) {
+            const message = 'The code generation ' + name + '(' + codegen.resourceProvider + ',' + codegen.sdk + ') is under ' + codegen.status + '. No avaialbe to run now.';
             this.logger.info(message);
             return this.json({ error: message }, 400);
         }
 
         await this.codeGenerationService.runCodeGeneration(codegen);
-        const message =
-            "Succeeded to run code generation '" +
-            name +
-            "'( " +
-            codegen.resourceProvider +
-            ', ' +
-            codegen.sdk +
-            ').';
+        const message = "Succeeded to run code generation '" + name + "'( " + codegen.resourceProvider + ', ' + codegen.sdk + ').';
 
         this.logger.info(message);
         return this.json(message, 200);
@@ -397,275 +272,117 @@ export class CodeGenerateController extends BaseController {
 
     /* customize the code generation. */
     @httpPost('/:codegenname/customize')
-    public async customizeSDKCodeGeneration(
-        request: Request
-    ): Promise<JsonResult> {
+    public async customizeSDKCodeGeneration(request: Request): Promise<JsonResult> {
         const name = request.params.codegenname;
         const triggerPR = request.body.triggerPR as string;
         const codePR = request.body.codePR as string;
 
-        let excludeTest: boolean = false;
+        let excludeTest = false;
         if (request.query.excludeTest !== undefined) {
             excludeTest = Boolean(request.query.excludeTest);
         }
 
-        let codegen = await this.codeGenerationService.getCodeGenerationByName(
-            name
-        );
+        const codegen = await this.codeGenerationService.getCodeGenerationByName(name);
 
         if (!codegen) {
-            const message =
-                'code generation ' +
-                name +
-                ' does not exist. No customize triggered.';
+            const message = 'code generation ' + name + ' does not exist. No customize triggered.';
             this.logger.info(message);
             return this.json({ error: message }, 400);
-        } else if (
-            codegen.status ===
-                CodeGenerationStatus.CODE_GENERATION_STATUS_IN_PROGRESS ||
-            codegen.status ===
-                CodeGenerationStatus.CODE_GENERATION_STATUS_CANCELED
-        ) {
+        } else if (codegen.status === CodeGenerationStatus.CodeGenerationStatusInProgress || codegen.status === CodeGenerationStatus.CodeGenerationStatusCancelled) {
             const message =
-                'The code generation ' +
-                name +
-                '(' +
-                codegen.resourceProvider +
-                ',' +
-                codegen.sdk +
-                ') is under ' +
-                codegen.status +
-                '. Not avaialbe to trigger customize now.';
+                'The code generation ' + name + '(' + codegen.resourceProvider + ',' + codegen.sdk + ') is under ' + codegen.status + '. Not avaialbe to trigger customize now.';
             this.logger.info(message);
             return this.json({ error: message }, 400);
-        } else if (
-            codegen.status ===
-            CodeGenerationStatus.CODE_GENERATION_STATUS_CUSTOMIZING
-        ) {
-            const message =
-                'The code generation ' +
-                name +
-                '(' +
-                codegen.resourceProvider +
-                ',' +
-                codegen.sdk +
-                ') is under ' +
-                codegen.status +
-                'Already. Ignore this trigger.';
+        } else if (codegen.status === CodeGenerationStatus.CodeGenerationStatusCustomizing) {
+            const message = 'The code generation ' + name + '(' + codegen.resourceProvider + ',' + codegen.sdk + ') is under ' + codegen.status + 'Already. Ignore this trigger.';
             this.logger.info(message);
-            return this.json(
-                'customize. pipeline: https://devdiv.visualstudio.com/DevDiv/_build?definitionId=' +
-                    codegen.lastPipelineBuildID,
-                201
-            );
+            return this.json('customize. pipeline: https://devdiv.visualstudio.com/DevDiv/_build?definitionId=' + codegen.lastPipelineBuildID, 201);
         }
 
-        await this.codeGenerationService.customizeCodeGeneration(
-            name,
-            triggerPR,
-            codePR,
-            excludeTest
-        );
+        await this.codeGenerationService.customizeCodeGeneration(name, triggerPR, codePR, excludeTest);
 
-        this.logger.info(
-            "Succeeded to customize code generation '" +
-                name +
-                "'( " +
-                codegen.resourceProvider +
-                ', ' +
-                codegen.sdk +
-                ').'
-        );
-        return this.json(
-            'customize.pipeline: https://devdiv.visualstudio.com/DevDiv/_build?definitionId=' +
-                codegen.lastPipelineBuildID,
-            200
-        );
+        this.logger.info("Succeeded to customize code generation '" + name + "'( " + codegen.resourceProvider + ', ' + codegen.sdk + ').');
+        return this.json('customize.pipeline: https://devdiv.visualstudio.com/DevDiv/_build?definitionId=' + codegen.lastPipelineBuildID, 200);
     }
 
     /* customize the code generation. */
     @httpGet('/:codegenname/customize')
-    public async customizeSDKCodeGenerationGet(
-        request: Request
-    ): Promise<JsonResult> {
+    public async customizeSDKCodeGenerationGet(request: Request): Promise<JsonResult> {
         const name = request.params.codegenname;
         const triggerPR = request.query.triggerPR as string;
         const codePR = request.query.codePR as string;
 
-        let excludeTest: boolean = false;
+        let excludeTest = false;
         if (request.query.excludeTest !== undefined) {
             excludeTest = Boolean(request.query.excludeTest);
         }
 
-        let codegen = await this.codeGenerationService.getCodeGenerationByName(
-            name
-        );
+        const codegen = await this.codeGenerationService.getCodeGenerationByName(name);
 
         if (!codegen) {
-            this.logger.info(
-                'code generation ' +
-                    name +
-                    ' does not exist. No customize triggered.'
-            );
-            return this.json(
-                { error: 'No available code generation to trigger customize.' },
-                400
-            );
+            this.logger.info('code generation ' + name + ' does not exist. No customize triggered.');
+            return this.json({ error: 'No available code generation to trigger customize.' }, 400);
         } else if (
-            codegen.status ===
-                CodeGenerationStatus.CODE_GENERATION_STATUS_COMPLETED ||
-            codegen.status ===
-                CodeGenerationStatus.CODE_GENERATION_STATUS_IN_PROGRESS ||
-            codegen.status ===
-                CodeGenerationStatus.CODE_GENERATION_STATUS_CANCELED
+            codegen.status === CodeGenerationStatus.CodeGenerationStatusCompleted ||
+            codegen.status === CodeGenerationStatus.CodeGenerationStatusInProgress ||
+            codegen.status === CodeGenerationStatus.CodeGenerationStatusCancelled
         ) {
             this.logger.info(
-                'The code generation ' +
-                    name +
-                    '(' +
-                    codegen.resourceProvider +
-                    ',' +
-                    codegen.sdk +
-                    ') is under ' +
-                    codegen.status +
-                    '. Not avaialbe to trigger customize now.'
+                'The code generation ' + name + '(' + codegen.resourceProvider + ',' + codegen.sdk + ') is under ' + codegen.status + '. Not avaialbe to trigger customize now.',
             );
-            return this.json(
-                { error: 'Not available to trigger customize now' },
-                400
-            );
-        } else if (
-            codegen.status ===
-            CodeGenerationStatus.CODE_GENERATION_STATUS_CUSTOMIZING
-        ) {
-            this.logger.info(
-                'The code generation ' +
-                    name +
-                    '(' +
-                    codegen.resourceProvider +
-                    ',' +
-                    codegen.sdk +
-                    ') is under ' +
-                    codegen.status +
-                    'Already. Ignore this trigger.'
-            );
-            return this.json(
-                'customize. pipeline: https://devdiv.visualstudio.com/DevDiv/_build?definitionId=' +
-                    codegen.lastPipelineBuildID,
-                201
-            );
+            return this.json({ error: 'Not available to trigger customize now' }, 400);
+        } else if (codegen.status === CodeGenerationStatus.CodeGenerationStatusCustomizing) {
+            this.logger.info('The code generation ' + name + '(' + codegen.resourceProvider + ',' + codegen.sdk + ') is under ' + codegen.status + 'Already. Ignore this trigger.');
+            return this.json('customize. pipeline: https://devdiv.visualstudio.com/DevDiv/_build?definitionId=' + codegen.lastPipelineBuildID, 201);
         }
 
-        const customizer =
-            await this.codeGenerationService.customizeCodeGeneration(
-                name,
-                triggerPR,
-                codePR,
-                excludeTest
-            );
+        const customizer = await this.codeGenerationService.customizeCodeGeneration(name, triggerPR, codePR, excludeTest);
 
         if (customizer !== undefined) {
-            this.logger.error(
-                "Failed to customize code generation '" +
-                    name +
-                    "'( " +
-                    codegen.resourceProvider +
-                    ', ' +
-                    codegen.sdk +
-                    ').',
-                customizer
-            );
+            this.logger.error("Failed to customize code generation '" + name + "'( " + codegen.resourceProvider + ', ' + codegen.sdk + ').', customizer);
             return this.json({ error: customizer }, 400);
         } else {
-            this.logger.info(
-                "Succeeded to customize code generation '" +
-                    name +
-                    "'( " +
-                    codegen.resourceProvider +
-                    ', ' +
-                    codegen.sdk +
-                    ').'
-            );
-            return this.json(
-                'customize. pipeline: https://devdiv.visualstudio.com/DevDiv/_build?definitionId=' +
-                    codegen.lastPipelineBuildID,
-                201
-            );
+            this.logger.info("Succeeded to customize code generation '" + name + "'( " + codegen.resourceProvider + ', ' + codegen.sdk + ').');
+            return this.json('customize. pipeline: https://devdiv.visualstudio.com/DevDiv/_build?definitionId=' + codegen.lastPipelineBuildID, 201);
         }
     }
 
     /*onboard one codegeneration, submit generated code to sdk repo and readme to swagger repo. */
     @httpPost('/:codegenname/onboard')
-    public async onboardSDKCodeGeneration(
-        request: Request
-    ): Promise<JsonResult> {
+    public async onboardSDKCodeGeneration(request: Request): Promise<JsonResult> {
         const name = request.params.codegenname;
 
-        let codegen = await this.codeGenerationService.getCodeGenerationByName(
-            name
-        );
+        const codegen = await this.codeGenerationService.getCodeGenerationByName(name);
 
         if (!codegen) {
-            this.logger.info(
-                'code generation ' +
-                    name +
-                    ' does not exist. No onboard triggered.'
-            );
-            return this.json(
-                { error: 'No available code generation to onboard.' },
-                400
-            );
+            this.logger.info('code generation ' + name + ' does not exist. No onboard triggered.');
+            return this.json({ error: 'No available code generation to onboard.' }, 400);
         }
 
         await this.codeGenerationService.submitGeneratedCode(codegen);
 
         const statusCode = 200;
-        const content =
-            'Succeed to onboard ' +
-            name +
-            '(' +
-            codegen.sdk +
-            ', ' +
-            codegen.resourceProvider +
-            ').';
+        const content = 'Succeed to onboard ' + name + '(' + codegen.sdk + ', ' + codegen.resourceProvider + ').';
 
         return this.json(content, statusCode);
     }
 
     /*onboard one codegeneration, submit generated code to sdk repo and readme to swagger repo. */
     @httpGet('/:codegenname/onboard')
-    public async onboardSDKCodeGenerationGet(
-        request: Request
-    ): Promise<JsonResult> {
+    public async onboardSDKCodeGenerationGet(request: Request): Promise<JsonResult> {
         const name = request.params.codegenname;
 
-        let codegen = await this.codeGenerationService.getCodeGenerationByName(
-            name
-        );
+        const codegen = await this.codeGenerationService.getCodeGenerationByName(name);
 
         if (!codegen) {
-            this.logger.info(
-                'code generation ' +
-                    name +
-                    ' does not exist. No onboard triggered.'
-            );
-            return this.json(
-                { error: 'No available code generation to onboard.' },
-                400
-            );
+            this.logger.info('code generation ' + name + ' does not exist. No onboard triggered.');
+            return this.json({ error: 'No available code generation to onboard.' }, 400);
         }
 
         await this.codeGenerationService.submitGeneratedCode(codegen);
 
         const statusCode = 200;
-        const content =
-            'Succeed to onboard ' +
-            name +
-            '(' +
-            codegen.sdk +
-            ', ' +
-            codegen.resourceProvider +
-            ').';
+        const content = 'Succeed to onboard ' + name + '(' + codegen.sdk + ', ' + codegen.resourceProvider + ').';
         this.logger.info(content);
 
         return this.json(content, statusCode);
@@ -673,6 +390,7 @@ export class CodeGenerateController extends BaseController {
 
     /*generate code snipper. */
     @httpPost('/codeSnipper')
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     public async generateSDKCodeSnipper(request: Request) {
         return this.json('Not Implemented', 200);
     }

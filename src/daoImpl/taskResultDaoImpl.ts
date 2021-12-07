@@ -1,26 +1,18 @@
+import { TaskResultDao } from '../dao/taskResultDao';
+import { injectableTypes } from '../injectableTypes/injectableTypes';
+import { CodegenPipelineTaskResult, TaskResult } from '../models/entity/TaskResult';
 import { inject, injectable } from 'inversify';
 import { Connection, MongoRepository } from 'typeorm';
-
-import { TaskResultDao } from '../dao/taskResultDao';
-import { InjectableTypes } from '../injectableTypes/injectableTypes';
-import {
-    CodegenPipelineTaskResult,
-    TaskResult,
-} from '../models/entity/TaskResult';
 
 @injectable()
 export class TaskResultDaoImpl implements TaskResultDao {
     private repo: MongoRepository<TaskResult>;
 
-    constructor(
-        @inject(InjectableTypes.MongoDbConnection) connection: Connection
-    ) {
+    constructor(@inject(injectableTypes.MongoDbConnection) connection: Connection) {
         this.repo = connection.getMongoRepository(TaskResult);
     }
 
-    public async getFromBuild(
-        pipelineBuildId: string
-    ): Promise<CodegenPipelineTaskResult[]> {
+    public async getFromBuild(pipelineBuildId: string): Promise<CodegenPipelineTaskResult[]> {
         const taskResults: TaskResult[] = await this.repo.find({
             pipelineBuildId: pipelineBuildId,
         });
@@ -31,10 +23,7 @@ export class TaskResultDaoImpl implements TaskResultDao {
         return results;
     }
 
-    public async put(
-        pipelineBuildId: string,
-        taskResult: CodegenPipelineTaskResult
-    ) {
+    public async put(pipelineBuildId: string, taskResult: CodegenPipelineTaskResult) {
         const key = `${pipelineBuildId}/${taskResult.name}`;
         await this.repo.findOneAndReplace(
             { key: key },
@@ -43,7 +32,7 @@ export class TaskResultDaoImpl implements TaskResultDao {
                 pipelineBuildId: pipelineBuildId,
                 taskResult: taskResult,
             },
-            { upsert: true }
+            { upsert: true },
         );
     }
 }
