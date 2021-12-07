@@ -5,6 +5,7 @@ import { RepoInfo } from '../models/CodeGenerationModel';
 export interface GithubDao {
     getCurrentCommit(org: string, repo: string, branch: string);
     createBranch(org: string, repo: string, branch: string, commitSha: string);
+    getBranch(org: string, repo: string, branch: string);
     createPullRequest(
         org: string,
         repo: string,

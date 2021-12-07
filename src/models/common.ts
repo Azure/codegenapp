@@ -15,9 +15,12 @@ export enum SDK {
     TF_SDK = 'terraform',
     CLI = 'cli',
     CLI_CORE_SDK = 'clicore',
-    CLI_EXTENSTION_SDK = 'cliextension',
+    CLI_EXTENSION_SDK = 'cliextension',
     GO_SDK = 'go',
     DOTNET_SDK = 'dotnet',
+    JS_SDK = 'js',
+    JAVA_SDK = 'java',
+    PYTHON_SDK = 'python',
 }
 
 export enum README {

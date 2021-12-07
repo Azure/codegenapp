@@ -1,5 +1,5 @@
-import { CodeGeneration } from './entity/codegenSqlServer/entity/CodeGeneration';
-import { CodegenPipelineTaskResult } from './entity/taskResultMongodb/entity/TaskResult';
+import { CodeGeneration } from './entity/CodeGeneration';
+import { CodegenPipelineTaskResult } from './entity/TaskResult';
 
 export enum CodeGenerationStatus {
     CODE_GENERATION_STATUS_SUBMIT = 'submit',

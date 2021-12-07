@@ -4,7 +4,7 @@ import { Repository } from 'typeorm/repository/Repository';
 
 import { CodeGenerationDao } from '../dao/codeGenerationDao';
 import { InjectableTypes } from '../injectableTypes/injectableTypes';
-import { CodeGeneration } from '../models/entity/codegenSqlServer/entity/CodeGeneration';
+import { CodeGeneration } from '../models/entity/CodeGeneration';
 
 @injectable()
 export class CodeGenerationDaoImpl implements CodeGenerationDao {
@@ -12,7 +12,7 @@ export class CodeGenerationDaoImpl implements CodeGenerationDao {
     private repo: Repository<CodeGeneration>;
 
     constructor(
-        @inject(InjectableTypes.CodegenSqlServerConnection)
+        @inject(InjectableTypes.MongoDbConnection)
         connection: Connection
     ) {
         this.repo = connection.getRepository(CodeGeneration);
