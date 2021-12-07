@@ -1,4 +1,4 @@
-import { CodegenPipelineTaskResult } from '../models/entity/taskResultMongodb/entity/TaskResult';
+import { CodegenPipelineTaskResult } from '../models/entity/TaskResult';
 
 export interface TaskResultDao {
     getFromBuild(pipelineBuildId: string);

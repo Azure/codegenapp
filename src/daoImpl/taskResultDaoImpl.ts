@@ -6,7 +6,7 @@ import { InjectableTypes } from '../injectableTypes/injectableTypes';
 import {
     CodegenPipelineTaskResult,
     TaskResult,
-} from '../models/entity/taskResultMongodb/entity/TaskResult';
+} from '../models/entity/TaskResult';
 
 @injectable()
 export class TaskResultDaoImpl implements TaskResultDao {

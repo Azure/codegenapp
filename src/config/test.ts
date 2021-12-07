@@ -13,38 +13,53 @@ export const environmentConfigTest: Partial<Config> = {
     loggingMaxFileSize: '200MB',
     defaultSwaggerRepo: {
         type: RepoType.GITHUB,
-        path: 'https://github.com/AzureSDKPipelineBot/azure-rest-api-specs',
+        path: 'https://github.com/AzureSDKPipelineTestBot/azure-rest-api-specs',
         branch: 'main',
     },
     defaultCodegenRepo: {
         type: RepoType.GITHUB,
-        path: 'https://github.com/Azure/azure-sdk-pipeline',
-        branch: 'dev',
+        path: 'https://github.com/AzureSDKPipelineTestBot/azure-sdk-pipeline',
+        branch: 'main',
     },
     defaultSDKRepos: {
         [SDK.TF_SDK]: {
             type: RepoType.GITHUB,
-            path: 'https://github.com/AzureSDKPipelineBot/terraform-provider-azurerm',
+            path: 'https://github.com/AzureSDKPipelineTestBot/terraform-provider-azurerm',
             branch: 'pipeline',
         },
         [SDK.GO_SDK]: {
             type: RepoType.GITHUB,
-            path: 'https://github.com/AzureSDKPipelineBot/azure-sdk-for-go',
+            path: 'https://github.com/AzureSDKPipelineTestBot/azure-sdk-for-go',
             branch: 'main',
         },
         [SDK.CLI_CORE_SDK]: {
             type: RepoType.GITHUB,
-            path: 'https://github.com/AzureSDKPipelineBot/azure-cli',
+            path: 'https://github.com/AzureSDKPipelineTestBot/azure-cli',
             branch: 'dev',
         },
-        [SDK.CLI_EXTENSTION_SDK]: {
+        [SDK.CLI_EXTENSION_SDK]: {
             type: RepoType.GITHUB,
-            path: 'https://github.com/AzureSDKPipelineBot/azure-cli-extensions',
+            path: 'https://github.com/AzureSDKPipelineTestBot/azure-cli-extensions',
             branch: 'main',
         },
         [SDK.DOTNET_SDK]: {
             type: RepoType.GITHUB,
-            path: 'https://github.com/AzureSDKPipelineBot/azure-sdk-for-net',
+            path: 'https://github.com/AzureSDKPipelineTestBot/azure-sdk-for-net',
+            branch: 'main',
+        },
+        [SDK.JS_SDK]: {
+            type: RepoType.GITHUB,
+            path: 'https://github.com/AzureSDKPipelineTestBot/azure-sdk-for-net',
+            branch: 'main',
+        },
+        [SDK.JAVA_SDK]: {
+            type: RepoType.GITHUB,
+            path: 'https://github.com/AzureSDKPipelineTestBot/azure-sdk-for-net',
+            branch: 'main',
+        },
+        [SDK.PYTHON_SDK]: {
+            type: RepoType.GITHUB,
+            path: 'https://github.com/AzureSDKPipelineTestBot/azure-sdk-for-net',
             branch: 'main',
         },
     },

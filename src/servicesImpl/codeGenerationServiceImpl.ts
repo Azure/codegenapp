@@ -16,8 +16,8 @@ import {
     ResourceAndOperation,
 } from '../models/ResourceAndOperationModel';
 import { CodeGenerationType, ORG, README, REPO, SDK } from '../models/common';
-import { CodeGeneration } from '../models/entity/codegenSqlServer/entity/CodeGeneration';
-import { CodegenPipelineTaskResult } from '../models/entity/taskResultMongodb/entity/TaskResult';
+import { CodeGeneration } from '../models/entity/CodeGeneration';
+import { CodegenPipelineTaskResult } from '../models/entity/TaskResult';
 import { PipelineVariablesInterface } from '../models/pipelineVariables';
 import { CodeGenerationService } from '../service/codeGenerationService';
 import { Logger } from '../utils/logger/logger';
@@ -82,7 +82,7 @@ export class CodeGenerationServiceImpl implements CodeGenerationService {
         if (resources !== undefined) rs.resourcelist = resources;
 
         const { org: codegenOrg, repo: codegenRepoName } =
-            this.githubDao.getGitRepoInfo(codegenRepo);
+            this.getGitRepoInfo(codegenRepo);
         await this.createCodeGenerationByCreatingPR(
             name,
             codegenOrg,
@@ -91,6 +91,21 @@ export class CodeGenerationServiceImpl implements CodeGenerationService {
             rs,
             owner
         );
+    }
+
+    public async getBranch(repoInfo: RepoInfo, branchName: string) {
+        const { org: codegenOrg, repo: codegenRepoName } =
+            this.getGitRepoInfo(repoInfo);
+        const result = await this.githubDao.getBranch(
+            codegenOrg,
+            codegenRepoName,
+            branchName
+        );
+        return result;
+    }
+
+    public getGitRepoInfo(repoInfo: RepoInfo) {
+        return this.githubDao.getGitRepoInfo(repoInfo);
     }
 
     public async deleteSDKCodeGeneration(
@@ -577,7 +592,7 @@ export class CodeGenerationServiceImpl implements CodeGenerationService {
         );
         let sdk: string = rpToGen.target;
         /* wrapped clicore and cliextension to cli. */
-        if (sdk === SDK.CLI_CORE_SDK || sdk === SDK.CLI_EXTENSTION_SDK) {
+        if (sdk === SDK.CLI_CORE_SDK || sdk === SDK.CLI_EXTENSION_SDK) {
             sdk = SDK.CLI;
         }
         const { org: swaggerOrg, repo: swaggerRepoName } =
