@@ -2,11 +2,11 @@ import { config } from '../config';
 import { RepoInfo } from './CodeGenerationModel';
 import { CodeGenerationType } from './common';
 
-export const RESOUCEMAPFile = 'ToGenerate.json';
+export const resourceMapFile = 'ToGenerate.json';
 
-export enum SERVICE_TYPE {
-    RESOURCE_MANAGE = 'resource-manager',
-    DATA_PLAN = 'data-plan',
+export enum ServiceType {
+    ResourceManager = 'resource-manager',
+    DataPlane = 'data-plan',
 }
 
 export interface JsonOperationMap {
@@ -16,18 +16,18 @@ export interface JsonOperationMap {
 
 export class ResourceAndOperation {
     public constructor(
-        RPName: string,
+        rpName: string,
         readme: string,
         resources: OnboardResource[],
         target: string,
-        type: string = CodeGenerationType.DEPTH_COVERAGE,
+        type: string = CodeGenerationType.DepthCoverage,
         stype?: string,
         swagger?: RepoInfo,
-        codegen_repo?: RepoInfo,
-        sdk_repo?: RepoInfo,
-        commit?: string
+        codegenRepo?: RepoInfo,
+        sdkRepo?: RepoInfo,
+        commit?: string,
     ) {
-        this.RPName = RPName;
+        this.RPName = rpName;
         this.readmeFile = readme;
         this.resources = resources;
         this.target = target;
@@ -40,27 +40,28 @@ export class ResourceAndOperation {
             this.swaggerRepo = swagger;
         }
 
-        if (codegen_repo !== undefined) {
-            this.codegenRepo = codegen_repo;
+        if (codegenRepo !== undefined) {
+            this.codegenRepo = codegenRepo;
         }
 
-        if (sdk_repo !== undefined) {
-            this.sdkRepo = sdk_repo;
+        if (sdkRepo !== undefined) {
+            this.sdkRepo = sdkRepo;
         } else {
             this.sdkRepo = config.defaultSDKRepos[target];
         }
         this.commit = commit;
     }
     public name: string;
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     public RPName: string;
-    public serviceType: string = SERVICE_TYPE.RESOURCE_MANAGE;
+    public serviceType: string = ServiceType.ResourceManager;
     public readmeFile: string;
     public target: string;
     public resources: OnboardResource[] = [];
     public excludeStages: string;
     public tag: string;
-    public resourcelist: string = '';
-    public onboardType: string = CodeGenerationType.DEPTH_COVERAGE;
+    public resourcelist = '';
+    public onboardType: string = CodeGenerationType.DepthCoverage;
     public swaggerRepo: RepoInfo = config.defaultSwaggerRepo;
     public sdkRepo: RepoInfo = undefined;
     public codegenRepo: RepoInfo = config.defaultCodegenRepo;
@@ -69,7 +70,7 @@ export class ResourceAndOperation {
     public jsonFileList: JsonOperationMap[] = [];
 
     public generateResourceList() {
-        for (let r of this.resources) {
+        for (const r of this.resources) {
             if (this.resourcelist.length === 0) {
                 this.resourcelist = r.Resource;
             } else {
@@ -84,7 +85,9 @@ export class OnboardResource {
         this.Resource = rs;
         this.APIVersion = version;
     }
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     public Resource: string;
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     public APIVersion: string = undefined;
     public operations: OnboardOperation[] = [];
     public tag: string;
@@ -95,6 +98,7 @@ export class OnboardOperation {
         this.version = version;
         this.jsonFilePath = jsonfile;
     }
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     public OperationId: string;
     public version: string;
     public jsonFilePath: string;

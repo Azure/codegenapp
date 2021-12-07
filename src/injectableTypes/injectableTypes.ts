@@ -1,9 +1,7 @@
-import { AuthUtils } from '../utils/authUtils';
-
 /**
  * The types available for dependency injection.
  */
-const InjectableTypes = {
+const injectableTypes = {
     Config: Symbol.for('Config'),
     Logger: Symbol.for('Logger'),
     MongoDbConnection: Symbol.for('MongoDbConnection'),
@@ -18,4 +16,4 @@ const InjectableTypes = {
     AuthUtils: Symbol.for('AuthUtils'),
 };
 
-export { InjectableTypes };
+export { injectableTypes };

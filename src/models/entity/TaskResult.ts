@@ -1,8 +1,4 @@
-import {
-    MessageRecord,
-    PipelineResult,
-    PipelineStatus,
-} from '@azure/swagger-validation-common';
+import { MessageRecord, PipelineResult, PipelineStatus } from '@azure/swagger-validation-common';
 import { Column, Entity, ObjectIdColumn } from 'typeorm';
 
 @Entity('sdkGenerationResults')
@@ -52,7 +48,4 @@ export type TestTaskResult = CodegenPipelineTaskResultCommon & {
     codeCoverage?: number;
 };
 
-export type CodegenPipelineTaskResult =
-    | CodegenPipelineTaskResultCommon
-    | CodegenCodeGenerateTaskResult
-    | TestTaskResult;
+export type CodegenPipelineTaskResult = CodegenPipelineTaskResultCommon | CodegenCodeGenerateTaskResult | TestTaskResult;

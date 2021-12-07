@@ -20,7 +20,7 @@ export interface CodeGenerationService {
         sdkRepo: RepoInfo,
         commit: string,
         owner: string,
-        tag: string
+        tag: string,
     );
 
     getBranch(repoInfo: RepoInfo, branchName: string);
@@ -31,7 +31,7 @@ export interface CodeGenerationService {
 
     getTaskResultByPipelineId(id: string);
 
-    listCodeGenerations(filters: {}, filterCompleted: boolean);
+    listCodeGenerations(filters: any, filterCompleted: boolean);
 
     completeCodeGeneration(codegen: CodeGeneration);
 
@@ -39,38 +39,17 @@ export interface CodeGenerationService {
 
     runCodeGeneration(codegen: CodeGeneration);
 
-    customizeCodeGeneration(
-        name: string,
-        triggerPR: string,
-        codePR: string,
-        excludeTest: boolean
-    );
+    customizeCodeGeneration(name: string, triggerPR: string, codePR: string, excludeTest: boolean);
 
     submitGeneratedCode(codegen: CodeGeneration);
 
-    publishTaskResult(
-        pipelineBuildId: string,
-        taskResult: CodegenPipelineTaskResult
-    );
+    publishTaskResult(pipelineBuildId: string, taskResult: CodegenPipelineTaskResult);
 
-    generateCodePullRequest(
-        org: string,
-        repo: string,
-        title: string,
-        branch: string,
-        basebranch: string
-    );
+    generateCodePullRequest(org: string, repo: string, title: string, branch: string, basebranch: string);
 
     completeAllCodeGenerations();
 
     runCodeGenerationForCI(): void;
 
-    createCodeGenerationByCreatingPR(
-        name: string,
-        codegenOrg: string,
-        codegenRepo: string,
-        codegenBaseBranch: string,
-        rpToGen: ResourceAndOperation,
-        owner?: string
-    );
+    createCodeGenerationByCreatingPR(name: string, codegenOrg: string, codegenRepo: string, codegenBaseBranch: string, rpToGen: ResourceAndOperation, owner?: string);
 }

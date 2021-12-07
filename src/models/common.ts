@@ -1,39 +1,39 @@
-export enum REPO {
-    SWAGGER_REPO = 'azure-rest-api-specs',
-    TF_PROVIDER_REPO = 'terraform-provider-azurerm',
-    CLI_REPO = 'azure-cli',
-    CLI_EXTENSION_REPO = 'azure-cli-extensions',
-    DEPTH_COVERAGE_REPO = 'azure-sdk-pipeline',
+export enum Repo {
+    SwaggerRepo = 'azure-rest-api-specs',
+    TfProviderRepo = 'terraform-provider-azurerm',
+    CliRepo = 'azure-cli',
+    CliExtensionRepo = 'azure-cli-extensions',
+    DepthCoverageRepo = 'azure-sdk-pipeline',
 }
 
-export enum ORG {
-    AZURE = 'Azure',
-    MS = 'microsoft',
+export enum Org {
+    Azure = 'Azure',
+    Ms = 'microsoft',
 }
 
-export enum SDK {
-    TF_SDK = 'terraform',
+export enum Sdk {
+    TfSdk = 'terraform',
     CLI = 'cli',
-    CLI_CORE_SDK = 'clicore',
-    CLI_EXTENSION_SDK = 'cliextension',
-    GO_SDK = 'go',
-    DOTNET_SDK = 'dotnet',
-    JS_SDK = 'js',
-    JAVA_SDK = 'java',
-    PYTHON_SDK = 'python',
+    CliCoreSdk = 'clicore',
+    CliExtensionSdk = 'cliextension',
+    GoSdk = 'go',
+    DotNetSdk = 'dotnet',
+    JsSdk = 'js',
+    JavaSdk = 'java',
+    PythonSdk = 'python',
 }
 
 export enum README {
-    TF_README_FILE = 'readme.terraform.md',
-    CLI_README_FILE = 'readme.az.md',
+    TfReadmeFile = 'readme.terraform.md',
+    CliReadmeFile = 'readme.az.md',
 }
 
 export enum CodeGenerationType {
-    DEPTH_COVERAGE = 'depth',
-    CI = 'CI',
-    ADHOC = 'ad-hoc',
-    RELEASE = 'release',
-    DEV_ONBOARD = 'dev',
+    DepthCoverage = 'depth',
+    Ci = 'Ci',
+    Adhoc = 'ad-hoc',
+    Release = 'release',
+    DevOnboard = 'dev',
 }
 
 export enum RepoType {
@@ -42,9 +42,9 @@ export enum RepoType {
 }
 
 export enum CodeGenerationPipelineTaskName {
-    SET_UP = 'Setup',
-    GENERATE_CODE = 'GenerateCode',
-    BUILD = 'Build',
-    MOCK_TEST = 'MockTest',
-    LIVE_TEST = 'LiveTest',
+    Setup = 'Setup',
+    GenerateCode = 'GenerateCode',
+    Build = 'Build',
+    MockTest = 'MockTest',
+    LiveTest = 'LiveTest',
 }

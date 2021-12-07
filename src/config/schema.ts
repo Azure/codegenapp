@@ -1,9 +1,8 @@
-import * as convict from 'convict';
-
-import { RepoType, SDK } from '../models/common';
+import { RepoType, Sdk } from '../models/common';
 import { LoggerLevel } from '../utils/logger/loggerLevel';
 import { Config } from './config';
 import { Env } from './environment';
+import * as convict from 'convict';
 
 export const configSchema = convict<Config>({
     env: {
@@ -50,13 +49,7 @@ export const configSchema = convict<Config>({
     },
     loggingConsoleLevel: {
         doc: 'The log level.',
-        format: [
-            LoggerLevel.ERROR,
-            LoggerLevel.WARN,
-            LoggerLevel.INFO,
-            LoggerLevel.DEBUG,
-            LoggerLevel.VERBOSE,
-        ],
+        format: [LoggerLevel.ERROR, LoggerLevel.WARN, LoggerLevel.INFO, LoggerLevel.DEBUG, LoggerLevel.VERBOSE],
         default: LoggerLevel.INFO,
     },
     loggingMaxFiles: {
@@ -118,8 +111,7 @@ export const configSchema = convict<Config>({
         path: {
             doc: 'The url path of swagger repository.',
             format: String,
-            default:
-                'https://github.com/AzureSDKPipelineBot/azure-rest-api-specs',
+            default: 'https://github.com/AzureSDKPipelineBot/azure-rest-api-specs',
         },
         branch: {
             doc: 'The main branch of swagger repository.',
@@ -131,7 +123,7 @@ export const configSchema = convict<Config>({
         // doc: "The map of sdk repositories.[sdk]:[sdk repository configuration]",
         // format: (val)=>{/*noop */},
         // default: {}
-        [SDK.TF_SDK]: {
+        [Sdk.TfSdk]: {
             type: {
                 doc: 'The terraform repository type.',
                 format: String,
@@ -140,8 +132,7 @@ export const configSchema = convict<Config>({
             path: {
                 doc: 'The url path of terraform repository.',
                 format: String,
-                default:
-                    'https://github.com/microsoft/terraform-provider-azurerm',
+                default: 'https://github.com/microsoft/terraform-provider-azurerm',
             },
             branch: {
                 doc: 'The main branch of terraform repository.',
@@ -149,7 +140,7 @@ export const configSchema = convict<Config>({
                 default: 'pipeline',
             },
         },
-        [SDK.GO_SDK]: {
+        [Sdk.GoSdk]: {
             type: {
                 doc: 'The go repository type.',
                 format: String,
@@ -166,7 +157,7 @@ export const configSchema = convict<Config>({
                 default: 'main',
             },
         },
-        [SDK.CLI_CORE_SDK]: {
+        [Sdk.CliCoreSdk]: {
             type: {
                 doc: 'The clicore repository type.',
                 format: String,
@@ -183,7 +174,7 @@ export const configSchema = convict<Config>({
                 default: 'dev',
             },
         },
-        [SDK.CLI_EXTENSION_SDK]: {
+        [Sdk.CliExtensionSdk]: {
             type: {
                 doc: 'The cliextension repository type.',
                 format: String,
@@ -200,7 +191,7 @@ export const configSchema = convict<Config>({
                 default: 'main',
             },
         },
-        [SDK.DOTNET_SDK]: {
+        [Sdk.DotNetSdk]: {
             type: {
                 doc: 'The dotnet repository type.',
                 format: String,
@@ -217,7 +208,7 @@ export const configSchema = convict<Config>({
                 default: 'main',
             },
         },
-        [SDK.JS_SDK]: {
+        [Sdk.JsSdk]: {
             type: {
                 doc: 'The js repository type.',
                 format: String,
@@ -234,7 +225,7 @@ export const configSchema = convict<Config>({
                 default: 'main',
             },
         },
-        [SDK.JAVA_SDK]: {
+        [Sdk.JavaSdk]: {
             type: {
                 doc: 'The java repository type.',
                 format: String,
@@ -251,7 +242,7 @@ export const configSchema = convict<Config>({
                 default: 'main',
             },
         },
-        [SDK.PYTHON_SDK]: {
+        [Sdk.PythonSdk]: {
             type: {
                 doc: 'The python repository type.',
                 format: String,
@@ -288,11 +279,7 @@ export const configSchema = convict<Config>({
             {
                 name: 'openapiPortal',
                 id: '0a1005c6-8089-4164-8d46-46fc28239500',
-                thumbprints: [
-                    'B9EAFEF226F4C44C68684AC4348080AFECD1E4CC',
-                    '46BAB0A0212D6B32DBC627012274623B17A6FF2A',
-                    'AE079CF9E902F7EEC3B2DBAE299237DD1A3C135C',
-                ],
+                thumbprints: ['B9EAFEF226F4C44C68684AC4348080AFECD1E4CC', '46BAB0A0212D6B32DBC627012274623B17A6FF2A', 'AE079CF9E902F7EEC3B2DBAE299237DD1A3C135C'],
                 authMetadataEndpoints: [],
             },
             {
@@ -311,10 +298,7 @@ export const configSchema = convict<Config>({
             {
                 name: 'runners',
                 id: '25c5363b-7fe5-4683-9363-4739fab8c1bb',
-                thumbprints: [
-                    'B95A4E11225552D9C331694CAE0D833DF29B02DF',
-                    '4A79AB5164AD5D90C26A23A5479F232A210F6480',
-                ],
+                thumbprints: ['B95A4E11225552D9C331694CAE0D833DF29B02DF', '4A79AB5164AD5D90C26A23A5479F232A210F6480'],
                 authMetadataEndpoints: [],
             },
         ],

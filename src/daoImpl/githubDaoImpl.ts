@@ -1,26 +1,21 @@
+import { config } from '../config';
+import { GithubDao } from '../dao/githubDao';
+import { injectableTypes } from '../injectableTypes/injectableTypes';
+import { RepoInfo } from '../models/CodeGenerationModel';
+import { RepoType } from '../models/common';
 import { Octokit } from '@octokit/rest';
 import { inject, injectable } from 'inversify';
 import { MemoryFileSystem } from 'memory-fs';
 
-import { config } from '../config';
-import { GithubDao } from '../dao/githubDao';
-import { InjectableTypes } from '../injectableTypes/injectableTypes';
-import { RepoInfo } from '../models/CodeGenerationModel';
-import { RepoType } from '../models/common';
-
 @injectable()
 export class GithubDaoImpl implements GithubDao {
-    @inject(InjectableTypes.Logger) private logger;
+    @inject(injectableTypes.Logger) private logger;
 
     public client: Octokit = new Octokit({
         auth: config.githubToken,
     });
 
-    public async getCurrentCommit(
-        org: string,
-        repo: string,
-        branch: string = 'main'
-    ) {
+    public async getCurrentCommit(org: string, repo: string, branch = 'main') {
         const refData = (
             await this.client.git.getRef({
                 owner: org,
@@ -39,12 +34,7 @@ export class GithubDaoImpl implements GithubDao {
         return { commitSha, treeSha: commitData.tree.sha };
     }
 
-    public async createBranch(
-        org: string,
-        repo: string,
-        branch: string,
-        commitSha: string
-    ) {
+    public async createBranch(org: string, repo: string, branch: string, commitSha: string) {
         await this.client.git.createRef({
             owner: org,
             repo,
@@ -66,17 +56,11 @@ export class GithubDaoImpl implements GithubDao {
         }
     }
 
-    public async createNewTree(
-        owner: string,
-        repo: string,
-        fs: MemoryFileSystem,
-        paths: string[],
-        parentTreeSha: string
-    ) {
-        let tree = [];
-        for (let p of paths) {
-            let content = fs.readFileSync('/' + p).toString();
-            let blob = {
+    public async createNewTree(owner: string, repo: string, fs: MemoryFileSystem, paths: string[], parentTreeSha: string) {
+        const tree = [];
+        for (const p of paths) {
+            const content = fs.readFileSync('/' + p).toString();
+            const blob = {
                 path: p,
                 mode: '100644',
                 type: 'blob',
@@ -95,13 +79,7 @@ export class GithubDaoImpl implements GithubDao {
         return data;
     }
 
-    public async createNewCommit(
-        org: string,
-        repo: string,
-        message: string,
-        currentTreeSha: string,
-        currentCommitSha: string
-    ) {
+    public async createNewCommit(org: string, repo: string, message: string, currentTreeSha: string, currentCommitSha: string) {
         const newCommit = await this.client.git.createCommit({
             owner: org,
             repo,
@@ -113,12 +91,7 @@ export class GithubDaoImpl implements GithubDao {
         return newCommit.data;
     }
 
-    public async setBranchToCommit(
-        org: string,
-        repo: string,
-        branch: string,
-        commitSha: string
-    ) {
+    public async setBranchToCommit(org: string, repo: string, branch: string, commitSha: string) {
         await this.client.git.updateRef({
             owner: org,
             repo,
@@ -127,14 +100,8 @@ export class GithubDaoImpl implements GithubDao {
         });
     }
 
-    public async createPullRequest(
-        org: string,
-        repo: string,
-        baseBranch: string,
-        headBranch: string,
-        title: string
-    ): Promise<string> {
-        let result = await this.client.pulls.create({
+    public async createPullRequest(org: string, repo: string, baseBranch: string, headBranch: string, title: string): Promise<string> {
+        const result = await this.client.pulls.create({
             owner: org,
             repo,
             title: title,
@@ -153,10 +120,7 @@ export class GithubDaoImpl implements GithubDao {
                 ref: 'heads/' + branch,
             });
         } catch (e) {
-            this.logger.warn(
-                `Delete Branch ${branch} Failed in ${org}/${repo}`,
-                e
-            );
+            this.logger.warn(`Delete Branch ${branch} Failed in ${org}/${repo}`, e);
         }
     }
 
@@ -178,77 +142,66 @@ export class GithubDaoImpl implements GithubDao {
         codegenRepo: RepoInfo,
         sdkRepo: RepoInfo,
         swaggerRepo: RepoInfo,
-        branch?: string
+        branch?: string,
     ): Promise<void> {
         if (branch === undefined) {
             branch = onboardType + '-' + sdk.toLowerCase() + '-' + rp;
         }
         /* delete depth-coverage rp branch */
-        const { org: cgOrg, repo: cgRepoName } =
-            this.getGitRepoInfo(codegenRepo);
+        const { org: cgOrg, repo: cgRepoName } = this.getGitRepoInfo(codegenRepo);
         await this.deleteBranch(cgOrg, cgRepoName, branch);
 
         const { org: sdkOrg, repo: sdkRepoName } = this.getGitRepoInfo(sdkRepo);
         await this.deleteBranch(sdkOrg, sdkRepoName, branch);
-        let codeBranch = branch + '-code';
+        const codeBranch = branch + '-code';
         await this.deleteBranch(sdkOrg, sdkRepoName, codeBranch);
 
         /*delete swagger rp branch */
-        const { org: swaggerOrg, repo: swaggerRepoName } =
-            this.getGitRepoInfo(swaggerRepo);
+        const { org: swaggerOrg, repo: swaggerRepoName } = this.getGitRepoInfo(swaggerRepo);
         await this.deleteBranch(swaggerOrg, swaggerRepoName, branch);
     }
 
-    public async readFileFromRepo(
-        org: string,
-        repo: string,
-        branch: string,
-        fs: MemoryFileSystem,
-        filename: string
-    ): Promise<string> {
+    public async readFileFromRepo(org: string, repo: string, branch: string, fs: MemoryFileSystem, filename: string): Promise<string> {
         const content = await this.getBlobContent(org, repo, branch, filename);
         fs.writeFileSync('/' + filename, content);
         return content;
     }
 
-    public async getTree(owner: string, repo: string, tree_sha: string) {
+    public async getTree(owner: string, repo: string, treeSha: string) {
         const treeData = (
             await this.client.git.getTree({
                 owner,
                 repo,
-                tree_sha,
+                tree_sha: treeSha,
             })
         ).data;
 
         return treeData;
     }
 
-    public async getBlobContent(
-        org: string,
-        repo: string,
-        branch: string,
-        filepath: string
-    ) {
+    public async getBlobContent(org: string, repo: string, branch: string, filepath: string) {
         const currentCommit = await this.getCurrentCommit(org, repo, branch);
 
         const treeData = await this.getTree(org, repo, currentCommit.treeSha);
 
-        let content: string = '';
+        let content = '';
         const dirs: string[] = filepath.split('/');
         const filename = dirs.pop();
         let curtree = treeData;
-        for (let dir of dirs) {
-            let found: boolean = false;
-            for (let t of curtree.tree) {
+        for (const dir of dirs) {
+            let found = false;
+            for (const t of curtree.tree) {
                 if (t.path === dir) {
                     curtree = await this.getTree(org, repo, t.sha);
                     found = true;
                     break;
                 }
             }
-            if (!found) return '';
+            if (!found) {
+                return '';
+            }
         }
-        for (let t of curtree.tree) {
+        for (const t of curtree.tree) {
             if (t.path === filename) {
                 const blobdata = (
                     await this.client.git.getBlob({
@@ -258,7 +211,7 @@ export class GithubDaoImpl implements GithubDao {
                     })
                 ).data;
 
-                let buff = Buffer.from(blobdata.content, 'base64');
+                const buff = Buffer.from(blobdata.content, 'base64');
                 content = buff.toString('utf-8');
                 break;
             }
@@ -267,52 +220,23 @@ export class GithubDaoImpl implements GithubDao {
         return content;
     }
 
-    public async uploadToRepo(
-        fs: MemoryFileSystem,
-        filepaths: string[],
-        org: string,
-        repo: string,
-        branch: string = 'main'
-    ) {
+    public async uploadToRepo(fs: MemoryFileSystem, filepaths: string[], org: string, repo: string, branch = 'main') {
         const currentCommit = await this.getCurrentCommit(org, repo, branch);
-        const newTree = await this.createNewTree(
-            org,
-            repo,
-            fs,
-            filepaths,
-            currentCommit.treeSha
-        );
+        const newTree = await this.createNewTree(org, repo, fs, filepaths, currentCommit.treeSha);
 
         const commitMessage = 'My commit message';
 
-        const newCommit = await this.createNewCommit(
-            org,
-            repo,
-            commitMessage,
-            newTree.sha,
-            currentCommit.commitSha
-        );
+        const newCommit = await this.createNewCommit(org, repo, commitMessage, newTree.sha, currentCommit.commitSha);
 
         await this.setBranchToCommit(org, repo, branch, newCommit.sha);
     }
 
-    public async readCustomizeFiles(
-        org: string,
-        repo: string,
-        prNumber: number,
-        fs: MemoryFileSystem,
-        fileList: string[]
-    ): Promise<string> {
+    public async readCustomizeFiles(org: string, repo: string, prNumber: number, fs: MemoryFileSystem, fileList: string[]): Promise<string> {
         const prData = await this.getPullRequest(org, repo, prNumber);
         const headBranch = prData.head.ref;
-        let retrievedFileLst: string[] = [];
-        for (let file of fileList) {
-            const content = await this.getBlobContent(
-                org,
-                repo,
-                headBranch,
-                file
-            );
+        const retrievedFileLst: string[] = [];
+        for (const file of fileList) {
+            const content = await this.getBlobContent(org, repo, headBranch, file);
             if (content.length > 0) {
                 retrievedFileLst.push(file);
                 fs.writeFileSync('/' + file, content);
@@ -333,38 +257,24 @@ export class GithubDaoImpl implements GithubDao {
     }
 
     public getGitRepoInfo(repoInfo: RepoInfo) {
-        if (repoInfo === undefined || repoInfo === null)
+        if (repoInfo === undefined || repoInfo === null) {
             return { org: undefined, repo: undefined };
+        }
         const parts: string[] = repoInfo.path.split('/');
         const len = parts.length;
-        if (len <= 2) return { org: undefined, repo: undefined };
+        if (len <= 2) {
+            return { org: undefined, repo: undefined };
+        }
         return { org: parts[len - 2], repo: parts[len - 1] };
     }
 
     /* list pull request. */
-    public async listOpenPullRequest(
-        org: string,
-        repo: string,
-        head: string,
-        base: string
-    ): Promise<string[]> {
-        return await this.listPullRequest(
-            org,
-            repo,
-            'open',
-            org + ':' + head,
-            base
-        );
+    public async listOpenPullRequest(org: string, repo: string, head: string, base: string): Promise<string[]> {
+        return await this.listPullRequest(org, repo, 'open', org + ':' + head, base);
     }
 
-    public async listPullRequest(
-        org: string,
-        repo: string,
-        state: any,
-        head: string,
-        base: string
-    ): Promise<string[]> {
-        let pullurls: string[] = [];
+    public async listPullRequest(org: string, repo: string, state: any, head: string, base: string): Promise<string[]> {
+        const pullurls: string[] = [];
         const pulls = await this.client.pulls.list({
             owner: org,
             repo,
@@ -373,27 +283,15 @@ export class GithubDaoImpl implements GithubDao {
             base,
         });
 
-        for (let pull of pulls.data) {
+        for (const pull of pulls.data) {
             pullurls.push(pull.html_url);
         }
 
         return pullurls;
     }
 
-    public async submitPullRequest(
-        org: string,
-        repo: string,
-        title: string,
-        branchName: string,
-        basebranch: string
-    ): Promise<string> {
-        const prlink = await this.createPullRequest(
-            org,
-            repo,
-            basebranch,
-            branchName,
-            title
-        );
+    public async submitPullRequest(org: string, repo: string, title: string, branchName: string, basebranch: string): Promise<string> {
+        const prlink = await this.createPullRequest(org, repo, basebranch, branchName, title);
 
         return prlink;
     }
@@ -405,21 +303,13 @@ export class GithubDaoImpl implements GithubDao {
         const repo = prpaths.pop();
         const org = prpaths.pop();
 
-        const prdata = await this.checkIfMergedPullRequest(
-            org,
-            repo,
-            pullNumber
-        );
+        const prdata = await this.checkIfMergedPullRequest(org, repo, pullNumber);
         return prdata.statusCode === 204;
 
         return false;
     }
 
-    public async checkIfMergedPullRequest(
-        org: string,
-        repo: string,
-        pullNumber: number
-    ): Promise<any> {
+    public async checkIfMergedPullRequest(org: string, repo: string, pullNumber: number): Promise<any> {
         const pullData = await this.client.pulls.checkIfMerged({
             owner: org,
             repo,
@@ -429,13 +319,9 @@ export class GithubDaoImpl implements GithubDao {
         return pullData;
     }
 
-    public getBlobURL(
-        commit: string,
-        resourceProvider: string,
-        repoInfo: RepoInfo
-    ) {
+    public getBlobURL(commit: string, resourceProvider: string, repoInfo: RepoInfo) {
         if (repoInfo.type === RepoType.GITHUB) {
-            let githubpath: string = repoInfo.path.replace('.git', '');
+            const githubpath: string = repoInfo.path.replace('.git', '');
             return `${githubpath}/blob/${commit}/specification/${resourceProvider}/resource-manager/readme.md`;
         } else {
             return ''; //ADO not implement.

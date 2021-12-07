@@ -1,13 +1,5 @@
 export class CandidateResource {
-    public constructor(
-        rp: string,
-        rs: string,
-        fileName: string = 'ALL',
-        apiversion: string = 'ALL',
-        tag: string = 'ALL',
-        start: string = '',
-        end: string = ''
-    ) {
+    public constructor(rp: string, rs: string, fileName = 'ALL', apiversion = 'ALL', tag = 'ALL', start = '', end = '') {
         this.resourceProvider = rp;
         this.fullResourceType = rs;
         this.fileName = fileName;
@@ -19,8 +11,8 @@ export class CandidateResource {
     public resourceProvider: string;
     public fullResourceType: string;
     public fileName: string;
-    public apiVersion: string = 'ALL';
-    public tag: string = 'ALL';
+    public apiVersion = 'ALL';
+    public tag = 'ALL';
     public startDate: string;
     public endDate: string;
 }
