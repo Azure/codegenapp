@@ -7,7 +7,6 @@ import { Repository } from 'typeorm/repository/Repository';
 
 @injectable()
 export class CodeGenerationDaoImpl implements CodeGenerationDao {
-    @inject(injectableTypes.Logger) private logger;
     private repo: Repository<CodeGeneration>;
 
     constructor(
@@ -42,13 +41,18 @@ export class CodeGenerationDaoImpl implements CodeGenerationDao {
 
     /*Get all code generations of an special onboard type. */
     public async listCodeGenerations(filters: any = undefined, filterCompleted = false): Promise<CodeGeneration[]> {
+        let finalFilters: any;
         if (!filters) {
             filters = {};
         }
         if (filterCompleted) {
-            filters['status'] = 'Not(Equal(completed) OR Equal(pipelineCompleted))';
+            finalFilters = {
+                where: { $and: [{ status: { $ne: 'completed' } }, { status: { $ne: 'pipelineCompleted' } }, filters] },
+            };
+        } else {
+            finalFilters = filters;
         }
-        const codegens = await this.repo.find(filters);
+        const codegens = await this.repo.find(finalFilters);
         return codegens;
     }
 

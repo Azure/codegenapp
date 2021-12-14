@@ -13,9 +13,9 @@ module.exports = {
             tsconfig: 'tsconfig.json',
         },
     },
-    testPathIgnorePatterns: ['test/setup'],
+    testPathIgnorePatterns: ['test/setup', 'test/lib'],
     testRegex: './test/*/.*\\.ts',
     verbose: true,
     rootDir: './',
-    setupFilesAfterEnv: ['./jest.setup.js']
+    setupFilesAfterEnv: ['./jest.setup.js'],
 };
