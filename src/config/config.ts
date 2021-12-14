@@ -39,8 +39,10 @@ export interface Config {
         password: string;
     };
     githubToken: string;
+    azurePipelineToken: string;
+    azurePipelineUrl: string;
+    azurePipelineRef: string;
 }
-
 export interface Customer {
     id: string;
     name: string;
