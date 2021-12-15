@@ -31,3 +31,19 @@ steps:
       command: 'buildAndPush'
       Dockerfile: 'Dockerfile'
       tags: '$(Build.BuildNumber)'
+
+  - task: DockerCompose@0
+    displayName: "docker-compose up"
+    inputs:
+      dockerComposeFile: "**/docker-compose.yml"
+      dockerComposeFileArgs: "NODE_ENV=development"
+      qualifyImageNames: false
+      action: "run A Docker Compose Command"
+      dockerComposeCommand: "up --build --detach --remove-orphans --force-recreate --renew-anon-volumes"
+      buildImages: true
+      detached: true
+
+  - script: |
+      npm run test
+    displayName: 'npm run test'
+

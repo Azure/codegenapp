@@ -1,0 +1,11 @@
+version: "2.4"
+services:
+  mongodb:
+    image: mongo
+    platform: linux
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=admin
+      - MONGO_INITDB_ROOT_USERNAME=test
+      - MONGO_INITDB_ROOT_PASSWORD=123456

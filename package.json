@@ -7,7 +7,7 @@
     "start": "node dist/src/codegenApp.js",
     "run": "node dist/src/codegenApp.js",
     "debug": "node --max_old_space_size=4096 --inspect-brk dist/src/codegenApp.js",
-    "test": "jest --forceExit --coverage",
+    "test": "jest --forceExit --detectOpenHandles --coverage=true",
     "lint-fix": "eslint . --fix --ext .ts --ignore-pattern *.d.ts --max-warnings=0",
     "lint": "eslint . --ext .ts --ignore-pattern *.d.ts --max-warnings=0",
     "eslint": "eslint --ext .ts test/",
@@ -25,9 +25,6 @@
   "bin": {
     "publish-codegen-pipeline-result": "./dist/src/tools/publishCodegenPipelineResult.js"
   },
-  "jest": {
-    "testEnvironment": "node"
-  },
   "repository": {
     "type": "git",
     "url": "https://github.com/Azure/azure-sdk-pipeline.git"
@@ -37,7 +34,7 @@
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "^2.0.4",
     "@types/express": "^4.17.11",
-    "@types/jest": "^26.0.22",
+    "@types/jest": "^27.0.0",
     "@types/node": "^14.14.37",
     "@typescript-eslint/eslint-plugin": "^4.11.0",
     "@typescript-eslint/parser": "^4.11.0",
@@ -46,14 +43,14 @@
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-prettier": "^3.4.0",
     "eslint-plugin-sort-imports-es6-autofix": "^0.6.0",
-    "jest": "^27.3.1",
+    "jest": "^27.4.5",
     "mocha": "^8.3.2",
     "mocha-prepare": "^0.1.0",
     "nyc": "^15.1.0",
     "prettier": "^2.4.1",
     "rimraf": "^3.0.2",
     "shelljs": "^0.8.3",
-    "ts-jest": "^26.4.4"
+    "ts-jest": "^27.1.1"
   },
   "dependencies": {
     "@azure/identity": "^2.0.0",
