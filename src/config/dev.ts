@@ -49,17 +49,17 @@ export const environmentConfigDev: Partial<Config> = {
         },
         [Sdk.JsSdk]: {
             type: RepoType.GITHUB,
-            path: 'https://github.com/AzureSDKPipelineTestBot/azure-sdk-for-net',
+            path: 'https://github.com/AzureSDKPipelineTestBot/azure-sdk-for-js',
             branch: 'main',
         },
         [Sdk.JavaSdk]: {
             type: RepoType.GITHUB,
-            path: 'https://github.com/AzureSDKPipelineTestBot/azure-sdk-for-net',
+            path: 'https://github.com/AzureSDKPipelineTestBot/azure-sdk-for-java',
             branch: 'main',
         },
         [Sdk.PythonSdk]: {
             type: RepoType.GITHUB,
-            path: 'https://github.com/AzureSDKPipelineTestBot/azure-sdk-for-net',
+            path: 'https://github.com/AzureSDKPipelineTestBot/azure-sdk-for-python',
             branch: 'main',
         },
     },

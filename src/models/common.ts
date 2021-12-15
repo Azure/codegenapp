@@ -17,7 +17,7 @@ export enum Sdk {
     CliCoreSdk = 'clicore',
     CliExtensionSdk = 'cliextension',
     GoSdk = 'go',
-    DotNetSdk = 'dotnet',
+    DotNetSdk = 'net',
     JsSdk = 'js',
     JavaSdk = 'java',
     PythonSdk = 'python',

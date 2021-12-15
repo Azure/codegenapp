@@ -358,4 +358,22 @@ export const configSchema = convict<Config>({
         default: '',
         env: 'sdkGenerationGithubToken',
     },
+    azurePipelineToken: {
+        doc: 'The token used to call azure pipeline',
+        format: String,
+        default: '',
+        env: 'sdkGenerationAzurePipelineToken',
+    },
+    azurePipelineUrl: {
+        doc: 'The url of azure pipeline',
+        format: String,
+        default: '',
+        env: 'sdkGenerationAzurePipelineUrl',
+    },
+    azurePipelineRef: {
+        doc: 'The azure pipeline ref name',
+        format: String,
+        default: 'main',
+        env: 'sdkGenerationAzurePipelineRef',
+    },
 });

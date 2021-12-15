@@ -3,13 +3,15 @@ import { GithubDao } from '../dao/githubDao';
 import { TaskResultDao } from '../dao/taskResultDao';
 import { injectableTypes } from '../injectableTypes/injectableTypes';
 import { CodeGenerationDBColumn, CodeGenerationStatus, RepoInfo } from '../models/CodeGenerationModel';
-import { resourceMapFile, ResourceAndOperation } from '../models/ResourceAndOperationModel';
+import { ResourceAndOperation, resourceMapFile } from '../models/ResourceAndOperationModel';
+import { TemplateParameters } from '../models/RunAzurePipelineBodyModel';
 import { CodeGenerationType, Org, README, Repo, Sdk } from '../models/common';
 import { CodeGeneration } from '../models/entity/CodeGeneration';
 import { CodegenPipelineTaskResult } from '../models/entity/TaskResult';
 import { PipelineVariablesInterface } from '../models/pipelineVariables';
 import { CodeGenerationService } from '../service/codeGenerationService';
 import { Logger } from '../utils/logger/logger';
+import { azurePipelineClient } from '../utils/pipelineClient';
 import { inject, injectable } from 'inversify';
 import * as yaml from 'node-yaml';
 import { Equal, Not } from 'typeorm';
@@ -40,7 +42,7 @@ export class CodeGenerationServiceImpl implements CodeGenerationService {
         resourceProvider: string,
         resources: string,
         sdk: string,
-        type: string,
+        triggerType: string,
         serviceType: string,
         swaggerRepo: RepoInfo,
         codegenRepo: RepoInfo,
@@ -49,18 +51,42 @@ export class CodeGenerationServiceImpl implements CodeGenerationService {
         owner: string,
         tag: string,
     ) {
-        const readmeFile: string = '/specification/' + resourceProvider + '/resource-manager/readme.md';
-        const rs: ResourceAndOperation = new ResourceAndOperation(resourceProvider, readmeFile, [], sdk, type, serviceType, swaggerRepo, codegenRepo, sdkRepo, commit);
-        if (tag !== undefined) {
-            rs.tag = tag;
-        }
-        rs.generateResourceList();
-        if (resources !== undefined) {
-            rs.resourcelist = resources;
-        }
+        const readmeFile = `specification/${resourceProvider}/${serviceType}/readme.md`;
 
-        const { org: codegenOrg, repo: codegenRepoName } = this.getGitRepoInfo(codegenRepo);
-        await this.createCodeGenerationByCreatingPR(name, codegenOrg, codegenRepoName, codegenRepo.branch, rs, owner);
+        const templateParameters: TemplateParameters = {
+            sdkGenerationName: name,
+            sdk: sdk,
+            resourceProvider: resourceProvider,
+            readmeFile: readmeFile,
+            triggerType: triggerType,
+            specRepoType: swaggerRepo.type,
+            specRepoUrl: swaggerRepo.path,
+            specRepoBaseBranch: swaggerRepo.branch,
+            sdkRepoType: sdkRepo.type,
+            sdkRepoUrl: sdkRepo.path,
+            sdkRepoBaseBranch: sdkRepo.branch,
+            skippedTask: '""',
+            serviceType: serviceType,
+        };
+        const cg: CodeGeneration = new CodeGeneration();
+        cg.name = name;
+        cg.resourceProvider = resourceProvider;
+        cg.serviceType = serviceType;
+        cg.resourcesToGenerate = '';
+        cg.tag = tag;
+        cg.sdk = sdk;
+        cg.swaggerRepo = JSON.stringify(swaggerRepo);
+        cg.sdkRepo = JSON.stringify(sdkRepo);
+        cg.codegenRepo = JSON.stringify(codegenRepo);
+        cg.owner = owner === undefined ? '' : owner;
+        cg.type = triggerType;
+        cg.status = CodeGenerationStatus.CodeGenerationStatusSubmit;
+        const response = await azurePipelineClient.runPipeline(templateParameters);
+        if (response.status !== 200) {
+            throw new Error(`Run pipeline failed for ${name}`);
+        }
+        cg.lastPipelineBuildID = response.data['id'];
+        await this.codeGenerationDao.submitCodeGeneration(cg);
     }
 
     public async getBranch(repoInfo: RepoInfo, branchName: string) {
@@ -150,33 +176,28 @@ export class CodeGenerationServiceImpl implements CodeGenerationService {
 
     /*customize a code generation. */
     public async runCodeGeneration(codegen: CodeGeneration) {
-        const codegenrepo = JSON.parse(codegen.codegenRepo);
+        const templateParameters: TemplateParameters = {
+            sdkGenerationName: codegen.name,
+            sdk: codegen.sdk,
+            resourceProvider: codegen.resourceProvider,
+            readmeFile: `specification/${codegen.resourceProvider}/${codegen.serviceType}/readme.md`,
+            triggerType: codegen.type,
+            specRepoType: JSON.parse(codegen.swaggerRepo)['type'],
+            specRepoUrl: JSON.parse(codegen.swaggerRepo)['path'],
+            specRepoBaseBranch: `${JSON.parse(codegen.swaggerRepo)['branch']}`,
+            sdkRepoType: JSON.parse(codegen.sdkRepo)['type'],
+            sdkRepoUrl: JSON.parse(codegen.sdkRepo)['path'],
+            sdkRepoBaseBranch: `${JSON.parse(codegen.sdkRepo)['branch']}`,
+            skippedTask: '""',
+            serviceType: codegen.serviceType,
+        };
 
-        /* generate PR in swagger repo. */
-        const branch = codegen.name;
-
-        const { org: cgorg, repo: cgreponame } = this.githubDao.getGitRepoInfo(codegenrepo);
-        const fs = new MemoryFileSystem();
-        const jsonMapFile = 'ToGenerate.json';
-        const filepaths: string[] = [];
-        const content = await this.githubDao.readFileFromRepo(
-            cgorg !== undefined ? cgorg : Org.Azure,
-            cgreponame !== undefined ? cgreponame : Repo.DepthCoverageRepo,
-            branch,
-            fs,
-            jsonMapFile,
-        );
-
-        if (content !== undefined && content.length > 0) {
-            const resource: ResourceAndOperation = JSON.parse(content);
-            fs.writeFileSync('/' + jsonMapFile, JSON.stringify(resource, null, 2));
-            filepaths.push(jsonMapFile);
+        const response = await azurePipelineClient.runPipeline(templateParameters);
+        if (response.status !== 200) {
+            throw new Error(`Rerun sdk generation ${codegen.name} failed.`);
         }
-
-        /* update azure-sdk-pipeline trigger pull request. */
-        await this.githubDao.uploadToRepo(fs, filepaths, cgorg !== undefined ? cgorg : Org.Azure, cgreponame !== undefined ? cgreponame : Repo.DepthCoverageRepo, branch);
         await this.codeGenerationDao.updateCodeGenerationValuesByName(codegen.name, {
-            lastPipelineBuildID: '',
+            lastPipelineBuildID: response.data['id'],
             status: CodeGenerationStatus.CodeGenerationStatusSubmit,
         });
     }
@@ -477,6 +498,22 @@ export class CodeGenerationServiceImpl implements CodeGenerationService {
         await this.codeGenerationDao.submitCodeGeneration(cg);
     }
 
+    public async runCodeGenerationForCI() {
+        const codeGens: CodeGeneration[] = await this.codeGenerationDao.listCodeGenerations({
+            type: CodeGenerationType.Ci,
+            status: Not(Equal(CodeGenerationStatus.CodeGenerationStatusInProgress)),
+        });
+        for (const codeGen of codeGens) {
+            try {
+                this.runCodeGeneration(codeGen);
+            } catch (e) {
+                this.logger.info(`Failed to re-run Code generation ${codeGen.name} (resourceProvider: ${codeGen.resourceProvider}, sdk: ${codeGen.sdk}, type: ${codeGen.type})`);
+                this.logger.error(e);
+            }
+            this.logger.info(`Code generation ${codeGen.name} (resourceProvider: ${codeGen.resourceProvider}, sdk: ${codeGen.sdk}, type: ${codeGen.type}) is triggered`);
+        }
+    }
+
     private collectPipelineStages(type: string, sdk: string): string[] {
         const stages: string[] = [];
         stages.push('Setup');
@@ -498,22 +535,6 @@ export class CodeGenerationServiceImpl implements CodeGenerationService {
             return true;
         } else {
             return false;
-        }
-    }
-
-    public async runCodeGenerationForCI() {
-        const codeGens: CodeGeneration[] = await this.codeGenerationDao.listCodeGenerations({
-            type: CodeGenerationType.Ci,
-            status: Not(Equal(CodeGenerationStatus.CodeGenerationStatusInProgress)),
-        });
-        for (const codeGen of codeGens) {
-            try {
-                this.runCodeGeneration(codeGen);
-            } catch (e) {
-                this.logger.info(`Failed to re-run Code generation ${codeGen.name} (resourceProvider: ${codeGen.resourceProvider}, sdk: ${codeGen.sdk}, type: ${codeGen.type})`);
-                this.logger.error(e);
-            }
-            this.logger.info(`Code generation ${codeGen.name} (resourceProvider: ${codeGen.resourceProvider}, sdk: ${codeGen.sdk}, type: ${codeGen.type}) is triggered`);
         }
     }
 }

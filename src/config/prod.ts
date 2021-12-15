@@ -1,4 +1,4 @@
-import { RepoType, Sdk } from '../models/common';
+import { RepoType } from '../models/common';
 import { LoggerLevel } from '../utils/logger/loggerLevel';
 import { Config } from './config';
 import { Env } from './environment';
@@ -20,33 +20,6 @@ export const environmentConfigProd: Partial<Config> = {
         type: RepoType.GITHUB,
         path: 'https://github.com/Azure/azure-sdk-pipeline',
         branch: 'main',
-    },
-    defaultSDKRepos: {
-        [Sdk.TfSdk]: {
-            type: RepoType.GITHUB,
-            path: 'https://github.com/microsoft/terraform-provider-azurerm',
-            branch: 'pipeline',
-        },
-        [Sdk.GoSdk]: {
-            type: RepoType.GITHUB,
-            path: 'https://github.com/Azure/azure-sdk-for-go',
-            branch: 'main',
-        },
-        [Sdk.CliCoreSdk]: {
-            type: RepoType.GITHUB,
-            path: 'https://github.com/Azure/azure-cli',
-            branch: 'dev',
-        },
-        [Sdk.CliExtensionSdk]: {
-            type: RepoType.GITHUB,
-            path: 'https://github.com/Azure/azure-cli-extensions',
-            branch: 'main',
-        },
-        [Sdk.DotNetSdk]: {
-            type: RepoType.GITHUB,
-            path: 'https://github.com/Azure/azure-sdk-for-net',
-            branch: 'main',
-        },
     },
     armEndpoint: 'https://management.azure.com',
     clientAuthEnabled: true,

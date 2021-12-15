@@ -1,6 +1,7 @@
 import { config } from '../config';
 import { injectableTypes } from '../injectableTypes/injectableTypes';
 import { CodeGenerationStatus, RepoInfo } from '../models/CodeGenerationModel';
+import { ServiceType } from '../models/ResourceAndOperationModel';
 import { CodeGenerationType } from '../models/common';
 import { CodeGeneration } from '../models/entity/CodeGeneration';
 import { CodegenPipelineTaskResult } from '../models/entity/TaskResult';
@@ -37,7 +38,10 @@ export class CodeGenerateController extends BaseController {
         const resourceProvider = request.body.resourceProvider;
         const sdk: string = request.body.sdk;
         const resources: string = request.body.resources;
-        const serviceType = request.body.serviceType;
+        let serviceType = request.body.serviceType;
+        if (serviceType === undefined) {
+            serviceType = ServiceType.ResourceManager;
+        }
         const tag = request.body.tag;
         const commit = request.body.commit;
         const owners = request.body.contactAliases;
@@ -66,9 +70,9 @@ export class CodeGenerateController extends BaseController {
             sdkRepo = config.defaultSDKRepos[sdk];
         }
 
-        let type = request.body.type;
-        if (type === undefined) {
-            type = CodeGenerationType.Adhoc;
+        let triggerType = request.body.type;
+        if (triggerType === undefined) {
+            triggerType = CodeGenerationType.Adhoc;
         }
         const codegen = await this.codeGenerationService.getCodeGenerationByName(name);
         if (
@@ -81,19 +85,12 @@ export class CodeGenerateController extends BaseController {
             return this.json(message, 400);
         }
 
-        const branch = await this.codeGenerationService.getBranch(codegenRepo, name);
-        if (branch) {
-            const message = `The code generation ${name} has already been used. Please use another name`;
-            this.logger.info(message);
-            return this.json(message, 400);
-        }
-
         await this.codeGenerationService.createCodeGeneration(
             name,
             resourceProvider,
             resources,
             sdk,
-            type,
+            triggerType,
             serviceType,
             swaggerRepo,
             codegenRepo,
@@ -102,7 +99,7 @@ export class CodeGenerateController extends BaseController {
             owners !== undefined ? owners.join(';') : '',
             tag,
         );
-        return this.json('Trigger ' + type + ' for resource provider ' + resourceProvider, 200);
+        return this.json('Trigger ' + triggerType + ' for resource provider ' + resourceProvider, 200);
     }
 
     /* get sdk code generation. */
