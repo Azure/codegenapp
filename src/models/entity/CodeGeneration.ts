@@ -1,42 +1,57 @@
-import { Column, Entity, Index, ObjectIdColumn } from 'typeorm';
+import { IsNotEmpty, validateOrReject } from 'class-validator';
+import { BeforeInsert, BeforeUpdate, Column, Entity, Index, ObjectIdColumn } from 'typeorm';
 
 @Entity('sdkGenerations')
 export class CodeGeneration {
+    @BeforeInsert()
+    @BeforeUpdate()
+    async validate() {
+        await validateOrReject(this);
+    }
     @ObjectIdColumn()
     id: number;
     @Index({ unique: true })
     @Column()
+    @IsNotEmpty()
     name: string;
     @Column()
+    @IsNotEmpty()
     resourceProvider: string;
     @Column()
+    @IsNotEmpty()
     serviceType: string;
-    @Column({ nullable: true })
+    @Column()
     resourcesToGenerate: string;
-    @Column({ nullable: true })
+    @Column()
     tag: string;
-    @Column({ nullable: true })
+    @Column()
+    @IsNotEmpty()
     sdk: string;
-    @Column({ nullable: true })
+    @Column()
+    @IsNotEmpty()
     swaggerRepo: string;
-    @Column({ nullable: true })
+    @Column()
+    @IsNotEmpty()
     sdkRepo: string;
-    @Column({ nullable: true })
+    @Column()
+    @IsNotEmpty()
     codegenRepo: string;
-    @Column({ nullable: true })
+    @Column()
+    @IsNotEmpty()
     type: string;
-    @Column({ nullable: true })
+    @Column()
     ignoreFailure: string;
-    @Column({ nullable: true })
+    @Column()
     stages: string;
-    @Column({ nullable: true, default: '' })
+    @Column({ default: '' })
     lastPipelineBuildID: string;
-    @Column({ nullable: true })
+    @Column()
     swaggerPR: string;
-    @Column({ nullable: true })
+    @Column()
     codePR: string;
-    @Column({ nullable: true })
+    @Column()
+    @IsNotEmpty()
     status: string;
-    @Column({ nullable: true })
+    @Column({ default: '' })
     owner: string;
 }
