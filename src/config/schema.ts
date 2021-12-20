@@ -149,7 +149,7 @@ export const configSchema = convict<Config>({
             path: {
                 doc: 'The url path of go repository.',
                 format: String,
-                default: 'https://github.com/Azure/azure-sdk-for-go',
+                default: 'https://github.com/AzureSDKPipelineBot/azure-sdk-for-go',
             },
             branch: {
                 doc: 'The main branch of go repository.',
@@ -166,7 +166,7 @@ export const configSchema = convict<Config>({
             path: {
                 doc: 'The url path of clicore repository.',
                 format: String,
-                default: 'https://github.com/Azure/azure-cli',
+                default: 'https://github.com/AzureSDKPipelineBot/azure-cli',
             },
             branch: {
                 doc: 'The main branch of clicore repository.',
@@ -183,7 +183,7 @@ export const configSchema = convict<Config>({
             path: {
                 doc: 'The url path of cliextension repository.',
                 format: String,
-                default: 'https://github.com/Azure/azure-cli-extensions',
+                default: 'https://github.com/AzureSDKPipelineBot/azure-cli-extensions',
             },
             branch: {
                 doc: 'The main branch of cliextension repository.',
@@ -200,7 +200,7 @@ export const configSchema = convict<Config>({
             path: {
                 doc: 'The url path of dotnet repository.',
                 format: String,
-                default: 'https://github.com/Azure/azure-sdk-for-net',
+                default: 'https://github.com/AzureSDKPipelineBot/azure-sdk-for-net',
             },
             branch: {
                 doc: 'The main branch of dotnet repository.',
@@ -217,7 +217,7 @@ export const configSchema = convict<Config>({
             path: {
                 doc: 'The url path of js repository.',
                 format: String,
-                default: 'https://github.com/Azure/azure-sdk-for-js',
+                default: 'https://github.com/AzureSDKPipelineBot/azure-sdk-for-js',
             },
             branch: {
                 doc: 'The main branch of js repository.',
@@ -234,7 +234,7 @@ export const configSchema = convict<Config>({
             path: {
                 doc: 'The url path of java repository.',
                 format: String,
-                default: 'https://github.com/Azure/azure-sdk-for-net',
+                default: 'https://github.com/AzureSDKPipelineBot/azure-sdk-for-net',
             },
             branch: {
                 doc: 'The main branch of java repository.',
@@ -251,7 +251,7 @@ export const configSchema = convict<Config>({
             path: {
                 doc: 'The url path of python repository.',
                 format: String,
-                default: 'https://github.com/Azure/azure-sdk-for-net',
+                default: 'https://github.com/AzureSDKPipelineBot/azure-sdk-for-net',
             },
             branch: {
                 doc: 'The main branch of python repository.',
