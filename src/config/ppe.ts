@@ -53,17 +53,17 @@ export const environmentConfigPpe: Partial<Config> = {
         },
         [SDK.JS_SDK]: {
             type: RepoType.GITHUB,
-            path: 'https://github.com/AzureSDKPipelinePpeBot/azure-sdk-for-net',
+            path: 'https://github.com/AzureSDKPipelinePpeBot/azure-sdk-for-js',
             branch: 'main',
         },
         [SDK.JAVA_SDK]: {
             type: RepoType.GITHUB,
-            path: 'https://github.com/AzureSDKPipelinePpeBot/azure-sdk-for-net',
+            path: 'https://github.com/AzureSDKPipelinePpeBot/azure-sdk-for-java',
             branch: 'main',
         },
         [SDK.PYTHON_SDK]: {
             type: RepoType.GITHUB,
-            path: 'https://github.com/AzureSDKPipelinePpeBot/azure-sdk-for-net',
+            path: 'https://github.com/AzureSDKPipelinePpeBot/azure-sdk-for-python',
             branch: 'main',
         },
     },

@@ -243,7 +243,7 @@ export const configSchema = convict<Config>({
             path: {
                 doc: 'The url path of java repository.',
                 format: String,
-                default: 'https://github.com/Azure/azure-sdk-for-net',
+                default: 'https://github.com/Azure/azure-sdk-for-java',
             },
             branch: {
                 doc: 'The main branch of java repository.',
@@ -260,7 +260,7 @@ export const configSchema = convict<Config>({
             path: {
                 doc: 'The url path of python repository.',
                 format: String,
-                default: 'https://github.com/Azure/azure-sdk-for-net',
+                default: 'https://github.com/Azure/azure-sdk-for-python',
             },
             branch: {
                 doc: 'The main branch of python repository.',
