@@ -124,6 +124,15 @@ test('dao test submitCodeGeneration and getCodeGenerationByName3', async () => {
     const mockFn = jest.fn();
 
     await codeGenerationDao.deleteCodeGenerationByName(cg.name);
+    await codeGenerationDao.submitCodeGeneration(cg);
+    try {
+        cg.name = null;
+        await codeGenerationDao.submitCodeGeneration(cg);
+    } catch (error) {
+        mockFn();
+    }
+
+    await codeGenerationDao.deleteCodeGenerationByName(cg.name);
     try {
         cg.name = null;
         await codeGenerationDao.submitCodeGeneration(cg);
@@ -194,7 +203,7 @@ test('dao test submitCodeGeneration and getCodeGenerationByName3', async () => {
     } catch (error) {
         mockFn();
     }
-    expect(mockFn).toBeCalledTimes(9);
+    expect(mockFn).toBeCalledTimes(10);
 });
 
 test('dao test submitCodeGeneration, updateCodeGenerationValueByName and getCodeGenerationByName', async () => {
