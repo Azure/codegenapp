@@ -13,12 +13,12 @@ export const environmentConfigProd: Partial<Config> = {
     serviceName: 'sdk-generation',
     defaultSwaggerRepo: {
         type: RepoType.GITHUB,
-        path: 'https://github.com/Azure/azure-rest-api-specs',
+        path: 'https://github.com/AzureSDKPipelineBot/azure-rest-api-specs',
         branch: 'main',
     },
     defaultCodegenRepo: {
         type: RepoType.GITHUB,
-        path: 'https://github.com/Azure/azure-sdk-pipeline',
+        path: 'https://github.com/AzureSDKPipelineBot/azure-sdk-pipeline',
         branch: 'main',
     },
     defaultSDKRepos: {
