@@ -29,22 +29,37 @@ export const environmentConfigProd: Partial<Config> = {
         },
         [SDK.GO_SDK]: {
             type: RepoType.GITHUB,
-            path: 'https://github.com/Azure/azure-sdk-for-go',
+            path: 'https://github.com/AzureSDKPipelineBot/azure-sdk-for-go',
             branch: 'main',
         },
         [SDK.CLI_CORE_SDK]: {
             type: RepoType.GITHUB,
-            path: 'https://github.com/Azure/azure-cli',
-            branch: 'dev',
+            path: 'https://github.com/AzureSDKPipelineBot/azure-cli',
+            branch: 'main',
         },
         [SDK.CLI_EXTENSION_SDK]: {
             type: RepoType.GITHUB,
-            path: 'https://github.com/Azure/azure-cli-extensions',
+            path: 'https://github.com/AzureSDKPipelineBot/azure-cli-extensions',
             branch: 'main',
         },
         [SDK.DOTNET_SDK]: {
             type: RepoType.GITHUB,
-            path: 'https://github.com/Azure/azure-sdk-for-net',
+            path: 'https://github.com/AzureSDKPipelineBot/azure-sdk-for-net',
+            branch: 'main',
+        },
+        [SDK.JS_SDK]: {
+            type: RepoType.GITHUB,
+            path: 'https://github.com/AzureSDKPipelineBot/azure-sdk-for-js',
+            branch: 'main',
+        },
+        [SDK.JAVA_SDK]: {
+            type: RepoType.GITHUB,
+            path: 'https://github.com/AzureSDKPipelineBot/azure-sdk-for-java',
+            branch: 'main',
+        },
+        [SDK.PYTHON_SDK]: {
+            type: RepoType.GITHUB,
+            path: 'https://github.com/AzureSDKPipelineBot/azure-sdk-for-python',
             branch: 'main',
         },
     },
