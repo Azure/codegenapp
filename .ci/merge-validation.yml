@@ -26,7 +26,7 @@ steps:
   - task: DockerCompose@0
     displayName: "docker-compose up"
     inputs:
-      dockerComposeFile: "**/docker-compose.yml"
+      dockerComposeFile: "./.ci/test-docker-compose.yml"
       dockerComposeFileArgs: "NODE_ENV=development"
       qualifyImageNames: false
       action: "run A Docker Compose Command"

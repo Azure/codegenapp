@@ -29,9 +29,9 @@ async function initDaoTest() {
 
 beforeAll(initDaoTest);
 
-test('dao test submitCodeGeneration and getCodeGenerationByName', async () => {
+test('dao test submitCodeGeneration and getCodeGenerationByName1', async () => {
     const cg: CodeGeneration = new CodeGeneration();
-    cg.name = 'test1';
+    cg.name = 'test1a';
     cg.resourceProvider = 'msi';
     cg.serviceType = 'resource-manager';
     cg.resourcesToGenerate = '';
@@ -48,15 +48,147 @@ test('dao test submitCodeGeneration and getCodeGenerationByName', async () => {
     await codeGenerationDao.deleteCodeGenerationByName(cg.name);
     await codeGenerationDao.submitCodeGeneration(cg);
 
-    const retCg: CodeGeneration = await codeGenerationDao.getCodeGenerationByName('test1');
+    const retCg: CodeGeneration = await codeGenerationDao.getCodeGenerationByName(cg.name);
     expect(retCg.resourceProvider).toBe('msi');
     expect(retCg.serviceType).toBe('resource-manager');
-    expect(retCg.tag).toBe(null);
+    expect(retCg.tag).toBeNull();
     expect(retCg.sdk).toBe('javascript');
     expect(retCg.swaggerRepo).toBe('{"type": "github", "path":"https://github.com/azure"}');
+    expect(retCg.sdkRepo).toBe('{"type":"github", "path":"https://github.com/azure"}');
+    expect(retCg.codegenRepo).toBe('{"type":"github", "path":"https://github.com/azure"}');
     expect(retCg.owner).toBe('SDK');
     expect(retCg.type).toBe('ad-hoc');
     expect(retCg.status).toBe('submit');
+});
+
+test('dao test submitCodeGeneration and getCodeGenerationByName2', async () => {
+    const cg: CodeGeneration = new CodeGeneration();
+    cg.name = 'test1b';
+    cg.resourceProvider = 'msi';
+    cg.serviceType = 'resource-manager';
+    cg.resourcesToGenerate = '';
+    cg.tag = null;
+    cg.sdk = 'javascript';
+    cg.swaggerRepo = '{"type": "github", "path":"https://github.com/azure"}';
+    cg.sdkRepo = '{"type":"github", "path":"https://github.com/azure"}';
+    cg.codegenRepo = '{"type":"github", "path":"https://github.com/azure"}';
+    cg.type = 'ad-hoc';
+    cg.status = 'submit';
+    cg.ignoreFailure = null;
+    cg.stages = null;
+    cg.swaggerPR = null;
+    cg.codePR = null;
+    cg.owner = null;
+
+    const codeGenerationDao = container.get<CodeGenerationDao>(injectableTypes.CodeGenerationDao);
+    await codeGenerationDao.deleteCodeGenerationByName(cg.name);
+    await codeGenerationDao.submitCodeGeneration(cg);
+
+    const retCg: CodeGeneration = await codeGenerationDao.getCodeGenerationByName(cg.name);
+    expect(retCg.resourceProvider).toBe('msi');
+    expect(retCg.serviceType).toBe('resource-manager');
+    expect(retCg.tag).toBeNull();
+    expect(retCg.sdk).toBe('javascript');
+    expect(retCg.swaggerRepo).toBe('{"type": "github", "path":"https://github.com/azure"}');
+    expect(retCg.sdkRepo).toBe('{"type":"github", "path":"https://github.com/azure"}');
+    expect(retCg.codegenRepo).toBe('{"type":"github", "path":"https://github.com/azure"}');
+    expect(retCg.owner).toBeNull();
+    expect(retCg.type).toBe('ad-hoc');
+    expect(retCg.status).toBe('submit');
+    expect(retCg.ignoreFailure).toBeNull();
+    expect(retCg.stages).toBeNull();
+    expect(retCg.swaggerPR).toBeNull();
+    expect(retCg.codePR).toBeNull();
+});
+
+test('dao test submitCodeGeneration and getCodeGenerationByName3', async () => {
+    const cg: CodeGeneration = new CodeGeneration();
+    cg.name = 'test1c';
+    cg.resourceProvider = 'msi';
+    cg.serviceType = 'resource-manager';
+    cg.resourcesToGenerate = '';
+    cg.tag = null;
+    cg.sdk = 'javascript';
+    cg.swaggerRepo = '{"type": "github", "path":"https://github.com/azure"}';
+    cg.sdkRepo = '{"type":"github", "path":"https://github.com/azure"}';
+    cg.codegenRepo = '{"type":"github", "path":"https://github.com/azure"}';
+    cg.type = 'ad-hoc';
+    cg.status = 'submit';
+    cg.ignoreFailure = null;
+    cg.stages = null;
+    cg.swaggerPR = null;
+    cg.codePR = null;
+    cg.owner = null;
+
+    const cg2: CodeGeneration = new CodeGeneration();
+    cg2.name = 'test1c';
+    cg2.resourceProvider = 'msi';
+    cg2.serviceType = 'resource-manager';
+    cg2.resourcesToGenerate = '';
+    cg2.tag = null;
+    cg2.sdk = 'javascript';
+    cg2.swaggerRepo = '{"type": "github", "path":"https://github.com/azure"}';
+    cg2.sdkRepo = '{"type":"github", "path":"https://github.com/azure"}';
+    cg2.codegenRepo = '{"type":"github", "path":"https://github.com/azure"}';
+    cg2.type = 'ad-hoc';
+    cg2.status = 'submit';
+    cg2.ignoreFailure = null;
+    cg2.stages = null;
+    cg2.swaggerPR = null;
+    cg2.codePR = null;
+    cg2.owner = null;
+
+    const codeGenerationDao = container.get<CodeGenerationDao>(injectableTypes.CodeGenerationDao);
+
+    await codeGenerationDao.deleteCodeGenerationByName(cg.name);
+    await codeGenerationDao.submitCodeGeneration(cg);
+    await expect(codeGenerationDao.submitCodeGeneration(cg2)).rejects.toThrow(Error);
+
+    await codeGenerationDao.deleteCodeGenerationByName(cg.name);
+    cg.name = null;
+    // class-validator throw a array(not an error) and jest can't catch it, so use toBeTruthy
+    await expect(codeGenerationDao.submitCodeGeneration(cg)).rejects.toBeTruthy();
+    cg.name = 'test1c';
+
+    await codeGenerationDao.deleteCodeGenerationByName(cg.name);
+    cg.resourceProvider = null;
+    await expect(codeGenerationDao.submitCodeGeneration(cg)).rejects.toBeTruthy();
+    cg.resourceProvider = 'msi';
+
+    await codeGenerationDao.deleteCodeGenerationByName(cg.name);
+    cg.serviceType = null;
+    await expect(codeGenerationDao.submitCodeGeneration(cg)).rejects.toBeTruthy();
+    cg.serviceType = 'resource-manager';
+
+    await codeGenerationDao.deleteCodeGenerationByName(cg.name);
+    cg.sdk = null;
+    await expect(codeGenerationDao.submitCodeGeneration(cg)).rejects.toBeTruthy();
+    cg.sdk = 'javascript';
+
+    await codeGenerationDao.deleteCodeGenerationByName(cg.name);
+    cg.swaggerRepo = null;
+    await expect(codeGenerationDao.submitCodeGeneration(cg)).rejects.toBeTruthy();
+    cg.swaggerRepo = '{"type": "github", "path":"https://github.com/azure"}';
+
+    await codeGenerationDao.deleteCodeGenerationByName(cg.name);
+    cg.sdkRepo = null;
+    await expect(codeGenerationDao.submitCodeGeneration(cg)).rejects.toBeTruthy();
+    cg.sdkRepo = '{"type":"github", "path":"https://github.com/azure"}';
+
+    await codeGenerationDao.deleteCodeGenerationByName(cg.name);
+    cg.codegenRepo = null;
+    await expect(codeGenerationDao.submitCodeGeneration(cg)).rejects.toBeTruthy();
+    cg.codegenRepo = '{"type":"github", "path":"https://github.com/azure"}';
+
+    await codeGenerationDao.deleteCodeGenerationByName(cg.name);
+    cg.type = null;
+    await expect(codeGenerationDao.submitCodeGeneration(cg)).rejects.toBeTruthy();
+    cg.type = 'ad-hoc';
+
+    await codeGenerationDao.deleteCodeGenerationByName(cg.name);
+    cg.status = null;
+    await expect(codeGenerationDao.submitCodeGeneration(cg)).rejects.toBeTruthy();
+    cg.status = 'submit';
 });
 
 test('dao test submitCodeGeneration, updateCodeGenerationValueByName and getCodeGenerationByName', async () => {
@@ -64,7 +196,7 @@ test('dao test submitCodeGeneration, updateCodeGenerationValueByName and getCode
     cg.name = 'test2';
     cg.resourceProvider = 'msi';
     cg.serviceType = 'resource-manager';
-    cg.resourcesToGenerate = '';
+    cg.resourcesToGenerate = null;
     cg.tag = null;
     cg.sdk = 'javascript';
     cg.swaggerRepo = '{"type": "github", "path":"https://github.com/azure"}';
@@ -77,14 +209,17 @@ test('dao test submitCodeGeneration, updateCodeGenerationValueByName and getCode
     const codeGenerationDao = container.get<CodeGenerationDao>(injectableTypes.CodeGenerationDao);
     await codeGenerationDao.deleteCodeGenerationByName(cg.name);
     await codeGenerationDao.submitCodeGeneration(cg);
-    await codeGenerationDao.updateCodeGenerationValueByName('test2', 'owner', 'SWG');
+    await codeGenerationDao.updateCodeGenerationValueByName(cg.name, 'owner', 'SWG');
+    await expect(codeGenerationDao.updateCodeGenerationValueByName(cg.name, 'status', null)).rejects.toBeTruthy();
 
-    const retCg: CodeGeneration = await codeGenerationDao.getCodeGenerationByName('test2');
+    const retCg: CodeGeneration = await codeGenerationDao.getCodeGenerationByName(cg.name);
     expect(retCg.resourceProvider).toBe('msi');
     expect(retCg.serviceType).toBe('resource-manager');
-    expect(retCg.tag).toBe(null);
+    expect(retCg.tag).toBeNull();
     expect(retCg.sdk).toBe('javascript');
     expect(retCg.swaggerRepo).toBe('{"type": "github", "path":"https://github.com/azure"}');
+    expect(retCg.sdkRepo).toBe('{"type":"github", "path":"https://github.com/azure"}');
+    expect(retCg.codegenRepo).toBe('{"type":"github", "path":"https://github.com/azure"}');
     expect(retCg.owner).toBe('SWG');
     expect(retCg.type).toBe('ad-hoc');
     expect(retCg.status).toBe('submit');
@@ -109,18 +244,20 @@ test('dao test submitCodeGeneration, getCodeGenerationByName and deleteCodeGener
     await codeGenerationDao.deleteCodeGenerationByName(cg.name);
     await codeGenerationDao.submitCodeGeneration(cg);
 
-    const retCg: CodeGeneration = await codeGenerationDao.getCodeGenerationByName('test3');
+    const retCg: CodeGeneration = await codeGenerationDao.getCodeGenerationByName(cg.name);
     expect(retCg.resourceProvider).toBe('msi');
     expect(retCg.serviceType).toBe('resource-manager');
-    expect(retCg.tag).toBe(null);
+    expect(retCg.tag).toBeNull();
     expect(retCg.sdk).toBe('javascript');
     expect(retCg.swaggerRepo).toBe('{"type": "github", "path":"https://github.com/azure"}');
+    expect(retCg.sdkRepo).toBe('{"type":"github", "path":"https://github.com/azure"}');
+    expect(retCg.codegenRepo).toBe('{"type":"github", "path":"https://github.com/azure"}');
     expect(retCg.owner).toBe('SDK');
     expect(retCg.type).toBe('ad-hoc');
     expect(retCg.status).toBe('submit');
 
-    await codeGenerationDao.deleteCodeGenerationByName('test3');
-    const reqCg: CodeGeneration = await codeGenerationDao.getCodeGenerationByName('test3');
+    await codeGenerationDao.deleteCodeGenerationByName(cg.name);
+    const reqCg: CodeGeneration = await codeGenerationDao.getCodeGenerationByName(cg.name);
     expect(reqCg).toBe(undefined);
 });
 
@@ -142,17 +279,21 @@ test('dao test submitCodeGeneration, updateCodeGenerationValuesByName and getCod
     const codeGenerationDao = container.get<CodeGenerationDao>(injectableTypes.CodeGenerationDao);
     await codeGenerationDao.deleteCodeGenerationByName(cg.name);
     await codeGenerationDao.submitCodeGeneration(cg);
-    await codeGenerationDao.updateCodeGenerationValuesByName('test4', { type: 'ad-real', status: 'del' });
+    await codeGenerationDao.updateCodeGenerationValuesByName(cg.name, { type: 'ad-real', status: 'del' });
 
-    const retCg: CodeGeneration = await codeGenerationDao.getCodeGenerationByName('test4');
+    const retCg: CodeGeneration = await codeGenerationDao.getCodeGenerationByName(cg.name);
     expect(retCg.resourceProvider).toBe('msi');
     expect(retCg.serviceType).toBe('resource-manager');
-    expect(retCg.tag).toBe(null);
+    expect(retCg.tag).toBeNull();
     expect(retCg.sdk).toBe('javascript');
     expect(retCg.swaggerRepo).toBe('{"type": "github", "path":"https://github.com/azure"}');
+    expect(retCg.sdkRepo).toBe('{"type":"github", "path":"https://github.com/azure"}');
+    expect(retCg.codegenRepo).toBe('{"type":"github", "path":"https://github.com/azure"}');
     expect(retCg.owner).toBe('SDK');
     expect(retCg.type).toBe('ad-real');
     expect(retCg.status).toBe('del');
+
+    await expect(codeGenerationDao.updateCodeGenerationValuesByName(cg.name, { status: null })).rejects.toBeTruthy();
 });
 
 test('dao test submitCodeGeneration and listCodeGenerationsByStatus', async () => {
@@ -210,6 +351,9 @@ test('dao test submitCodeGeneration and listCodeGenerationsByStatus', async () =
     for (const retCg of retCgs) {
         expect(retCg.status).toBe('completed');
     }
+
+    const retCgs2: CodeGeneration[] = await codeGenerationDao.listCodeGenerationsByStatus(null);
+    expect(retCgs2.length).toBe(0);
 });
 
 test('dao test submitCodeGeneration and listCodeGenerationsByStatus', async () => {
@@ -272,6 +416,12 @@ test('dao test submitCodeGeneration and listCodeGenerationsByStatus', async () =
     for (const retCg of retCgs2) {
         expect(retCg.type).toBe('ad-test');
     }
+});
+
+test('dao test deleteCodeGenerationByName', async () => {
+    const codeGenerationDao = container.get<CodeGenerationDao>(injectableTypes.CodeGenerationDao);
+    await codeGenerationDao.deleteCodeGenerationByName('');
+    await codeGenerationDao.deleteCodeGenerationByName(undefined);
 });
 
 function destroyDaoTest() {
