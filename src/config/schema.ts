@@ -27,6 +27,7 @@ export const configSchema = convict<Config>({
         doc: 'Whether the server is https or not.',
         format: Boolean,
         default: true,
+        env: 'sdkGenerationEnableHttps',
     },
     certKeyPath: {
         doc: 'The path to the key file.',
@@ -61,6 +62,12 @@ export const configSchema = convict<Config>({
         doc: 'The max size of an logging file.',
         format: String,
         default: '200MB',
+    },
+    statsdEnable: {
+        doc: 'Whether enable statsd.',
+        format: Boolean,
+        default: true,
+        env: 'statsdEnable',
     },
     statsdHost: {
         doc: 'The statsd host name.',
@@ -350,6 +357,12 @@ export const configSchema = convict<Config>({
             format: String,
             default: '',
             env: 'sdkGenerationMongoDbPassword',
+        },
+        ssl: {
+            doc: 'Whether used ssl to connect db',
+            format: Boolean,
+            default: true,
+            env: 'sdkGenerationMongoDbSsl',
         },
     },
     githubToken: {

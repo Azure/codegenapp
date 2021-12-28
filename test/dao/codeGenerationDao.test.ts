@@ -424,8 +424,8 @@ test('dao test deleteCodeGenerationByName', async () => {
     await codeGenerationDao.deleteCodeGenerationByName(undefined);
 });
 
-function destroyDaoTest() {
-    mongoDbConnection.close();
+async function destroyDaoTest() {
+    await mongoDbConnection.close();
 }
 
 afterAll(destroyDaoTest);

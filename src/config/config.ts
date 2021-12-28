@@ -15,6 +15,7 @@ export interface Config {
     loggingConsoleLevel: string;
     loggingMaxFiles: number;
     loggingMaxFileSize: string;
+    statsdEnable: boolean;
     statsdHost: string;
     statsdPort: number;
     deploymentRegion: string;
@@ -37,6 +38,7 @@ export interface Config {
         database: string;
         username: string;
         password: string;
+        ssl: boolean;
     };
     githubToken: string;
     azurePipelineToken: string;
