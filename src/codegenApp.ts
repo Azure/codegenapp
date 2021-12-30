@@ -213,4 +213,4 @@ class CodegenApp {
     }
 }
 
-export const codegenAppClient = new CodegenApp();
+export const codegenAppServes = new CodegenApp();

@@ -13,6 +13,7 @@ export class GithubDaoImpl implements GithubDao {
 
     public client: Octokit = new Octokit({
         auth: config.githubToken,
+        baseUrl: config.githubBaseUrl,
     });
 
     public async getCurrentCommit(org: string, repo: string, branch = 'main') {

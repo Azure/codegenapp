@@ -40,6 +40,7 @@ export interface Config {
         password: string;
         ssl: boolean;
     };
+    githubBaseUrl: string;
     githubToken: string;
     azurePipelineToken: string;
     azurePipelineUrl: string;

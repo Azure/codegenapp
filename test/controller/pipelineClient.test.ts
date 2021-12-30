@@ -11,7 +11,7 @@ describe('Testing pipelineClient', () => {
         process.env = {
             ...originalEnv,
             sdkGenerationAzurePipelineToken: '/sdkGenerationAzurePipelineToken',
-            sdkGenerationAzurePipelineUrl: 'http://localhost:9527/0bdbc590-a062-4c3f-b0f6-9383f67865ee/_apis/pipelines/14243/runs',
+            sdkGenerationAzurePipelineUrl: 'http://localhost:9527/0000/_apis/pipelines/14243/runs',
             sdkGenerationAzurePipelineRef: '/sdkGenerationAzurePipelineRef',
         };
         // eslint-disable-next-line  @typescript-eslint/no-var-requires
@@ -23,25 +23,25 @@ describe('Testing pipelineClient', () => {
     beforeEach(() => server.reset());
 
     test('Test pipelineClient', async () => {
-        const mock = server.post('/0bdbc590-a062-4c3f-b0f6-9383f67865ee/_apis/pipelines/14243/runs').mockImplementation((ctx) => {
+        const mock = server.post('/0000/_apis/pipelines/14243/runs').mockImplementation((ctx) => {
             ctx.status = 200;
             ctx.body = {
                 _links: {
                     self: {
-                        href: 'https://devdiv.visualstudio.com/0bdbc590-a062-4c3f-b0f6-9383f67865ee/_apis/pipelines/14243/runs/5565942',
+                        href: 'http://localhost:9528/0000/_apis/pipelines/14243/runs/5565942',
                     },
                     web: {
-                        href: 'https://devdiv.visualstudio.com/0bdbc590-a062-4c3f-b0f6-9383f67865ee/_build/results?buildId=5565942',
+                        href: 'http://localhost:9528/0000/_build/results?buildId=5565942',
                     },
                     'pipeline.web': {
-                        href: 'https://devdiv.visualstudio.com/0bdbc590-a062-4c3f-b0f6-9383f67865ee/_build/definition?definitionId=14243',
+                        href: 'http://localhost:9528/0000/_build/definition?definitionId=14243',
                     },
                     pipeline: {
-                        href: 'https://devdiv.visualstudio.com/0bdbc590-a062-4c3f-b0f6-9383f67865ee/_apis/pipelines/14243?revision=46',
+                        href: 'http://localhost:9528/0000/_apis/pipelines/14243?revision=46',
                     },
                 },
                 pipeline: {
-                    url: 'https://devdiv.visualstudio.com/0bdbc590-a062-4c3f-b0f6-9383f67865ee/_apis/pipelines/14243?revision=46',
+                    url: 'http://localhost:9528/0000/_apis/pipelines/14243?revision=46',
                     id: 14243,
                     revision: 46,
                     name: 'Azure.sdk-pipeline-test',
@@ -49,7 +49,7 @@ describe('Testing pipelineClient', () => {
                 },
                 state: 'inProgress',
                 createdDate: '2021-12-21T07:44:53.3491556Z',
-                url: 'https://devdiv.visualstudio.com/0bdbc590-a062-4c3f-b0f6-9383f67865ee/_apis/pipelines/14243/runs/5565942',
+                url: 'http://localhost:9528/0000/_apis/pipelines/14243/runs/5565942',
                 resources: {
                     repositories: {
                         self: {
@@ -87,16 +87,9 @@ describe('Testing pipelineClient', () => {
         });
 
         expect(response.status).toEqual(200);
-        expect.objectContaining(
-            (response.request = {
-                path: '/0bdbc590-a062-4c3f-b0f6-9383f67865ee/_apis/pipelines/14243/runs',
-                method: 'POST',
-            }),
-        );
 
         expect(mock).toHaveBeenCalledWith(
             expect.objectContaining({
-                path: '/0bdbc590-a062-4c3f-b0f6-9383f67865ee/_apis/pipelines/14243/runs',
                 method: 'POST',
             }),
             expect.any(Function),

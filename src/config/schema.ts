@@ -365,6 +365,12 @@ export const configSchema = convict<Config>({
             env: 'sdkGenerationMongoDbSsl',
         },
     },
+    githubBaseUrl: {
+        doc: 'The baseUrl used by github',
+        format: String,
+        default: 'https://api.github.com',
+        env: 'sdkGenerationGithubBaseUrl',
+    },
     githubToken: {
         doc: 'The token used by github',
         format: String,

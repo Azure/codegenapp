@@ -1,3 +1,3 @@
-import { codegenAppClient } from './codegenApp';
+import { codegenAppServes } from './codegenApp';
 
-codegenAppClient.start();
+codegenAppServes.start();
