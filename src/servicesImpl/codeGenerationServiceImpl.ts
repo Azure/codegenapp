@@ -85,7 +85,7 @@ export class CodeGenerationServiceImpl implements CodeGenerationService {
         if (response.status !== 200) {
             throw new Error(`Run pipeline failed for ${name}`);
         }
-        cg.lastPipelineBuildID = response.data['id'];
+        cg.lastPipelineBuildID = `${response.data['id']}`;
         await this.codeGenerationDao.submitCodeGeneration(cg);
     }
 
@@ -197,7 +197,7 @@ export class CodeGenerationServiceImpl implements CodeGenerationService {
             throw new Error(`Rerun sdk generation ${codegen.name} failed.`);
         }
         await this.codeGenerationDao.updateCodeGenerationValuesByName(codegen.name, {
-            lastPipelineBuildID: response.data['id'],
+            lastPipelineBuildID: `${response.data['id']}`,
             status: CodeGenerationStatus.CodeGenerationStatusSubmit,
         });
     }
