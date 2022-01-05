@@ -3,20 +3,19 @@ import { MockServer } from 'jest-mock-server';
 const originalEnv = process.env;
 
 describe('Testing pipelineClient', () => {
-    const port = 9527;
-    const server = new MockServer({ port });
+    const pipelinePort = 9527;
+    const server = new MockServer({ port: pipelinePort });
     let azurePipelineClient;
 
     beforeAll(async () => {
         process.env = {
             ...originalEnv,
             sdkGenerationAzurePipelineToken: '/sdkGenerationAzurePipelineToken',
-            sdkGenerationAzurePipelineUrl: 'http://localhost:9527/0000/_apis/pipelines/14243/runs',
+            sdkGenerationAzurePipelineUrl: 'http://localhost:' + pipelinePort + '/0000/_apis/pipelines/14243/runs',
             sdkGenerationAzurePipelineRef: '/sdkGenerationAzurePipelineRef',
         };
         // eslint-disable-next-line  @typescript-eslint/no-var-requires
         azurePipelineClient = require('../../src/utils/pipelineClient').azurePipelineClient; // use 'import' will cause config init before process.env setup
-
         await server.start();
     });
     afterAll(() => server.stop());
@@ -28,20 +27,20 @@ describe('Testing pipelineClient', () => {
             ctx.body = {
                 _links: {
                     self: {
-                        href: 'http://localhost:9528/0000/_apis/pipelines/14243/runs/5565942',
+                        href: 'http://localhost:' + pipelinePort + '/0000/_apis/pipelines/14243/runs/5565942',
                     },
                     web: {
-                        href: 'http://localhost:9528/0000/_build/results?buildId=5565942',
+                        href: 'http://localhost:' + pipelinePort + '/0000/_build/results?buildId=5565942',
                     },
                     'pipeline.web': {
-                        href: 'http://localhost:9528/0000/_build/definition?definitionId=14243',
+                        href: 'http://localhost:' + pipelinePort + '/0000/_build/definition?definitionId=14243',
                     },
                     pipeline: {
-                        href: 'http://localhost:9528/0000/_apis/pipelines/14243?revision=46',
+                        href: 'http://localhost:' + pipelinePort + '/0000/_apis/pipelines/14243?revision=46',
                     },
                 },
                 pipeline: {
-                    url: 'http://localhost:9528/0000/_apis/pipelines/14243?revision=46',
+                    url: 'http://localhost:' + pipelinePort + '/0000/_apis/pipelines/14243?revision=46',
                     id: 14243,
                     revision: 46,
                     name: 'Azure.sdk-pipeline-test',
@@ -49,7 +48,7 @@ describe('Testing pipelineClient', () => {
                 },
                 state: 'inProgress',
                 createdDate: '2021-12-21T07:44:53.3491556Z',
-                url: 'http://localhost:9528/0000/_apis/pipelines/14243/runs/5565942',
+                url: 'http://localhost:' + pipelinePort + '/0000/_apis/pipelines/14243/runs/5565942',
                 resources: {
                     repositories: {
                         self: {

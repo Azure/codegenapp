@@ -10,13 +10,14 @@ describe('Testing codeGenerateController', () => {
     const gitPort = 9529;
     const pipelineMockServer = new MockServer({ port: pipelinePort });
     const gitMockServer = new MockServer({ port: gitPort });
+    const codeGenServerPort = 3000;
     let codegenServer;
 
     beforeAll(async () => {
         process.env = {
             ...originalEnv,
             sdkGenerationAzurePipelineToken: '/sdkGenerationAzurePipelineToken',
-            sdkGenerationAzurePipelineUrl: 'http://localhost:9528/0000/_apis/pipelines/14243/runs',
+            sdkGenerationAzurePipelineUrl: 'http://localhost:' + pipelinePort + '/0000/_apis/pipelines/14243/runs',
             sdkGenerationAzurePipelineRef: '/sdkGenerationAzurePipelineRef',
             sdkGenerationMongoDbHost: '127.0.0.1',
             sdkGenerationMongoDbPort: '27017',
@@ -26,7 +27,7 @@ describe('Testing codeGenerateController', () => {
             sdkGenerationEnableHttps: 'false',
             sdkGenerationMongoDbSsl: 'false',
             statsdEnable: 'false',
-            sdkGenerationGithubBaseUrl: 'http://localhost:9529/githost',
+            sdkGenerationGithubBaseUrl: 'http://localhost:' + gitPort + '/githost',
         };
 
         // eslint-disable-next-line  @typescript-eslint/no-var-requires
@@ -51,20 +52,20 @@ describe('Testing codeGenerateController', () => {
             ctx.body = {
                 _links: {
                     self: {
-                        href: 'http://localhost:9528/0000/_apis/pipelines/14243/runs/5565942',
+                        href: 'http://localhost:' + pipelinePort + '/0000/_apis/pipelines/14243/runs/5565942',
                     },
                     web: {
-                        href: 'http://localhost:9528/0000/_build/results?buildId=5565942',
+                        href: 'http://localhost:' + pipelinePort + '/0000/_build/results?buildId=5565942',
                     },
                     'pipeline.web': {
-                        href: 'http://localhost:9528/0000/_build/definition?definitionId=14243',
+                        href: 'http://localhost:' + pipelinePort + '/0000/_build/definition?definitionId=14243',
                     },
                     pipeline: {
-                        href: 'http://localhost:9528/0000/_apis/pipelines/14243?revision=46',
+                        href: 'http://localhost:' + pipelinePort + '/0000/_apis/pipelines/14243?revision=46',
                     },
                 },
                 pipeline: {
-                    url: 'http://localhost:9528/0000/_apis/pipelines/14243?revision=46',
+                    url: 'http://localhost:' + pipelinePort + '/0000/_apis/pipelines/14243?revision=46',
                     id: 14243,
                     revision: 46,
                     name: 'Azure.sdk-pipeline-test',
@@ -72,7 +73,7 @@ describe('Testing codeGenerateController', () => {
                 },
                 state: 'inProgress',
                 createdDate: '2021-12-21T07:44:53.3491556Z',
-                url: 'http://localhost:9528/0000/_apis/pipelines/14243/runs/5565942',
+                url: 'http://localhost:' + pipelinePort + '/0000/_apis/pipelines/14243/runs/5565942',
                 resources: {
                     repositories: {
                         self: {
@@ -98,7 +99,7 @@ describe('Testing codeGenerateController', () => {
         });
 
         let response = await axios.put(
-            'http://localhost:3000/codegenerations/controllerTest',
+            'http://localhost:' + codeGenServerPort + '/codegenerations/controllerTest',
             {
                 resourceProvider: 'agrifood',
                 sdk: 'go',
@@ -127,9 +128,19 @@ describe('Testing codeGenerateController', () => {
             },
         );
         expect(response.status).toBe(200);
-        expect(mockpipeline).toHaveBeenCalled();
+        expect(mockpipeline).toHaveBeenCalledWith(
+            expect.objectContaining({
+                originalUrl: '/0000/_apis/pipelines/14243/runs',
+                request: expect.objectContaining({
+                    method: 'POST',
+                    url: '/0000/_apis/pipelines/14243/runs',
+                }),
+            }),
+            expect.any(Function),
+        );
+        mockpipeline.mockClear();
 
-        response = await axios.get('http://localhost:3000/codegenerations/controllerTest');
+        response = await axios.get('http://localhost:' + codeGenServerPort + '/codegenerations/controllerTest');
         expect(response.status).toBe(200);
         expect(response.data.status).toBe('submit');
         expect(response.data.id).not.toBe(null);
@@ -141,64 +152,125 @@ describe('Testing codeGenerateController', () => {
         expect(response.data.swaggerRepo).not.toBe(null);
         expect(response.data.sdkRepo).not.toBe(null);
 
-        response = await axios.patch('http://localhost:3000/codegenerations/controllerTest', {
+        response = await axios.patch('http://localhost:' + codeGenServerPort + '/codegenerations/controllerTest', {
             updateParameters: {
                 status: 'customizing',
             },
         });
         expect(response.status).toBe(200);
 
-        response = await axios.get('http://localhost:3000/codegenerations/controllerTest/detail');
+        response = await axios.get('http://localhost:' + codeGenServerPort + '/codegenerations/controllerTest/detail');
         expect(response.status).toBe(200);
         expect(response.data.name).toBe('controllerTest');
         expect(response.data.status).toBe('customizing');
 
-        response = await axios.post('http://localhost:3000/codegenerations/controllerTest/run');
+        response = await axios.post('http://localhost:' + codeGenServerPort + '/codegenerations/controllerTest/run');
         expect(response.status).toBe(200);
-        response = await axios.get('http://localhost:3000/codegenerations/controllerTest');
+        expect(mockpipeline).toHaveBeenCalledWith(
+            expect.objectContaining({
+                originalUrl: '/0000/_apis/pipelines/14243/runs',
+                request: expect.objectContaining({
+                    method: 'POST',
+                    url: '/0000/_apis/pipelines/14243/runs',
+                }),
+            }),
+            expect.any(Function),
+        );
+        mockpipeline.mockClear();
+        response = await axios.get('http://localhost:' + codeGenServerPort + '/codegenerations/controllerTest');
         expect(response.status).toBe(200);
         expect(response.data.id).not.toBe(null);
         expect(response.data.status).toBe('submit');
 
-        response = await axios.post('http://localhost:3000/codegenerations/controllerTest/cancel');
-        expect(mockgit).toHaveBeenCalled();
+        response = await axios.post('http://localhost:' + codeGenServerPort + '/codegenerations/controllerTest/cancel');
+        expect(mockgit).toHaveBeenCalledWith(
+            expect.objectContaining({
+                originalUrl: '/githost/repos/testorg/testrepo/git/refs/heads%2FcontrollerTest',
+                request: expect.objectContaining({
+                    method: 'DELETE',
+                    url: '/githost/repos/testorg/testrepo/git/refs/heads%2FcontrollerTest',
+                }),
+            }),
+            expect.any(Function),
+        );
+        mockgit.mockClear();
         expect(response.status).toBe(200);
-        response = await axios.get('http://localhost:3000/codegenerations/controllerTest');
+        response = await axios.get('http://localhost:' + codeGenServerPort + '/codegenerations/controllerTest');
         expect(response.status).toBe(200);
         expect(response.data.id).not.toBe(null);
         expect(response.data.status).toBe('cancelled');
 
-        response = await axios.patch('http://localhost:3000/codegenerations/controllerTest', {
+        response = await axios.patch('http://localhost:' + codeGenServerPort + '/codegenerations/controllerTest', {
             updateParameters: {
                 status: 'customizing',
             },
         });
         expect(response.status).toBe(200);
-        response = await axios.post('http://localhost:3000/codegenerations/controllerTest/complete');
-        expect(mockgit).toHaveBeenCalled();
+        response = await axios.post('http://localhost:' + codeGenServerPort + '/codegenerations/controllerTest/complete');
+        expect(mockgit).toHaveBeenCalledWith(
+            expect.objectContaining({
+                originalUrl: '/githost/repos/testorg/testrepo/git/refs/heads%2FcontrollerTest',
+                request: expect.objectContaining({
+                    method: 'DELETE',
+                    url: '/githost/repos/testorg/testrepo/git/refs/heads%2FcontrollerTest',
+                }),
+            }),
+            expect.any(Function),
+        );
+        mockgit.mockClear();
         expect(response.status).toBe(200);
-        response = await axios.get('http://localhost:3000/codegenerations/controllerTest');
+        response = await axios.get('http://localhost:' + codeGenServerPort + '/codegenerations/controllerTest');
         expect(response.status).toBe(200);
         expect(response.data.id).not.toBe(null);
         expect(response.data.status).toBe('completed');
 
-        response = await axios.post('http://localhost:3000/codegenerations/controllerTest/onboard');
-        expect(mockgit).toHaveBeenCalled();
+        response = await axios.post('http://localhost:' + codeGenServerPort + '/codegenerations/controllerTest/onboard');
+        expect(mockgit).toHaveBeenCalledWith(
+            expect.objectContaining({
+                originalUrl: '/githost/repos/testorg/testrepo/pulls',
+                request: expect.objectContaining({
+                    method: 'POST',
+                    url: '/githost/repos/testorg/testrepo/pulls',
+                }),
+            }),
+            expect.any(Function),
+        );
+        mockgit.mockClear();
         expect(response.status).toBe(200);
 
-        response = await axios.get('http://localhost:3000/codegenerations/controllerTest/onboard');
-        expect(mockgit).toHaveBeenCalled();
+        response = await axios.get('http://localhost:' + codeGenServerPort + '/codegenerations/controllerTest/onboard');
+        expect(mockgit).toHaveBeenCalledWith(
+            expect.objectContaining({
+                originalUrl: '/githost/repos/testorg/testrepo/pulls',
+                request: expect.objectContaining({
+                    method: 'POST',
+                    url: '/githost/repos/testorg/testrepo/pulls',
+                }),
+            }),
+            expect.any(Function),
+        );
+        mockgit.mockClear();
         expect(response.status).toBe(200);
 
-        response = await axios.get('http://localhost:3000/codegenerations');
+        response = await axios.get('http://localhost:' + codeGenServerPort + '/codegenerations');
         expect(response.status).toBe(200);
         expect(response.data.length).toBeGreaterThan(0);
 
-        response = await axios.delete('http://localhost:3000/codegenerations/controllerTest');
+        response = await axios.delete('http://localhost:' + codeGenServerPort + '/codegenerations/controllerTest');
         expect(response.status).toBe(200);
-        expect(mockgit).toHaveBeenCalled();
+        expect(mockgit).toHaveBeenCalledWith(
+            expect.objectContaining({
+                originalUrl: '/githost/repos/testorg/testrepo/git/refs/heads%2FcontrollerTest',
+                request: expect.objectContaining({
+                    method: 'DELETE',
+                    url: '/githost/repos/testorg/testrepo/git/refs/heads%2FcontrollerTest',
+                }),
+            }),
+            expect.any(Function),
+        );
+        mockgit.mockClear();
 
-        await expect(axios.get('http://localhost:3000/codegenerations/controllerTest')).rejects.toThrow(Error);
+        await expect(axios.get('http://localhost:' + codeGenServerPort + '/codegenerations/controllerTest')).rejects.toThrow(Error);
 
         return;
     });
@@ -209,20 +281,20 @@ describe('Testing codeGenerateController', () => {
             ctx.body = {
                 _links: {
                     self: {
-                        href: 'http://localhost:9528/0000/_apis/pipelines/14243/runs/5565942',
+                        href: 'http://localhost:' + pipelinePort + '/0000/_apis/pipelines/14243/runs/5565942',
                     },
                     web: {
-                        href: 'http://localhost:9528/0000/_build/results?buildId=5565942',
+                        href: 'http://localhost:' + pipelinePort + '/0000/_build/results?buildId=5565942',
                     },
                     'pipeline.web': {
-                        href: 'http://localhost:9528/0000/_build/definition?definitionId=14243',
+                        href: 'http://localhost:' + pipelinePort + '/0000/_build/definition?definitionId=14243',
                     },
                     pipeline: {
-                        href: 'http://localhost:9528/0000/_apis/pipelines/14243?revision=46',
+                        href: 'http://localhost:' + pipelinePort + '/0000/_apis/pipelines/14243?revision=46',
                     },
                 },
                 pipeline: {
-                    url: 'http://localhost:9528/0000/_apis/pipelines/14243?revision=46',
+                    url: 'http://localhost:' + pipelinePort + '/0000/_apis/pipelines/14243?revision=46',
                     id: 14243,
                     revision: 46,
                     name: 'Azure.sdk-pipeline-test',
@@ -230,7 +302,7 @@ describe('Testing codeGenerateController', () => {
                 },
                 state: 'inProgress',
                 createdDate: '2021-12-21T07:44:53.3491556Z',
-                url: 'http://localhost:9528/0000/_apis/pipelines/14243/runs/5565942',
+                url: 'http://localhost:' + pipelinePort + '/0000/_apis/pipelines/14243/runs/5565942',
                 resources: {
                     repositories: {
                         self: {
@@ -256,7 +328,7 @@ describe('Testing codeGenerateController', () => {
         });
 
         let response = await axios.put(
-            'http://localhost:3000/codegenerations/controllerTest2',
+            'http://localhost:' + codeGenServerPort + '/codegenerations/controllerTest2',
             {
                 resourceProvider: 'agrifood',
                 sdk: 'go',
@@ -286,8 +358,9 @@ describe('Testing codeGenerateController', () => {
         );
         expect(response.status).toBe(200);
         expect(mockpipeline).toHaveBeenCalled();
+        mockpipeline.mockClear();
 
-        await axios.post('http://localhost:3000/codegenerations/controllerTest2/taskResult', {
+        await axios.post('http://localhost:' + codeGenServerPort + '/codegenerations/controllerTest2/taskResult', {
             pipelineBuildId: '5565943',
             taskResult: {
                 name: 'testname',
@@ -299,18 +372,20 @@ describe('Testing codeGenerateController', () => {
             },
         });
 
-        response = await axios.get('http://localhost:3000/codegenerations/controllerTest2/detail');
+        response = await axios.get('http://localhost:' + codeGenServerPort + '/codegenerations/controllerTest2/detail');
         expect(response.status).toBe(200);
         expect(response.data.name).toBe('controllerTest2');
         expect(response.data.taskResults.length).toBeGreaterThan(0);
 
-        response = await axios.post('http://localhost:3000/codegenerations/controllerTest2/complete');
+        response = await axios.post('http://localhost:' + codeGenServerPort + '/codegenerations/controllerTest2/complete');
         expect(mockgit).toHaveBeenCalled();
+        mockgit.mockClear();
         expect(response.status).toBe(200);
 
-        response = await axios.delete('http://localhost:3000/codegenerations/controllerTest2');
+        response = await axios.delete('http://localhost:' + codeGenServerPort + '/codegenerations/controllerTest2');
         expect(response.status).toBe(200);
         expect(mockgit).toHaveBeenCalled();
+        mockgit.mockClear();
 
         return;
     });
@@ -321,20 +396,20 @@ describe('Testing codeGenerateController', () => {
             ctx.body = {
                 _links: {
                     self: {
-                        href: 'http://localhost:9528/0000/_apis/pipelines/14243/runs/5565942',
+                        href: 'http://localhost:' + pipelinePort + '/0000/_apis/pipelines/14243/runs/5565942',
                     },
                     web: {
-                        href: 'http://localhost:9528/0000/_build/results?buildId=5565942',
+                        href: 'http://localhost:' + pipelinePort + '/0000/_build/results?buildId=5565942',
                     },
                     'pipeline.web': {
-                        href: 'http://localhost:9528/0000/_build/definition?definitionId=14243',
+                        href: 'http://localhost:' + pipelinePort + '/0000/_build/definition?definitionId=14243',
                     },
                     pipeline: {
-                        href: 'http://localhost:9528/0000/_apis/pipelines/14243?revision=46',
+                        href: 'http://localhost:' + pipelinePort + '/0000/_apis/pipelines/14243?revision=46',
                     },
                 },
                 pipeline: {
-                    url: 'http://localhost:9528/0000/_apis/pipelines/14243?revision=46',
+                    url: 'http://localhost:' + pipelinePort + '/0000/_apis/pipelines/14243?revision=46',
                     id: 14243,
                     revision: 46,
                     name: 'Azure.sdk-pipeline-test',
@@ -342,7 +417,7 @@ describe('Testing codeGenerateController', () => {
                 },
                 state: 'inProgress',
                 createdDate: '2021-12-21T07:44:53.3491556Z',
-                url: 'http://localhost:9528/0000/_apis/pipelines/14243/runs/5565942',
+                url: 'http://localhost:' + pipelinePort + '/0000/_apis/pipelines/14243/runs/5565942',
                 resources: {
                     repositories: {
                         self: {
@@ -368,7 +443,7 @@ describe('Testing codeGenerateController', () => {
         });
 
         let response = await axios.put(
-            'http://localhost:3000/codegenerations/controllerTest3',
+            'http://localhost:' + codeGenServerPort + '/codegenerations/controllerTest3',
             {
                 resourceProvider: 'agrifood',
                 sdk: 'go',
@@ -398,10 +473,11 @@ describe('Testing codeGenerateController', () => {
         );
         expect(response.status).toBe(200);
         expect(mockpipeline).toHaveBeenCalled();
+        mockpipeline.mockClear();
 
         await expect(
             axios.put(
-                'http://localhost:3000/codegenerations/controllerTest3',
+                'http://localhost:' + codeGenServerPort + '/codegenerations/controllerTest3',
                 {
                     resourceProvider: 'agrifood',
                     sdk: 'go',
@@ -431,50 +507,52 @@ describe('Testing codeGenerateController', () => {
             ),
         ).rejects.toThrow(Error);
 
-        response = await axios.patch('http://localhost:3000/codegenerations/controllerTest3', {
+        response = await axios.patch('http://localhost:' + codeGenServerPort + '/codegenerations/controllerTest3', {
             updateParameters: {
                 status: CodeGenerationStatus.CodeGenerationStatusInProgress,
             },
         });
         expect(response.status).toBe(200);
 
-        await expect(axios.post('http://localhost:3000/codegenerations/controllerTest3/customize')).rejects.toThrow(Error);
-        await expect(axios.get('http://localhost:3000/codegenerations/controllerTest3/customize')).rejects.toThrow(Error);
+        await expect(axios.post('http://localhost:' + codeGenServerPort + '/codegenerations/controllerTest3/customize')).rejects.toThrow(Error);
+        await expect(axios.get('http://localhost:' + codeGenServerPort + '/codegenerations/controllerTest3/customize')).rejects.toThrow(Error);
 
-        response = await axios.patch('http://localhost:3000/codegenerations/controllerTest3', {
+        response = await axios.patch('http://localhost:' + codeGenServerPort + '/codegenerations/controllerTest3', {
             updateParameters: {
                 status: CodeGenerationStatus.CodeGenerationStatusCustomizing,
             },
         });
         expect(response.status).toBe(200);
 
-        response = await axios.post('http://localhost:3000/codegenerations/controllerTest3/customize');
+        response = await axios.post('http://localhost:' + codeGenServerPort + '/codegenerations/controllerTest3/customize');
         expect(response.status).toBe(201);
 
-        response = await axios.get('http://localhost:3000/codegenerations/controllerTest3/customize');
+        response = await axios.get('http://localhost:' + codeGenServerPort + '/codegenerations/controllerTest3/customize');
         expect(response.status).toBe(201);
 
-        response = await axios.post('http://localhost:3000/codegenerations/controllerTest3/cancel');
+        response = await axios.post('http://localhost:' + codeGenServerPort + '/codegenerations/controllerTest3/cancel');
         expect(response.status).toBe(200);
         expect(mockgit).toHaveBeenCalled();
-        response = await axios.get('http://localhost:3000/codegenerations/controllerTest3/detail');
+        mockgit.mockClear();
+        response = await axios.get('http://localhost:' + codeGenServerPort + '/codegenerations/controllerTest3/detail');
         expect(response.status).toBe(200);
         expect(response.data.status).toBe(CodeGenerationStatus.CodeGenerationStatusCancelled);
 
-        await expect(axios.post('http://localhost:3000/codegenerations/controllerTest3/complete')).rejects.toThrow(Error);
-        await expect(axios.post('http://localhost:3000/codegenerations/controllerTest3/run')).rejects.toThrow(Error);
+        await expect(axios.post('http://localhost:' + codeGenServerPort + '/codegenerations/controllerTest3/complete')).rejects.toThrow(Error);
+        await expect(axios.post('http://localhost:' + codeGenServerPort + '/codegenerations/controllerTest3/run')).rejects.toThrow(Error);
 
-        response = await axios.delete('http://localhost:3000/codegenerations/controllerTest3');
+        response = await axios.delete('http://localhost:' + codeGenServerPort + '/codegenerations/controllerTest3');
         expect(response.status).toBe(200);
         expect(mockgit).toHaveBeenCalled();
+        mockgit.mockClear();
 
-        await expect(axios.post('http://localhost:3000/codegenerations/notexist/customize')).rejects.toThrow(Error);
-        await expect(axios.get('http://localhost:3000/codegenerations/notexist/customize')).rejects.toThrow(Error);
-        await expect(axios.post('http://localhost:3000/codegenerations/notexist/onboard')).rejects.toThrow(Error);
-        await expect(axios.get('http://localhost:3000/codegenerations/notexist/onboard')).rejects.toThrow(Error);
-        await expect(axios.post('http://localhost:3000/codegenerations/notexist/complete')).rejects.toThrow(Error);
-        await expect(axios.post('http://localhost:3000/codegenerations/notexist/cancel')).rejects.toThrow(Error);
-        await expect(axios.post('http://localhost:3000/codegenerations/notexist/run')).rejects.toThrow(Error);
+        await expect(axios.post('http://localhost:' + codeGenServerPort + '/codegenerations/notexist/customize')).rejects.toThrow(Error);
+        await expect(axios.get('http://localhost:' + codeGenServerPort + '/codegenerations/notexist/customize')).rejects.toThrow(Error);
+        await expect(axios.post('http://localhost:' + codeGenServerPort + '/codegenerations/notexist/onboard')).rejects.toThrow(Error);
+        await expect(axios.get('http://localhost:' + codeGenServerPort + '/codegenerations/notexist/onboard')).rejects.toThrow(Error);
+        await expect(axios.post('http://localhost:' + codeGenServerPort + '/codegenerations/notexist/complete')).rejects.toThrow(Error);
+        await expect(axios.post('http://localhost:' + codeGenServerPort + '/codegenerations/notexist/cancel')).rejects.toThrow(Error);
+        await expect(axios.post('http://localhost:' + codeGenServerPort + '/codegenerations/notexist/run')).rejects.toThrow(Error);
 
         return;
     });
