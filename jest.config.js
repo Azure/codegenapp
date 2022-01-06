@@ -6,8 +6,14 @@ module.exports = {
     moduleFileExtensions: ['ts', 'js', 'json', 'node'],
     moduleNameMapper: {},
     collectCoverage: true,
-    coverageReporters: ['html'],
-    coveragePathIgnorePatterns: ['/node_modules/', 'dist'],
+    coverageReporters: ['html', ["text", {"skipFull": true}]],
+    coveragePathIgnorePatterns: [
+        '/node_modules/',
+        'dist',
+        'src/daoImpl/githubDaoImpl.ts',
+        'src/models/ResourceAndOperationModel.ts',
+        'src/utils/authUtils.ts'
+    ],
     globals: {
         'ts-jest': {
             tsconfig: 'tsconfig.json',

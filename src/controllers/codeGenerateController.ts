@@ -211,7 +211,7 @@ export class CodeGenerateController extends BaseController {
         if (!codegen) {
             this.logger.info('The code generation (' + name + ') does not exist.');
             return this.json({ error: 'Not Exist.' }, 400);
-        } else if (codegen.status === CodeGenerationStatus.CodeGenerationStatusCompleted && codegen.status === CodeGenerationStatus.CodeGenerationStatusCancelled) {
+        } else if (codegen.status === CodeGenerationStatus.CodeGenerationStatusCompleted || codegen.status === CodeGenerationStatus.CodeGenerationStatusCancelled) {
             const message = `Cannot complete code generation ${name} because it's status is ${codegen.status}.`;
             this.logger.info(message);
             return this.json({ error: message }, 400);

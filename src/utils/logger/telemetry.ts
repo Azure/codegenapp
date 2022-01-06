@@ -1,11 +1,13 @@
 import { config } from '../../config';
 import * as statsd from 'hot-shots';
 
-const stats = new statsd.StatsD({
-    host: config.statsdHost,
-    port: config.statsdPort,
-    mock: config.env === 'development',
-});
+const stats = config.statsdEnable
+    ? new statsd.StatsD({
+          host: config.statsdHost,
+          port: config.statsdPort,
+          mock: config.env === 'development',
+      })
+    : undefined;
 
 export enum Metrics {
     Liveness = 'liveness',
@@ -23,6 +25,9 @@ const podName = process.env.POD_NAME || '';
  * call to emit metrics from the service.
  */
 export function emitMetric(metric: Metrics, value: number, dims?: { [key: string]: string | number }): void {
+    if (!config.statsdEnable) {
+        return;
+    }
     if (!dims) {
         dims = {};
     }

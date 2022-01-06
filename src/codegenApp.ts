@@ -8,6 +8,8 @@ import { CodeGenerationDaoImpl } from './daoImpl/codeGenerationDaoImpl';
 import { GithubDaoImpl } from './daoImpl/githubDaoImpl';
 import { TaskResultDaoImpl } from './daoImpl/taskResultDaoImpl';
 import { injectableTypes } from './injectableTypes/injectableTypes';
+import { CodeGeneration } from './models/entity/CodeGeneration';
+import { TaskResult } from './models/entity/TaskResult';
 import { CodeGenerationService } from './service/codeGenerationService';
 import { CodeGenerationServiceImpl } from './servicesImpl/codeGenerationServiceImpl';
 import { AuthUtils, CustomersThumbprints } from './utils/authUtils';
@@ -41,6 +43,10 @@ class CodegenApp {
         this.buildSchedulerTask();
     }
 
+    public async shutdown(): Promise<void> {
+        await this.mongoDbConnection.close();
+    }
+
     private async buildMongoDBCollection() {
         this.mongoDbConnection = await createConnection({
             name: 'mongodb',
@@ -50,10 +56,10 @@ class CodegenApp {
             username: config.mongodb.username,
             password: config.mongodb.password,
             database: config.mongodb.database,
-            ssl: true,
+            ssl: config.mongodb.ssl,
             synchronize: config.changeDatabase,
             logging: true,
-            entities: ['dist/src/models/entity/CodeGeneration.js', 'dist/src/models/entity/TaskResult.js'],
+            entities: [CodeGeneration, TaskResult],
         });
     }
 
@@ -207,4 +213,4 @@ class CodegenApp {
     }
 }
 
-new CodegenApp().start();
+export const codegenAppServes = new CodegenApp();
