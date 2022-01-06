@@ -270,6 +270,7 @@ describe('Testing codeGenerateController', () => {
         );
         mockgit.mockClear();
 
+        // check whether delete operation take effect
         await expect(axios.get('http://localhost:' + codeGenServerPort + '/codegenerations/controllerTest')).rejects.toThrow(Error);
 
         return;
@@ -475,6 +476,7 @@ describe('Testing codeGenerateController', () => {
         expect(mockpipeline).toHaveBeenCalled();
         mockpipeline.mockClear();
 
+        // check create two codeGen entity with same name
         await expect(
             axios.put(
                 'http://localhost:' + codeGenServerPort + '/codegenerations/controllerTest3',
@@ -514,6 +516,7 @@ describe('Testing codeGenerateController', () => {
         });
         expect(response.status).toBe(200);
 
+        // codeGen at CodeGenerationStatusInProgress status should not customize
         await expect(axios.post('http://localhost:' + codeGenServerPort + '/codegenerations/controllerTest3/customize')).rejects.toThrow(Error);
         await expect(axios.get('http://localhost:' + codeGenServerPort + '/codegenerations/controllerTest3/customize')).rejects.toThrow(Error);
 
@@ -538,6 +541,7 @@ describe('Testing codeGenerateController', () => {
         expect(response.status).toBe(200);
         expect(response.data.status).toBe(CodeGenerationStatus.CodeGenerationStatusCancelled);
 
+        // codeGen at CodeGenerationStatusCancelled status can't be customized/ran
         await expect(axios.post('http://localhost:' + codeGenServerPort + '/codegenerations/controllerTest3/complete')).rejects.toThrow(Error);
         await expect(axios.post('http://localhost:' + codeGenServerPort + '/codegenerations/controllerTest3/run')).rejects.toThrow(Error);
 
@@ -546,6 +550,7 @@ describe('Testing codeGenerateController', () => {
         expect(mockgit).toHaveBeenCalled();
         mockgit.mockClear();
 
+        // call with notexisted codeGen name
         await expect(axios.post('http://localhost:' + codeGenServerPort + '/codegenerations/notexist/customize')).rejects.toThrow(Error);
         await expect(axios.get('http://localhost:' + codeGenServerPort + '/codegenerations/notexist/customize')).rejects.toThrow(Error);
         await expect(axios.post('http://localhost:' + codeGenServerPort + '/codegenerations/notexist/onboard')).rejects.toThrow(Error);

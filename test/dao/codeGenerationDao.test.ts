@@ -142,14 +142,17 @@ test('dao test submitCodeGeneration and getCodeGenerationByName3', async () => {
 
     await codeGenerationDao.deleteCodeGenerationByName(cg.name);
     await codeGenerationDao.submitCodeGeneration(cg);
+    // codeGen name must be unique
     await expect(codeGenerationDao.submitCodeGeneration(cg2)).rejects.toThrow(Error);
 
     await codeGenerationDao.deleteCodeGenerationByName(cg.name);
     cg.name = null;
+    // one codeGen can't submit twice, unless delete the first one
     // class-validator throw a array(not an error) and jest can't catch it, so use toBeTruthy
     await expect(codeGenerationDao.submitCodeGeneration(cg)).rejects.toBeTruthy();
     cg.name = 'test1c';
 
+    // next cases check columns which can't be null
     await codeGenerationDao.deleteCodeGenerationByName(cg.name);
     cg.resourceProvider = null;
     await expect(codeGenerationDao.submitCodeGeneration(cg)).rejects.toBeTruthy();
@@ -210,6 +213,7 @@ test('dao test submitCodeGeneration, updateCodeGenerationValueByName and getCode
     await codeGenerationDao.deleteCodeGenerationByName(cg.name);
     await codeGenerationDao.submitCodeGeneration(cg);
     await codeGenerationDao.updateCodeGenerationValueByName(cg.name, 'owner', 'SWG');
+    // check columns which can't be null
     await expect(codeGenerationDao.updateCodeGenerationValueByName(cg.name, 'status', null)).rejects.toBeTruthy();
 
     const retCg: CodeGeneration = await codeGenerationDao.getCodeGenerationByName(cg.name);
@@ -293,6 +297,7 @@ test('dao test submitCodeGeneration, updateCodeGenerationValuesByName and getCod
     expect(retCg.type).toBe('ad-real');
     expect(retCg.status).toBe('del');
 
+    // check columns which can't be null
     await expect(codeGenerationDao.updateCodeGenerationValuesByName(cg.name, { status: null })).rejects.toBeTruthy();
 });
 
