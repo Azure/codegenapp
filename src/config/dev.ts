@@ -64,7 +64,7 @@ export const environmentConfigDev: Partial<Config> = {
         },
     },
     armEndpoint: 'https://management.azure.com',
-    clientAuthEnabled: false,
+    clientAuthEnabled: true,
     retries: 2,
     changeDatabase: true,
 };
