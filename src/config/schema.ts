@@ -313,7 +313,7 @@ export const configSchema = convict<Config>({
                 id: '753c5992-7810-11ec-90d6-0242ac120003',
                 thumbprints: ['28A3E7886D47A09B7EE8D9ABCF713013527E81C7'],
                 authMetadataEndpoints: [],
-            }
+            },
         ],
     },
     refreshClientCertificateIntervalSeconds: {
