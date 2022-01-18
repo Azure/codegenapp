@@ -323,10 +323,10 @@ export const configSchema = convict<Config>({
         env: 'retries',
     },
     healthProbeEndpoint: {
-        doc: "The health probe endpoint to use.",
+        doc: 'The health probe endpoint to use.',
         format: String,
-        default: "alive",
-        env: "healthProbeEndpoint",
+        default: 'alive',
+        env: 'healthProbeEndpoint',
     },
     changeDatabase: {
         doc: 'change the database based on entity',
