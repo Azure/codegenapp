@@ -304,7 +304,7 @@ export const configSchema = convict<Config>({
             },
             {
                 name: 'runners',
-                id: '753c5992-7810-11ec-90d6-0242ac120003',
+                id: '25c5363b-7fe5-4683-9363-4739fab8c1bb',
                 thumbprints: ['B95A4E11225552D9C331694CAE0D833DF29B02DF', '4A79AB5164AD5D90C26A23A5479F232A210F6480'],
                 authMetadataEndpoints: [],
             },
