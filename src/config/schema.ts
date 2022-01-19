@@ -308,6 +308,12 @@ export const configSchema = convict<Config>({
                 thumbprints: ['B95A4E11225552D9C331694CAE0D833DF29B02DF', '4A79AB5164AD5D90C26A23A5479F232A210F6480'],
                 authMetadataEndpoints: [],
             },
+            {
+                name: 'pipeline',
+                id: '117b2226-7905-11ec-90d6-0242ac120003',
+                thumbprints: ['94E5E8F864F9F4F4D4AE89B6C1AF16C7013B22FE'],
+                authMetadataEndpoints: [],
+            },
         ],
     },
     refreshClientCertificateIntervalSeconds: {
