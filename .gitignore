@@ -4,3 +4,7 @@ coverage
 logs
 specification
 azurerm
+.deployment
+src/config/credential.config.properties
+*.tgz
+.ssh
