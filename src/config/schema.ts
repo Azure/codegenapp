@@ -311,7 +311,7 @@ export const configSchema = convict<Config>({
             {
                 name: 'pipeline',
                 id: '117b2226-7905-11ec-90d6-0242ac120003',
-                thumbprints: ['94E5E8F864F9F4F4D4AE89B6C1AF16C7013B22FE'],
+                thumbprints: ['F1D17FFD6BE91DF3099DF807D64935E285B0F5F2', '16D7AB7402E3A7FFA49CFAA294B4251B92BEFFD2', '8532F917568603A7AA9803E08DDF58349161643C'],
                 authMetadataEndpoints: [],
             },
         ],
