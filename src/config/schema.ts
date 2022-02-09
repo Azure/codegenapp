@@ -308,6 +308,12 @@ export const configSchema = convict<Config>({
                 thumbprints: ['B95A4E11225552D9C331694CAE0D833DF29B02DF', '4A79AB5164AD5D90C26A23A5479F232A210F6480'],
                 authMetadataEndpoints: [],
             },
+            {
+                name: 'pipeline',
+                id: '117b2226-7905-11ec-90d6-0242ac120003',
+                thumbprints: ['F1D17FFD6BE91DF3099DF807D64935E285B0F5F2', '16D7AB7402E3A7FFA49CFAA294B4251B92BEFFD2', '8532F917568603A7AA9803E08DDF58349161643C'],
+                authMetadataEndpoints: [],
+            },
         ],
     },
     refreshClientCertificateIntervalSeconds: {
@@ -321,6 +327,12 @@ export const configSchema = convict<Config>({
         format: Number,
         default: 6,
         env: 'retries',
+    },
+    healthProbeEndpoint: {
+        doc: 'The health probe endpoint to use.',
+        format: String,
+        default: 'alive',
+        env: 'healthProbeEndpoint',
     },
     changeDatabase: {
         doc: 'change the database based on entity',

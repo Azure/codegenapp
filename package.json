@@ -4,9 +4,9 @@
   "description": "Autorest Azure code generator",
   "main": "dist/src/app/index.js",
   "scripts": {
-    "start": "node dist/src/codegenApp.js",
-    "run": "node dist/src/codegenApp.js",
-    "debug": "node --max_old_space_size=4096 --inspect-brk dist/src/codegenApp.js",
+    "start": "node dist/src/index.js",
+    "run": "node dist/src/index.js",
+    "debug": "node --max_old_space_size=4096 --inspect-brk dist/src/index.js",
     "test": "jest --forceExit --detectOpenHandles --coverage=true",
     "lint-fix": "eslint . --fix --ext .ts --ignore-pattern *.d.ts --max-warnings=0",
     "lint": "eslint . --ext .ts --ignore-pattern *.d.ts --max-warnings=0",
