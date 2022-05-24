@@ -39,7 +39,7 @@ export async function getWebApi(serverUrl?: string): Promise<azdev.WebApi> {
     serverUrl = serverUrl || getEnv('API_URL');
     return await getApi(
         serverUrl,
-        '4mk3ddbwdjlu53npp2xzeoacsivyxv5iemghv34mtxcynbqforfa'
+        getEnv("API_TOKEN")
     );
 }
 
