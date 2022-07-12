@@ -1,12 +1,12 @@
-import * as winston from 'winston';
-
 import { Config } from '../../config/config';
 import { Env } from '../../config/environment';
 import { Logger } from './logger';
 
-import WinstonDailyRotate = require('winston-daily-rotate-file');
+const WinstonDailyRotate = require('winston-daily-rotate-file');
+const winston: any = require('winston');
 
 export class CodegenAppLogger implements Logger {
+    // @ts-ignore
     logger: winston.Logger;
 
     public constructor(config: Config) {
@@ -16,6 +16,7 @@ export class CodegenAppLogger implements Logger {
             return info;
         });
 
+        // @ts-ignore
         const consoleTransportOptions: winston.transports.ConsoleTransportOptions =
             {
                 handleExceptions: true,

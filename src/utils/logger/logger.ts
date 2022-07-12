@@ -1,6 +1,7 @@
-import * as winston from 'winston';
+const winston = require('winston');
 
 export interface Logger {
+    // @ts-ignore
     logger: winston.Logger;
     error: (string, any?) => void;
     warn: (string, any?) => void;
