@@ -37,10 +37,7 @@ export async function getApi(
 
 export async function getWebApi(serverUrl?: string): Promise<azdev.WebApi> {
     serverUrl = serverUrl || getEnv('API_URL');
-    return await getApi(
-        serverUrl,
-        getEnv("API_TOKEN")
-    );
+    return await getApi(serverUrl, getEnv('API_TOKEN'));
 }
 
 function getEnv(name: string): string {
